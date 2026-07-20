@@ -4,373 +4,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>💎 Jewellery Manager Pro</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Existing Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"></script>
-    <!-- Google APIs for Drive -->
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client"></script>
-    <!-- Rest of the style (same as before, omitted for brevity – will include all styles) -->
-    <style>
-        /* ... all previous styles (copy from your file) ... */
-        /* আমরা নতুন কিছু স্টাইল যোগ করব না, কারণ আগের স্টাইলই যথেষ্ট */
-    </style>
-</head>
-<body>
-    <!-- আপনার পুরো HTML বডি (যেমন আগে ছিল) - আমরা শুধু Settings-এ একটি নতুন সেকশন যোগ করব -->
-    <div class="wrap">
-        <!-- Header, Tabs, Grid ইত্যাদি আগের মতোই থাকবে -->
-        <!-- আমরা Settings সেকশনের ভিতরে Google Drive সেকশন যোগ করব -->
-        <!-- নিচে শুধু Settings-এর পরিবর্তন দেখাচ্ছি, বাকি সব আগের মতো -->
-
-        <section id="settings" class="card" style="display:none">
-            <div class="section-title">⚙ Settings</div>
-            <div class="note">Company profile, appearance, customization, export/import, plugins and more.</div>
-
-            <!-- Company Profile, Appearance, Customization ইত্যাদি আগের মতো -->
-
-            <hr>
-
-            <!-- ===== NEW: Google Drive Sync Section ===== -->
-            <div class="section-title" style="font-size:15px;">☁️ Google Drive Sync</div>
-            <div class="note">Connect your Google Drive to automatically sync data across all your devices (Windows, Android, Web).</div>
-            <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
-                <button id="gdriveLoginBtn" onclick="loginGoogleDrive()" class="ghost">🔑 Connect to Google Drive</button>
-                <button id="gdriveLogoutBtn" onclick="logoutGoogleDrive()" class="ghost" style="display:none;">🔒 Disconnect</button>
-                <button id="gdriveSyncBtn" onclick="manualSyncToDrive()" class="ghost" style="display:none;">🔄 Sync Now</button>
-                <span id="gdriveStatus" class="muted" style="font-size:12px;">Not connected</span>
-            </div>
-            <div id="gdriveFileInfo" style="margin-top:6px;font-size:11px;color:var(--muted-2);display:none;"></div>
-            <hr>
-
-            <!-- Backup & Restore, Export & Import, Plugins, Quick Stats ইত্যাদি আগের মতো -->
-            <!-- ... -->
-        </section>
-
-        <!-- বাকি সব HTML (modals, footer) আগের মতো -->
-    </div>
-
-    <!-- JavaScript changes -->
-    <script>
-        // ==================== GOOGLE DRIVE SYNC ====================
-        // 🔑 Replace with your own Google Cloud Console client ID
-        const CLIENT_ID = '169816348216-0jfq6r8gm83fc2a7lhbg1g1c1ct644ro.apps.googleusercontent.com';
-        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-        const FILE_NAME = 'jewellery_data.json';
-
-        let gapiInited = false;
-        let gisInited = false;
-        let tokenClient = null;
-        let gdriveLoggedIn = false;
-        let gdriveFileId = null;
-        let gdriveAccessToken = null;
-
-        // Load Google APIs
-        function initGoogleDrive() {
-            gapi.load('client', async () => {
-                try {
-                    await gapi.client.init({
-                        apiKey: '', // not needed for OAuth
-                        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-                    });
-                    gapiInited = true;
-                    console.log('✅ GAPI client initialized');
-                    checkGdriveAuth();
-                } catch (e) {
-                    console.error('GAPI init error:', e);
-                }
-            });
-
-            // GIS (Identity Services) for token client
-            window.onGoogleLibraryLoad = () => {
-                tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: CLIENT_ID,
-                    scope: SCOPES,
-                    callback: (resp) => {
-                        if (resp.error) {
-                            console.error('Auth error:', resp);
-                            showToast('❌ Google Drive auth failed', 'err');
-                            updateGdriveUI(false);
-                            return;
-                        }
-                        gdriveAccessToken = resp.access_token;
-                        gdriveLoggedIn = true;
-                        updateGdriveUI(true);
-                        showToast('✅ Connected to Google Drive', 'ok');
-                        // Now fetch or create the file
-                        findOrCreateDriveFile().then(fileId => {
-                            gdriveFileId = fileId;
-                            if (fileId) {
-                                loadFromDrive();
-                            }
-                        });
-                    },
-                });
-                gisInited = true;
-            };
-        }
-
-        function checkGdriveAuth() {
-            // Check if we have a token stored
-            const token = localStorage.getItem('gdrive_token');
-            if (token) {
-                gdriveAccessToken = token;
-                gdriveLoggedIn = true;
-                updateGdriveUI(true);
-                findOrCreateDriveFile().then(fileId => {
-                    gdriveFileId = fileId;
-                    if (fileId) {
-                        loadFromDrive();
-                    }
-                });
-            }
-        }
-
-        function loginGoogleDrive() {
-            if (!tokenClient) {
-                showToast('⏳ Google API not ready. Please refresh.', 'err');
-                return;
-            }
-            tokenClient.requestAccessToken({ prompt: 'consent' });
-        }
-
-        function logoutGoogleDrive() {
-            // Revoke token
-            if (gdriveAccessToken) {
-                google.accounts.oauth2.revoke(gdriveAccessToken, () => {
-                    console.log('Token revoked');
-                });
-            }
-            localStorage.removeItem('gdrive_token');
-            gdriveLoggedIn = false;
-            gdriveAccessToken = null;
-            gdriveFileId = null;
-            updateGdriveUI(false);
-            showToast('🔒 Disconnected from Google Drive', 'ok');
-        }
-
-        function updateGdriveUI(loggedIn) {
-            const loginBtn = document.getElementById('gdriveLoginBtn');
-            const logoutBtn = document.getElementById('gdriveLogoutBtn');
-            const syncBtn = document.getElementById('gdriveSyncBtn');
-            const status = document.getElementById('gdriveStatus');
-            const fileInfo = document.getElementById('gdriveFileInfo');
-            if (loggedIn) {
-                loginBtn.style.display = 'none';
-                logoutBtn.style.display = 'inline-block';
-                syncBtn.style.display = 'inline-block';
-                status.textContent = '✅ Connected to Google Drive';
-                status.style.color = 'var(--success)';
-                if (gdriveFileId) {
-                    fileInfo.style.display = 'block';
-                    fileInfo.textContent = `📄 File ID: ${gdriveFileId.substring(0,10)}...`;
-                }
-            } else {
-                loginBtn.style.display = 'inline-block';
-                logoutBtn.style.display = 'none';
-                syncBtn.style.display = 'none';
-                status.textContent = 'Not connected';
-                status.style.color = 'var(--muted)';
-                fileInfo.style.display = 'none';
-            }
-        }
-
-        async function findOrCreateDriveFile() {
-            try {
-                // Search for existing file
-                const response = await gapi.client.drive.files.list({
-                    q: `name='${FILE_NAME}' and trashed=false`,
-                    fields: 'files(id, name)',
-                    spaces: 'drive',
-                });
-                const files = response.result.files;
-                if (files && files.length > 0) {
-                    const file = files[0];
-                    gdriveFileId = file.id;
-                    console.log('📄 Found file:', file.id);
-                    return file.id;
-                } else {
-                    // Create new file
-                    const fileMetadata = {
-                        name: FILE_NAME,
-                        mimeType: 'application/json',
-                    };
-                    const createResponse = await gapi.client.drive.files.create({
-                        resource: fileMetadata,
-                        fields: 'id',
-                    });
-                    const fileId = createResponse.result.id;
-                    gdriveFileId = fileId;
-                    console.log('📄 Created new file:', fileId);
-                    // Initialize with empty data
-                    await uploadToDrive(fileId, {});
-                    return fileId;
-                }
-            } catch (e) {
-                console.error('Error finding/creating file:', e);
-                showToast('❌ Google Drive file error', 'err');
-                return null;
-            }
-        }
-
-        async function uploadToDrive(fileId, data) {
-            if (!fileId) return;
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const metadata = {
-                name: FILE_NAME,
-                mimeType: 'application/json',
-            };
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            form.append('file', blob);
-
-            const response = await fetch(
-                `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`,
-                {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${gdriveAccessToken}`,
-                    },
-                    body: form,
-                }
-            );
-            if (!response.ok) {
-                throw new Error('Upload failed: ' + response.statusText);
-            }
-            const result = await response.json();
-            console.log('✅ Uploaded to Drive:', result);
-            return result;
-        }
-
-        async function loadFromDrive() {
-            if (!gdriveFileId) return;
-            try {
-                const response = await gapi.client.drive.files.get({
-                    fileId: gdriveFileId,
-                    alt: 'media',
-                });
-                const data = response.result;
-                if (data && typeof data === 'object') {
-                    // Import data into app
-                    importDriveData(data);
-                    showToast('🔄 Data synced from Google Drive', 'ok');
-                }
-            } catch (e) {
-                console.error('Error loading from Drive:', e);
-                // If file not found or empty, ignore
-            }
-        }
-
-        function importDriveData(data) {
-            if (data.items) items = data.items;
-            if (data.products) products = data.products;
-            if (data.company) company = data.company;
-            if (data.customers) customers = data.customers;
-            if (data.suppliers) suppliers = data.suppliers;
-            if (data.purchases) purchases = data.purchases;
-            if (data.sales) sales = data.sales;
-            if (data.custLedger) custLedger = data.custLedger;
-            if (data.supLedger) supLedger = data.supLedger;
-            if (data.settings) settings = data.settings;
-            if (data.globalCategories) globalCategories = data.globalCategories;
-            if (data.plugins) plugins = data.plugins;
-            // Save to localStorage and refresh UI
-            saveAll(true);
-            renderAll();
-        }
-
-        // Override saveAll to sync to Drive
-        const originalSaveAll = saveAll;
-        saveAll = function(silent) {
-            originalSaveAll(silent);
-            // If logged in and online, sync to Drive
-            if (gdriveLoggedIn && navigator.onLine && gdriveFileId) {
-                const data = {
-                    items, products, company, customers, suppliers, purchases,
-                    sales, custLedger, supLedger, settings, globalCategories, plugins
-                };
-                uploadToDrive(gdriveFileId, data).then(() => {
-                    console.log('✅ Data synced to Drive');
-                }).catch(err => {
-                    console.warn('Drive sync failed:', err);
-                });
-            }
-        };
-
-        function manualSyncToDrive() {
-            if (!gdriveLoggedIn) {
-                showToast('❌ Not connected to Google Drive', 'err');
-                return;
-            }
-            if (!navigator.onLine) {
-                showToast('❌ No internet connection', 'err');
-                return;
-            }
-            const data = {
-                items, products, company, customers, suppliers, purchases,
-                sales, custLedger, supLedger, settings, globalCategories, plugins
-            };
-            uploadToDrive(gdriveFileId, data).then(() => {
-                showToast('✅ Data manually synced to Drive', 'ok');
-            }).catch(err => {
-                showToast('❌ Sync failed: ' + err.message, 'err');
-            });
-        }
-
-        // Automatically load from Drive on startup if logged in
-        function autoLoadFromDrive() {
-            if (gdriveLoggedIn && gdriveFileId) {
-                loadFromDrive();
-            }
-        }
-
-        // Initialize Google Drive on load
-        document.addEventListener('DOMContentLoaded', function() {
-            initGoogleDrive();
-            // After a delay, check auth and load
-            setTimeout(() => {
-                if (gapiInited && gisInited) {
-                    checkGdriveAuth();
-                }
-            }, 1000);
-        });
-
-        // Override renderAll to refresh UI after import
-        function renderAll() {
-            renderItemTable();
-            renderProductGrid();
-            renderDashboard();
-            renderVariations();
-            renderVariationQueue();
-            renderProdImages();
-            populateItemSelect();
-            populateExportSelect();
-            renderStockTable();
-            renderSalesHistory();
-            renderCustomerLedger();
-            renderSupplierLedger();
-            renderWalkinLedger();
-            renderItemsList();
-            renderCategoryManager();
-            populateCategorySelects();
-            updateStats();
-            updateMiniStats();
-            updateQuickStatsInSettings();
-            updateAIStats();
-        }
-
-       <!doctype html>
-<html lang="bn">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>💎 Jewellery Manager Pro</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -382,6 +15,8 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js">
     </script>
+    <script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
     <style>
         :root {
             --bg: #f5f5f7;
@@ -3975,6 +3610,17 @@
                     </div>
                     <div id="backupList" style="margin-top:10px"></div>
                     <hr>
+                    <!-- ===== NEW: Google Drive Sync Section ===== -->
+<div class="section-title" style="font-size:15px;">☁️ Google Drive Sync</div>
+<div class="note">Connect your Google Drive to automatically sync data across all your devices (Windows, Android, Web).</div>
+<div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
+    <button id="gdriveLoginBtn" onclick="loginGoogleDrive()" class="ghost">🔑 Connect to Google Drive</button>
+    <button id="gdriveLogoutBtn" onclick="logoutGoogleDrive()" class="ghost" style="display:none;">🔒 Disconnect</button>
+    <button id="gdriveSyncBtn" onclick="manualSyncToDrive()" class="ghost" style="display:none;">🔄 Sync Now</button>
+    <span id="gdriveStatus" class="muted" style="font-size:12px;">Not connected</span>
+</div>
+<div id="gdriveFileInfo" style="margin-top:6px;font-size:11px;color:var(--muted-2);display:none;"></div>
+<hr>
 
                     <div class="section-title" style="font-size:15px;">Data Storage Location</div>
                     <div class="note">Choose a folder where all your data will be auto-saved as JSON files (including images as base64).</div>
@@ -8513,9 +8159,263 @@
                 if (e.target === modal) modal.style.display = 'none';
             });
         });
-        console.log('Jewellery Product Builder Pro loaded successfully. AI features active!');
- 
+        // ==================== GOOGLE DRIVE SYNC (ADDED) ====================
+// 🔑 Replace with your own Google Cloud Console client ID
+const CLIENT_ID = '169816348216-0jfq6r8gm83fc2a7lhbg1g1c1ct644ro.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const FILE_NAME = 'jewellery_data.json';
 
+let gapiInited = false, gisInited = false, tokenClient = null;
+let gdriveLoggedIn = false, gdriveFileId = null, gdriveAccessToken = null;
+
+function initGoogleDrive() {
+    gapi.load('client', async () => {
+        try {
+            await gapi.client.init({
+                apiKey: '',
+                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+            });
+            gapiInited = true;
+            checkGdriveAuth();
+        } catch (e) { console.error('GAPI init error:', e); }
+    });
+    window.onGoogleLibraryLoad = () => {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: (resp) => {
+                if (resp.error) {
+                    console.error('Auth error:', resp);
+                    showToast('❌ Google Drive auth failed', 'err');
+                    updateGdriveUI(false);
+                    return;
+                }
+                gdriveAccessToken = resp.access_token;
+                gdriveLoggedIn = true;
+                localStorage.setItem('gdrive_token', gdriveAccessToken);
+                updateGdriveUI(true);
+                showToast('✅ Connected to Google Drive', 'ok');
+                findOrCreateDriveFile().then(fileId => {
+                    gdriveFileId = fileId;
+                    if (fileId) loadFromDrive();
+                });
+            },
+        });
+        gisInited = true;
+    };
+}
+
+function checkGdriveAuth() {
+    const token = localStorage.getItem('gdrive_token');
+    if (token) {
+        gdriveAccessToken = token;
+        gdriveLoggedIn = true;
+        updateGdriveUI(true);
+        findOrCreateDriveFile().then(fileId => {
+            gdriveFileId = fileId;
+            if (fileId) loadFromDrive();
+        });
+    }
+}
+
+function loginGoogleDrive() {
+    if (!tokenClient) { showToast('⏳ Google API not ready. Please refresh.', 'err'); return; }
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+}
+
+function logoutGoogleDrive() {
+    if (gdriveAccessToken) {
+        google.accounts.oauth2.revoke(gdriveAccessToken, () => console.log('Token revoked'));
+    }
+    localStorage.removeItem('gdrive_token');
+    gdriveLoggedIn = false;
+    gdriveAccessToken = null;
+    gdriveFileId = null;
+    updateGdriveUI(false);
+    showToast('🔒 Disconnected from Google Drive', 'ok');
+}
+
+function updateGdriveUI(loggedIn) {
+    const loginBtn = document.getElementById('gdriveLoginBtn');
+    const logoutBtn = document.getElementById('gdriveLogoutBtn');
+    const syncBtn = document.getElementById('gdriveSyncBtn');
+    const status = document.getElementById('gdriveStatus');
+    const fileInfo = document.getElementById('gdriveFileInfo');
+    if (loggedIn) {
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+        if (syncBtn) syncBtn.style.display = 'inline-block';
+        if (status) { status.textContent = '✅ Connected to Google Drive'; status.style.color = 'var(--success)'; }
+        if (fileInfo && gdriveFileId) {
+            fileInfo.style.display = 'block';
+            fileInfo.textContent = `📄 File ID: ${gdriveFileId.substring(0,10)}...`;
+        }
+    } else {
+        if (loginBtn) loginBtn.style.display = 'inline-block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (syncBtn) syncBtn.style.display = 'none';
+        if (status) { status.textContent = 'Not connected'; status.style.color = 'var(--muted)'; }
+        if (fileInfo) fileInfo.style.display = 'none';
+    }
+}
+
+async function findOrCreateDriveFile() {
+    try {
+        const response = await gapi.client.drive.files.list({
+            q: `name='${FILE_NAME}' and trashed=false`,
+            fields: 'files(id, name)',
+            spaces: 'drive',
+        });
+        const files = response.result.files;
+        if (files && files.length > 0) {
+            gdriveFileId = files[0].id;
+            return gdriveFileId;
+        } else {
+            const fileMetadata = { name: FILE_NAME, mimeType: 'application/json' };
+            const createResponse = await gapi.client.drive.files.create({
+                resource: fileMetadata,
+                fields: 'id',
+            });
+            gdriveFileId = createResponse.result.id;
+            await uploadToDrive(gdriveFileId, {});
+            return gdriveFileId;
+        }
+    } catch (e) {
+        console.error('Error finding/creating file:', e);
+        showToast('❌ Google Drive file error', 'err');
+        return null;
+    }
+}
+
+async function uploadToDrive(fileId, data) {
+    if (!fileId) return;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const metadata = { name: FILE_NAME, mimeType: 'application/json' };
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', blob);
+
+    const response = await fetch(
+        `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`,
+        {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${gdriveAccessToken}` },
+            body: form,
+        }
+    );
+    if (!response.ok) throw new Error('Upload failed: ' + response.statusText);
+    return await response.json();
+}
+
+async function loadFromDrive() {
+    if (!gdriveFileId) return;
+    try {
+        const response = await gapi.client.drive.files.get({
+            fileId: gdriveFileId,
+            alt: 'media',
+        });
+        const data = response.result;
+        if (data && typeof data === 'object') {
+            importDriveData(data);
+            showToast('🔄 Data synced from Google Drive', 'ok');
+        }
+    } catch (e) {
+        console.error('Error loading from Drive:', e);
+    }
+}
+
+function importDriveData(data) {
+    if (data.items) items = data.items;
+    if (data.products) products = data.products;
+    if (data.company) company = data.company;
+    if (data.customers) customers = data.customers;
+    if (data.suppliers) suppliers = data.suppliers;
+    if (data.purchases) purchases = data.purchases;
+    if (data.sales) sales = data.sales;
+    if (data.custLedger) custLedger = data.custLedger;
+    if (data.supLedger) supLedger = data.supLedger;
+    if (data.settings) settings = data.settings;
+    if (data.globalCategories) globalCategories = data.globalCategories;
+    if (data.plugins) plugins = data.plugins;
+    // Save to localStorage and refresh UI
+    window._skipDriveSync = true;
+    saveAll(true);
+    window._skipDriveSync = false;
+    renderAll();
+}
+
+// Override saveAll to sync to Drive
+const originalSaveAll = saveAll;
+saveAll = function(silent) {
+    originalSaveAll(silent);
+    if (!window._skipDriveSync && gdriveLoggedIn && navigator.onLine && gdriveFileId) {
+        const data = {
+            items, products, company, customers, suppliers, purchases,
+            sales, custLedger, supLedger, settings, globalCategories, plugins
+        };
+        uploadToDrive(gdriveFileId, data).catch(err => console.warn('Drive sync failed:', err));
+    }
+};
+
+function manualSyncToDrive() {
+    if (!gdriveLoggedIn) { showToast('❌ Not connected to Google Drive', 'err'); return; }
+    if (!navigator.onLine) { showToast('❌ No internet connection', 'err'); return; }
+    const data = {
+        items, products, company, customers, suppliers, purchases,
+        sales, custLedger, supLedger, settings, globalCategories, plugins
+    };
+    uploadToDrive(gdriveFileId, data).then(() => {
+        showToast('✅ Data manually synced to Drive', 'ok');
+    }).catch(err => {
+        showToast('❌ Sync failed: ' + err.message, 'err');
+    });
+}
+
+// Define renderAll (if not already defined)
+function renderAll() {
+    renderItemTable();
+    renderProductGrid();
+    renderDashboard();
+    renderVariations();
+    renderVariationQueue();
+    renderProdImages();
+    populateItemSelect();
+    populateExportSelect();
+    renderStockTable();
+    renderSalesHistory();
+    renderCustomerLedger();
+    renderSupplierLedger();
+    renderWalkinLedger();
+    renderItemsList();
+    renderCategoryManager();
+    populateCategorySelects();
+    updateStats();
+    updateMiniStats();
+    updateQuickStatsInSettings();
+    updateAIStats();
+}
+
+// Initialize Google Drive on load
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing DOMContentLoaded code (keep it) ...
+    // Add this:
+    initGoogleDrive();
+    setTimeout(() => {
+        if (gapiInited && gisInited) {
+            checkGdriveAuth();
+        }
+    }, 1500);
+});
+
+// Update UI when online
+window.addEventListener('online', () => {
+    if (gdriveLoggedIn && gdriveFileId) {
+        loadFromDrive();
+    }
+});
+
+console.log('Jewellery Product Builder Pro loaded. Google Drive sync added.');
+        console.log('Jewellery Product Builder Pro loaded successfully. AI features active!');
     </script>
 </body>
 </html>
