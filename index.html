@@ -8881,6 +8881,423 @@
         setTimeout(function() {
             initGoogleDrive();
         }, 2000);
+        // ==================== GOOGLE DRIVE SYNC (FIXED) ====================
+// 🔑 Your Client ID from Google Cloud Console
+const CLIENT_ID = '169816348216-0jfq6r8gm83fc2a7lhbg1g1c1ct644ro.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const FILE_NAME = 'jewellery_data.json';
+
+var gapiInitedDrive = false;
+var gisInitedDrive = false;
+var tokenClientDrive = null;
+var gdriveLoggedIn = false;
+var gdriveFileId = null;
+var gdriveAccessToken = null;
+var _skipDriveSync = false;
+
+// ===== GOOGLE DRIVE INITIALIZATION =====
+function initGoogleDrive() {
+    // Check if gapi is available
+    if (typeof gapi === 'undefined') {
+        console.warn('⚠️ GAPI not loaded yet, retrying...');
+        setTimeout(initGoogleDrive, 1000);
+        return;
+    }
+    
+    // Initialize GAPI client
+    gapi.load('client', function() {
+        gapi.client.init({
+            apiKey: '',
+            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+        }).then(function() {
+            gapiInitedDrive = true;
+            console.log('✅ GAPI client initialized');
+            // Check if already logged in
+            checkGdriveAuth();
+        }).catch(function(err) {
+            console.error('❌ GAPI init error:', err);
+            showToast('⚠️ Google API init failed. Please refresh.', 'err');
+        });
+    });
+
+    // Initialize Identity Services (for OAuth)
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+        tokenClientDrive = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: function(resp) {
+                if (resp.error) {
+                    console.error('❌ Auth error:', resp);
+                    showToast('❌ Google Drive auth failed: ' + resp.error, 'err');
+                    updateGdriveUI(false);
+                    return;
+                }
+                gdriveAccessToken = resp.access_token;
+                gdriveLoggedIn = true;
+                localStorage.setItem('gdrive_token', gdriveAccessToken);
+                updateGdriveUI(true);
+                showToast('✅ Connected to Google Drive', 'ok');
+                // Now find or create the file
+                findOrCreateDriveFile().then(function(fileId) {
+                    gdriveFileId = fileId;
+                    if (fileId) {
+                        loadFromDrive();
+                    }
+                });
+            },
+        });
+        gisInitedDrive = true;
+        console.log('✅ GIS initialized');
+    } else {
+        // Wait for GIS to load
+        window.onGoogleLibraryLoad = function() {
+            console.log('📦 Google Library Loaded');
+            if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+                tokenClientDrive = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: SCOPES,
+                    callback: function(resp) {
+                        if (resp.error) {
+                            console.error('❌ Auth error:', resp);
+                            showToast('❌ Google Drive auth failed: ' + resp.error, 'err');
+                            updateGdriveUI(false);
+                            return;
+                        }
+                        gdriveAccessToken = resp.access_token;
+                        gdriveLoggedIn = true;
+                        localStorage.setItem('gdrive_token', gdriveAccessToken);
+                        updateGdriveUI(true);
+                        showToast('✅ Connected to Google Drive', 'ok');
+                        findOrCreateDriveFile().then(function(fileId) {
+                            gdriveFileId = fileId;
+                            if (fileId) {
+                                loadFromDrive();
+                            }
+                        });
+                    },
+                });
+                gisInitedDrive = true;
+                console.log('✅ GIS initialized (via onGoogleLibraryLoad)');
+            }
+        };
+    }
+}
+
+// ===== CHECK EXISTING AUTH =====
+function checkGdriveAuth() {
+    var token = localStorage.getItem('gdrive_token');
+    if (token) {
+        gdriveAccessToken = token;
+        gdriveLoggedIn = true;
+        updateGdriveUI(true);
+        console.log('🔑 Found existing token, trying to connect...');
+        findOrCreateDriveFile().then(function(fileId) {
+            gdriveFileId = fileId;
+            if (fileId) {
+                loadFromDrive();
+            }
+        });
+    }
+}
+
+// ===== LOGIN/LOGOUT =====
+function loginGoogleDrive() {
+    if (!tokenClientDrive) {
+        // Try to re-initialize
+        console.log('⏳ Token client not ready, re-initializing...');
+        initGoogleDrive();
+        setTimeout(function() {
+            if (tokenClientDrive) {
+                tokenClientDrive.requestAccessToken({ prompt: 'consent' });
+            } else {
+                showToast('⏳ Google API still loading. Please wait and try again.', 'err');
+            }
+        }, 2000);
+        return;
+    }
+    tokenClientDrive.requestAccessToken({ prompt: 'consent' });
+}
+
+function logoutGoogleDrive() {
+    if (gdriveAccessToken) {
+        if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+            google.accounts.oauth2.revoke(gdriveAccessToken, function() {
+                console.log('🔒 Token revoked');
+            });
+        }
+    }
+    localStorage.removeItem('gdrive_token');
+    gdriveLoggedIn = false;
+    gdriveAccessToken = null;
+    gdriveFileId = null;
+    updateGdriveUI(false);
+    showToast('🔒 Disconnected from Google Drive', 'ok');
+}
+
+// ===== UPDATE UI =====
+function updateGdriveUI(loggedIn) {
+    var loginBtn = document.getElementById('gdriveLoginBtn');
+    var logoutBtn = document.getElementById('gdriveLogoutBtn');
+    var syncBtn = document.getElementById('gdriveSyncBtn');
+    var status = document.getElementById('gdriveStatus');
+    var fileInfo = document.getElementById('gdriveFileInfo');
+    
+    if (loggedIn) {
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+        if (syncBtn) syncBtn.style.display = 'inline-block';
+        if (status) {
+            status.textContent = '✅ Connected to Google Drive';
+            status.style.color = 'var(--success)';
+        }
+        if (fileInfo && gdriveFileId) {
+            fileInfo.style.display = 'block';
+            fileInfo.textContent = '📄 File ID: ' + gdriveFileId.substring(0, 10) + '...';
+        }
+    } else {
+        if (loginBtn) loginBtn.style.display = 'inline-block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (syncBtn) syncBtn.style.display = 'none';
+        if (status) {
+            status.textContent = 'Not connected';
+            status.style.color = 'var(--muted)';
+        }
+        if (fileInfo) fileInfo.style.display = 'none';
+    }
+}
+
+// ===== FIND OR CREATE DRIVE FILE =====
+function findOrCreateDriveFile() {
+    if (!gdriveAccessToken) {
+        console.warn('⚠️ No access token available');
+        return Promise.resolve(null);
+    }
+    
+    return gapi.client.drive.files.list({
+        q: "name='" + FILE_NAME + "' and trashed=false",
+        fields: 'files(id, name)',
+        spaces: 'drive',
+    }).then(function(response) {
+        var files = response.result.files;
+        if (files && files.length > 0) {
+            gdriveFileId = files[0].id;
+            console.log('📄 Found existing file:', gdriveFileId);
+            return gdriveFileId;
+        } else {
+            console.log('📄 No file found, creating new...');
+            var fileMetadata = { name: FILE_NAME, mimeType: 'application/json' };
+            return gapi.client.drive.files.create({
+                resource: fileMetadata,
+                fields: 'id',
+            }).then(function(createResponse) {
+                gdriveFileId = createResponse.result.id;
+                console.log('📄 Created new file:', gdriveFileId);
+                // Initialize with empty data
+                return uploadToDrive(gdriveFileId, {}).then(function() {
+                    return gdriveFileId;
+                });
+            });
+        }
+    }).catch(function(err) {
+        console.error('❌ Drive file error:', err);
+        showToast('❌ Google Drive file error: ' + err.message, 'err');
+        return null;
+    });
+}
+
+// ===== UPLOAD TO DRIVE =====
+function uploadToDrive(fileId, data) {
+    if (!fileId || !gdriveAccessToken) {
+        console.warn('⚠️ Cannot upload: no fileId or token');
+        return Promise.resolve(null);
+    }
+    
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var metadata = { name: FILE_NAME, mimeType: 'application/json' };
+    var form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', blob);
+    
+    return fetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=multipart', {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + gdriveAccessToken },
+        body: form,
+    }).then(function(response) {
+        if (!response.ok) {
+            throw new Error('Upload failed: ' + response.statusText);
+        }
+        return response.json();
+    }).then(function(result) {
+        console.log('✅ Uploaded to Drive successfully');
+        return result;
+    }).catch(function(err) {
+        console.error('❌ Upload error:', err);
+        return null;
+    });
+}
+
+// ===== LOAD FROM DRIVE =====
+function loadFromDrive() {
+    if (!gdriveFileId || !gdriveAccessToken) {
+        console.warn('⚠️ Cannot load: no fileId or token');
+        return Promise.resolve();
+    }
+    
+    return gapi.client.drive.files.get({
+        fileId: gdriveFileId,
+        alt: 'media',
+    }).then(function(response) {
+        var data = response.result;
+        if (data && typeof data === 'object') {
+            importDriveData(data);
+            showToast('🔄 Data synced from Google Drive', 'ok');
+        }
+    }).catch(function(err) {
+        // File might not exist yet or empty
+        console.log('📭 No data on Drive yet (file empty or not found)');
+        return null;
+    });
+}
+
+// ===== IMPORT DATA FROM DRIVE =====
+function importDriveData(data) {
+    if (data.items) items = data.items;
+    if (data.products) products = data.products;
+    if (data.company) company = data.company;
+    if (data.customers) customers = data.customers;
+    if (data.suppliers) suppliers = data.suppliers;
+    if (data.purchases) purchases = data.purchases;
+    if (data.sales) sales = data.sales;
+    if (data.custLedger) custLedger = data.custLedger;
+    if (data.supLedger) supLedger = data.supLedger;
+    if (data.settings) settings = data.settings;
+    if (data.globalCategories) globalCategories = data.globalCategories;
+    if (data.plugins) plugins = data.plugins;
+    
+    _skipDriveSync = true;
+    saveAll(true);
+    _skipDriveSync = false;
+    renderAll();
+    console.log('✅ Data imported from Drive');
+}
+
+// ===== MANUAL SYNC =====
+function manualSyncToDrive() {
+    if (!gdriveLoggedIn) {
+        showToast('❌ Not connected to Google Drive', 'err');
+        return;
+    }
+    if (!navigator.onLine) {
+        showToast('❌ No internet connection', 'err');
+        return;
+    }
+    var data = {
+        items: items,
+        products: products,
+        company: company,
+        customers: customers,
+        suppliers: suppliers,
+        purchases: purchases,
+        sales: sales,
+        custLedger: custLedger,
+        supLedger: supLedger,
+        settings: settings,
+        globalCategories: globalCategories,
+        plugins: plugins
+    };
+    showToast('⏳ Syncing to Drive...', 'info', 2000);
+    uploadToDrive(gdriveFileId, data).then(function() {
+        showToast('✅ Data manually synced to Drive', 'ok');
+    }).catch(function(err) {
+        showToast('❌ Sync failed: ' + err.message, 'err');
+    });
+}
+
+// ===== RENDER ALL FUNCTION =====
+function renderAll() {
+    renderItemTable();
+    renderProductGrid();
+    renderDashboard();
+    renderVariations();
+    renderVariationQueue();
+    renderProdImages();
+    populateItemSelect();
+    populateExportSelect();
+    renderStockTable();
+    renderSalesHistory();
+    renderCustomerLedger();
+    renderSupplierLedger();
+    renderWalkinLedger();
+    renderItemsList();
+    renderCategoryManager();
+    populateCategorySelects();
+    updateStats();
+    updateMiniStats();
+    updateQuickStatsInSettings();
+    updateAIStats();
+}
+
+// ===== INITIALIZE GOOGLE DRIVE ON LOAD =====
+// This will run after the page loads
+console.log('🚀 Initializing Google Drive...');
+
+// Wait for DOM and all scripts to load
+if (document.readyState === 'complete') {
+    setTimeout(initGoogleDrive, 1000);
+} else {
+    document.addEventListener('readystatechange', function() {
+        if (document.readyState === 'complete') {
+            setTimeout(initGoogleDrive, 1000);
+        }
+    });
+}
+
+// Also try to initialize if gapi loads later
+if (typeof gapi !== 'undefined') {
+    // Already loaded
+} else {
+    // Wait for gapi to load
+    var gapiCheckInterval = setInterval(function() {
+        if (typeof gapi !== 'undefined') {
+            clearInterval(gapiCheckInterval);
+            console.log('✅ GAPI detected, initializing...');
+            initGoogleDrive();
+        }
+    }, 500);
+}
+
+// ===== OVERRIDE SAVEALL TO AUTO-SYNC TO DRIVE =====
+// We'll wrap the existing saveAll to add Drive sync
+var originalSaveAllFn = saveAll;
+saveAll = function(silent) {
+    // Call original saveAll
+    if (typeof originalSaveAllFn === 'function') {
+        originalSaveAllFn(silent);
+    }
+    
+    // If logged in and online, sync to Drive
+    if (!_skipDriveSync && gdriveLoggedIn && navigator.onLine && gdriveFileId && gdriveAccessToken) {
+        var data = {
+            items: items,
+            products: products,
+            company: company,
+            customers: customers,
+            suppliers: suppliers,
+            purchases: purchases,
+            sales: sales,
+            custLedger: custLedger,
+            supLedger: supLedger,
+            settings: settings,
+            globalCategories: globalCategories,
+            plugins: plugins
+        };
+        uploadToDrive(gdriveFileId, data).catch(function(err) {
+            console.warn('⚠️ Auto-sync to Drive failed:', err);
+        });
+    }
+};
+
+console.log('✅ Google Drive sync module loaded');
     </script>
 </body>
 </html>
