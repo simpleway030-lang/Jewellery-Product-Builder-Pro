@@ -8881,7 +8881,8 @@
         setTimeout(function() {
             initGoogleDrive();
         }, 2000);
- // ==================== GOOGLE DRIVE SYNC (FIXED with better error handling) ====================
+
+        // ==================== GOOGLE DRIVE SYNC (FIXED - No auto-logout on refresh) ====================
 const CLIENT_ID = '169816348216-0jfq6r8gm83fc2a7lhbg1g1c1ct644ro.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const FILE_NAME = 'jewellery_data.json';
@@ -8893,9 +8894,13 @@ var gdriveLoggedIn = false;
 var gdriveFileId = null;
 var gdriveAccessToken = null;
 var _skipDriveSync = false;
+var _driveInitAttempted = false;
 
 // ===== MAIN INIT =====
 function initGoogleDrive() {
+    if (_driveInitAttempted) return;
+    _driveInitAttempted = true;
+    
     if (typeof gapi === 'undefined') {
         console.warn('⏳ GAPI not loaded, waiting...');
         setTimeout(initGoogleDrive, 1000);
@@ -8908,10 +8913,12 @@ function initGoogleDrive() {
         }).then(function() {
             gapiInitedDrive = true;
             console.log('✅ GAPI initialized');
-            checkGdriveAuth();
+            // Check auth after a small delay to ensure everything is ready
+            setTimeout(checkGdriveAuth, 500);
         }).catch(function(err) {
             console.error('❌ GAPI init error:', err);
             showToast('⚠️ Google API init failed. Please refresh.', 'err');
+            _driveInitAttempted = false;
         });
     });
 
@@ -8950,7 +8957,6 @@ function handleAuthCallback(resp) {
     localStorage.setItem('gdrive_token', gdriveAccessToken);
     updateGdriveUI(true);
     showToast('✅ Connected to Google Drive', 'ok');
-    // Now find or create file
     findOrCreateDriveFile().then(function(fileId) {
         gdriveFileId = fileId;
         if (fileId) {
@@ -8959,39 +8965,62 @@ function handleAuthCallback(resp) {
     });
 }
 
-// ===== CHECK EXISTING AUTH =====
+// ===== CHECK EXISTING AUTH (Improved - no auto-logout) =====
 function checkGdriveAuth() {
     var token = localStorage.getItem('gdrive_token');
     if (!token) {
         console.log('ℹ️ No token found.');
+        updateGdriveUI(false);
         return;
     }
-    console.log('🔑 Found token, validating...');
+    console.log('🔑 Found token, checking validity...');
     gdriveAccessToken = token;
     gdriveLoggedIn = true;
     updateGdriveUI(true);
-    // Validate token by attempting to list files
-    findOrCreateDriveFile().then(function(fileId) {
-        if (fileId) {
+    
+    // Try to validate token by listing files
+    gapi.client.drive.files.list({
+        pageSize: 1,
+        fields: 'files(id)',
+    }).then(function(response) {
+        // Token is valid
+        console.log('✅ Token is valid');
+        // Now find or create the actual file
+        findOrCreateDriveFile().then(function(fileId) {
             gdriveFileId = fileId;
-            loadFromDrive();
-        } else {
-            // Token invalid or file issue
-            console.warn('⚠️ Token validation failed or file not accessible.');
-            logoutGoogleDrive(); // This clears token and logs out
-            showToast('🔑 Session expired. Please reconnect.', 'info');
-        }
+            if (fileId) {
+                loadFromDrive();
+            }
+        });
     }).catch(function(err) {
-        console.error('❌ Token validation error:', err);
-        logoutGoogleDrive();
-        showToast('🔑 Session expired. Please reconnect.', 'info');
+        // Token might be expired or invalid
+        console.warn('⚠️ Token validation failed:', err);
+        // Only logout if it's a clear auth error (401 or 403)
+        if (err.status === 401 || err.status === 403) {
+            console.log('🔑 Token expired/invalid. Logging out.');
+            logoutGoogleDrive();
+            showToast('🔑 Session expired. Please reconnect.', 'info');
+        } else {
+            // Network or other error - keep the token but show a warning
+            console.warn('⚠️ Could not validate token due to network error. Keeping token.');
+            // Try to load anyway - might work on retry
+            findOrCreateDriveFile().then(function(fileId) {
+                gdriveFileId = fileId;
+                if (fileId) {
+                    loadFromDrive();
+                }
+            }).catch(function() {
+                // If still fails, show reconnect option
+                showToast('⚠️ Could not connect to Drive. Click "Sync Now" to retry.', 'info');
+            });
+        }
     });
 }
 
 // ===== LOGIN/LOGOUT =====
 function loginGoogleDrive() {
     if (!tokenClientDrive) {
-        showToast('⏳ Google API not ready. Please wait and try again.', 'err');
+        showToast('⏳ Google API not ready. Please wait.', 'err');
         return;
     }
     tokenClientDrive.requestAccessToken({ prompt: 'consent' });
@@ -9052,7 +9081,6 @@ function findOrCreateDriveFile() {
             console.log('📄 Found existing file:', gdriveFileId);
             return gdriveFileId;
         } else {
-            // Create new file
             var fileMetadata = { name: FILE_NAME, mimeType: 'application/json' };
             return gapi.client.drive.files.create({
                 resource: fileMetadata,
@@ -9060,7 +9088,6 @@ function findOrCreateDriveFile() {
             }).then(function(createResponse) {
                 gdriveFileId = createResponse.result.id;
                 console.log('📄 Created new file:', gdriveFileId);
-                // Initialize with empty data
                 return uploadToDrive(gdriveFileId, {}).then(function() {
                     return gdriveFileId;
                 });
@@ -9068,7 +9095,6 @@ function findOrCreateDriveFile() {
         }
     }).catch(function(err) {
         console.error('❌ Drive file error:', err);
-        // If error is about token, logout automatically
         if (err.status === 401 || err.status === 403) {
             logoutGoogleDrive();
             showToast('🔑 Session expired. Please reconnect.', 'info');
@@ -9079,7 +9105,7 @@ function findOrCreateDriveFile() {
     });
 }
 
-// ===== UPLOAD/LOAD FUNCTIONS (unchanged) =====
+// ===== UPLOAD/LOAD FUNCTIONS =====
 function uploadToDrive(fileId, data) {
     if (!fileId || !gdriveAccessToken) return Promise.resolve(null);
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -9153,7 +9179,6 @@ function manualSyncToDrive() {
 }
 
 function renderAll() {
-    // all render functions
     renderItemTable(); renderProductGrid(); renderDashboard();
     renderVariations(); renderVariationQueue(); renderProdImages();
     populateItemSelect(); populateExportSelect(); renderStockTable();
