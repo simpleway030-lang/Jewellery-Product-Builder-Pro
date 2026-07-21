@@ -8882,7 +8882,7 @@
             initGoogleDrive();
         }, 2000);
 
-     // ==================== GOOGLE DRIVE SYNC (with Silent Refresh) ====================
+    // ==================== GOOGLE DRIVE SYNC (No Silent Refresh - Simple) ====================
 const CLIENT_ID = '169816348216-0jfq6r8gm83fc2a7lhbg1g1c1ct644ro.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const FILE_NAME = 'jewellery_data.json';
@@ -8946,7 +8946,6 @@ function initGoogleDrive() {
 function handleAuthCallback(resp) {
     if (resp.error) {
         console.error('❌ Auth error:', resp);
-        // If it's a silent refresh failure, we may not want to show toast
         if (resp.error !== 'popup_closed_by_user') {
             showToast('❌ Google Drive auth failed: ' + (resp.error_description || resp.error), 'err');
         }
@@ -8966,7 +8965,7 @@ function handleAuthCallback(resp) {
     });
 }
 
-// ===== CHECK EXISTING AUTH with Silent Refresh =====
+// ===== CHECK EXISTING AUTH (Simple: if invalid, just logout) =====
 function checkGdriveAuth() {
     var token = localStorage.getItem('gdrive_token');
     if (!token) {
@@ -8996,22 +8995,10 @@ function checkGdriveAuth() {
         // Token invalid or expired
         console.warn('⚠️ Token validation failed:', err);
         if (err.status === 401 || err.status === 403) {
-            console.log('🔄 Token expired. Attempting silent refresh...');
-            // Try to refresh token silently
-            if (tokenClientDrive) {
-                tokenClientDrive.requestAccessToken({ prompt: '' });
-            } else {
-                // Token client not ready, wait and retry
-                setTimeout(function() {
-                    if (tokenClientDrive) {
-                        tokenClientDrive.requestAccessToken({ prompt: '' });
-                    } else {
-                        console.warn('❌ Token client not available. Logging out.');
-                        logoutGoogleDrive();
-                        showToast('🔑 Session expired. Please reconnect.', 'info');
-                    }
-                }, 1000);
-            }
+            // Token expired - logout and ask to reconnect
+            console.log('🔑 Token expired. Logging out.');
+            logoutGoogleDrive();
+            showToast('🔑 Session expired. Please reconnect.', 'info');
         } else {
             // Network error - keep token but show warning
             console.warn('⚠️ Network error validating token. Keeping token.');
@@ -9107,10 +9094,8 @@ function findOrCreateDriveFile() {
     }).catch(function(err) {
         console.error('❌ Drive file error:', err);
         if (err.status === 401 || err.status === 403) {
-            // Token invalid during file operation, try silent refresh
-            if (tokenClientDrive) {
-                tokenClientDrive.requestAccessToken({ prompt: '' });
-            }
+            logoutGoogleDrive();
+            showToast('🔑 Session expired. Please reconnect.', 'info');
         } else {
             showToast('❌ Google Drive file error: ' + (err.message || 'Unknown error'), 'err');
         }
