@@ -9075,13 +9075,58 @@ function uploadToDrive(fileId, data) {
         throw err;
     });
 }
+// ===================== নতুন সেফ মার্জ কোড (এখান থেকে কপি করুন) =====================
+
+function mergeItems(localArr, remoteArr) {
+    let map = new Map();
+    localArr.forEach(item => map.set((item.category||'')+'|'+(item.name||'')+'|'+(item.size||''), item));
+    remoteArr.forEach(item => {
+        let key = (item.category||'')+'|'+(item.name||'')+'|'+(item.size||'');
+        if (!map.has(key)) map.set(key, item);
+    });
+    return Array.from(map.values());
+}
+function mergeById(localArr, remoteArr) {
+    let map = new Map();
+    localArr.forEach(p => map.set(p.id, p));
+    remoteArr.forEach(p => { if (!map.has(p.id)) map.set(p.id, p); });
+    return Array.from(map.values());
+}
+function mergeCategories(localArr, remoteArr) {
+    return Array.from(new Set([...localArr, ...remoteArr]));
+}
+
+function importDriveData(data) {
+    if (!data || typeof data !== 'object') return;
+    if (data.items) items = mergeItems(items, data.items);
+    if (data.products) products = mergeById(products, data.products);
+    if (data.company) company = Object.assign({}, company, data.company);
+    if (data.customers) customers = mergeById(customers, data.customers);
+    if (data.suppliers) suppliers = mergeById(suppliers, data.suppliers);
+    if (data.purchases) purchases = mergeById(purchases, data.purchases);
+    if (data.sales) sales = mergeById(sales, data.sales);
+    if (data.custLedger) custLedger = mergeById(custLedger, data.custLedger);
+    if (data.supLedger) supLedger = mergeById(supLedger, data.supLedger);
+    if (data.settings) settings = Object.assign({}, settings, data.settings);
+    if (data.globalCategories) globalCategories = mergeCategories(globalCategories, data.globalCategories);
+    if (data.plugins) {
+        let map = new Map();
+        plugins.forEach(p => map.set(p.id, p));
+        data.plugins.forEach(p => { if (!map.has(p.id)) map.set(p.id, p); });
+        plugins = Array.from(map.values());
+    }
+    _skipDriveSync = true;
+    saveAll(true);
+    _skipDriveSync = false;
+    renderAll();
+    showToast('✅ Drive থেকে সেফ মার্জ সম্পন্ন! কোনো ডেটা রিমুভ হয়নি।', 'ok');
+}
 
 function loadFromDrive() {
-    // First ensure we have a file ID
     if (!gdriveFileId) {
         return findOrCreateDriveFile().then(function(fileId) {
             gdriveFileId = fileId;
-            return loadFromDrive(); // recursive call now that we have fileId
+            return loadFromDrive();
         });
     }
     if (!gdriveAccessToken) return Promise.resolve();
@@ -9090,21 +9135,24 @@ function loadFromDrive() {
         alt: 'media',
     }).then(function(response) {
         var data = response.result;
-        if (data && typeof data === 'object') {
+        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
             importDriveData(data);
-            showToast('🔄 Data synced from Google Drive', 'ok');
+        } else {
+            showToast('📭 Drive ফাইল খালি, মার্জ করার কিছু নেই।', 'info');
         }
     }).catch(function(err) {
-        console.log('📭 No data on Drive yet.');
+        console.warn('Drive লোড করতে সমস্যা:', err);
         if (err.status === 401 || err.status === 403) {
-            // Auth error during load: logout and ask to reconnect
             logoutGoogleDrive();
-            showToast('🔑 Session expired. Please reconnect.', 'info');
-            throw err;
+            showToast('🔑 সেশন শেষ, পুনরায় কানেক্ট করুন।', 'info');
+        } else {
+            showToast('⚠️ Drive থেকে লোড করা যায়নি, স্থানীয় ডেটা অক্ষত আছে।', 'err');
         }
         return null;
     });
 }
+// ===================== নতুন কোড শেষ =====================
+
 
 function importDriveData(data) {
     if (data.items) items = data.items;
