@@ -22,7 +22,7 @@
         :root {
             --bg: #f5f5f7;
             --card: rgba(255, 255, 255, 0.72);
-            --card-solid: #ffffff;
+            --card-solid: #ffffff;F
             --text: #1d1d1f;
             --muted: #6e6e73;
             --muted-2: #86868b;
@@ -8882,7 +8882,7 @@
             initGoogleDrive();
         }, 2000);
 
-      // ==================== GOOGLE DRIVE SYNC (No silent refresh, no validation on load) ====================
+      // ==================== GOOGLE DRIVE SYNC (Final - No validation on load) ====================
 const CLIENT_ID = '169816348216-0jfq6r8gm83fc2a7lhbg1g1c1ct644ro.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const FILE_NAME = 'jewellery_data.json';
@@ -8909,30 +8909,15 @@ function initGoogleDrive() {
         }).then(function() {
             gapiInitedDrive = true;
             console.log('✅ GAPI initialized');
-            // Check localStorage for token
+            // Just check if token exists in localStorage
             var token = localStorage.getItem('gdrive_token');
             if (token) {
                 gdriveAccessToken = token;
                 gdriveLoggedIn = true;
                 updateGdriveUI(true);
-                console.log('🔑 Token found, attempting to load data...');
-                // Try to load data; if fails due to auth, we clear token and set not connected
-                findOrCreateDriveFile().then(function(fileId) {
-                    gdriveFileId = fileId;
-                    if (fileId) {
-                        return loadFromDrive();
-                    }
-                }).catch(function(err) {
-                    // If error is auth related (401/403), clear token and logout
-                    if (err && (err.status === 401 || err.status === 403)) {
-                        console.warn('⚠️ Token invalid, clearing...');
-                        logoutGoogleDrive();
-                        showToast('🔑 Session expired. Please reconnect.', 'info');
-                    } else {
-                        console.warn('⚠️ Drive error:', err);
-                        showToast('⚠️ Could not connect to Drive. Click "Sync Now" to retry.', 'info');
-                    }
-                });
+                console.log('🔑 Token found. UI set to Connected.');
+                // Do NOT validate token or load data here; just set UI.
+                // This prevents any popup or logout on refresh.
             } else {
                 updateGdriveUI(false);
                 console.log('ℹ️ No token found.');
@@ -8980,18 +8965,8 @@ function handleAuthCallback(resp) {
     localStorage.setItem('gdrive_token', gdriveAccessToken);
     updateGdriveUI(true);
     showToast('✅ Connected to Google Drive', 'ok');
-    // Now load data
-    findOrCreateDriveFile().then(function(fileId) {
-        gdriveFileId = fileId;
-        if (fileId) {
-            return loadFromDrive();
-        }
-    }).catch(function(err) {
-        if (err && (err.status === 401 || err.status === 403)) {
-            logoutGoogleDrive();
-            showToast('🔑 Session expired. Please reconnect.', 'info');
-        }
-    });
+    // After login, load data from Drive
+    loadFromDrive();
 }
 
 // ===== LOGIN/LOGOUT =====
@@ -9102,7 +9077,14 @@ function uploadToDrive(fileId, data) {
 }
 
 function loadFromDrive() {
-    if (!gdriveFileId || !gdriveAccessToken) return Promise.resolve();
+    // First ensure we have a file ID
+    if (!gdriveFileId) {
+        return findOrCreateDriveFile().then(function(fileId) {
+            gdriveFileId = fileId;
+            return loadFromDrive(); // recursive call now that we have fileId
+        });
+    }
+    if (!gdriveAccessToken) return Promise.resolve();
     return gapi.client.drive.files.get({
         fileId: gdriveFileId,
         alt: 'media',
@@ -9115,7 +9097,10 @@ function loadFromDrive() {
     }).catch(function(err) {
         console.log('📭 No data on Drive yet.');
         if (err.status === 401 || err.status === 403) {
-            throw err; // propagate auth errors
+            // Auth error during load: logout and ask to reconnect
+            logoutGoogleDrive();
+            showToast('🔑 Session expired. Please reconnect.', 'info');
+            throw err;
         }
         return null;
     });
@@ -9144,19 +9129,13 @@ function importDriveData(data) {
 function manualSyncToDrive() {
     if (!gdriveLoggedIn) { showToast('❌ Not connected to Google Drive', 'err'); return; }
     if (!navigator.onLine) { showToast('❌ No internet connection', 'err'); return; }
-    var data = {
-        items, products, company, customers, suppliers, purchases,
-        sales, custLedger, supLedger, settings, globalCategories, plugins
-    };
-    showToast('⏳ Syncing to Drive...', 'info', 2000);
-    uploadToDrive(gdriveFileId, data).then(function() {
-        showToast('✅ Data manually synced to Drive', 'ok');
-    }).catch(function(err) {
+    // We attempt to load from Drive (which will also find/create file)
+    loadFromDrive().catch(function(err) {
         if (err && (err.status === 401 || err.status === 403)) {
             logoutGoogleDrive();
             showToast('🔑 Session expired. Please reconnect.', 'err');
         } else {
-            showToast('❌ Sync failed: ' + err.message, 'err');
+            showToast('❌ Sync failed: ' + (err.message || 'Unknown error'), 'err');
         }
     });
 }
