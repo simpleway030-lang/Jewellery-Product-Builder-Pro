@@ -8882,7 +8882,7 @@
             initGoogleDrive();
         }, 2000);
 
-        // ==================== GOOGLE DRIVE SYNC (Simplified - No validation on load) ====================
+      // ==================== GOOGLE DRIVE SYNC (No silent refresh, no validation on load) ====================
 const CLIENT_ID = '169816348216-0jfq6r8gm83fc2a7lhbg1g1c1ct644ro.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const FILE_NAME = 'jewellery_data.json';
@@ -8909,26 +8909,27 @@ function initGoogleDrive() {
         }).then(function() {
             gapiInitedDrive = true;
             console.log('✅ GAPI initialized');
-            // Check if we have a token in localStorage
+            // Check localStorage for token
             var token = localStorage.getItem('gdrive_token');
             if (token) {
                 gdriveAccessToken = token;
                 gdriveLoggedIn = true;
                 updateGdriveUI(true);
-                console.log('🔑 Token found, attempting to load from Drive...');
-                // Try to find or create file and load data
+                console.log('🔑 Token found, attempting to load data...');
+                // Try to load data; if fails due to auth, we clear token and set not connected
                 findOrCreateDriveFile().then(function(fileId) {
                     gdriveFileId = fileId;
                     if (fileId) {
-                        loadFromDrive();
+                        return loadFromDrive();
                     }
                 }).catch(function(err) {
-                    // If error is auth related, logout
+                    // If error is auth related (401/403), clear token and logout
                     if (err && (err.status === 401 || err.status === 403)) {
+                        console.warn('⚠️ Token invalid, clearing...');
                         logoutGoogleDrive();
                         showToast('🔑 Session expired. Please reconnect.', 'info');
                     } else {
-                        console.warn('⚠️ Could not access Drive:', err);
+                        console.warn('⚠️ Drive error:', err);
                         showToast('⚠️ Could not connect to Drive. Click "Sync Now" to retry.', 'info');
                     }
                 });
@@ -8942,7 +8943,7 @@ function initGoogleDrive() {
         });
     });
 
-    // GIS setup
+    // GIS setup for OAuth login
     if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
         tokenClientDrive = google.accounts.oauth2.initTokenClient({
             client_id: CLIENT_ID,
@@ -8964,7 +8965,7 @@ function initGoogleDrive() {
     }
 }
 
-// ===== AUTH CALLBACK =====
+// ===== AUTH CALLBACK (called after user logs in via popup) =====
 function handleAuthCallback(resp) {
     if (resp.error) {
         console.error('❌ Auth error:', resp);
@@ -8979,10 +8980,11 @@ function handleAuthCallback(resp) {
     localStorage.setItem('gdrive_token', gdriveAccessToken);
     updateGdriveUI(true);
     showToast('✅ Connected to Google Drive', 'ok');
+    // Now load data
     findOrCreateDriveFile().then(function(fileId) {
         gdriveFileId = fileId;
         if (fileId) {
-            loadFromDrive();
+            return loadFromDrive();
         }
     }).catch(function(err) {
         if (err && (err.status === 401 || err.status === 403)) {
@@ -9042,8 +9044,7 @@ function updateGdriveUI(loggedIn) {
 // ===== FIND OR CREATE DRIVE FILE =====
 function findOrCreateDriveFile() {
     if (!gdriveAccessToken) {
-        console.warn('⚠️ No access token');
-        return Promise.reject('No token');
+        return Promise.reject(new Error('No token'));
     }
     return gapi.client.drive.files.list({
         q: "name='" + FILE_NAME + "' and trashed=false",
@@ -9070,7 +9071,7 @@ function findOrCreateDriveFile() {
         }
     }).catch(function(err) {
         console.error('❌ Drive file error:', err);
-        throw err; // re-throw so caller can handle
+        throw err; // propagate
     });
 }
 
@@ -9087,7 +9088,12 @@ function uploadToDrive(fileId, data) {
         headers: { 'Authorization': 'Bearer ' + gdriveAccessToken },
         body: form,
     }).then(function(response) {
-        if (!response.ok) throw new Error('Upload failed: ' + response.statusText);
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                throw { status: response.status, message: 'Auth error' };
+            }
+            throw new Error('Upload failed: ' + response.statusText);
+        }
         return response.json();
     }).catch(function(err) {
         console.error('❌ Upload error:', err);
@@ -9108,9 +9114,8 @@ function loadFromDrive() {
         }
     }).catch(function(err) {
         console.log('📭 No data on Drive yet.');
-        // If 401/403, re-throw so caller can handle
         if (err.status === 401 || err.status === 403) {
-            throw err;
+            throw err; // propagate auth errors
         }
         return null;
     });
