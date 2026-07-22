@@ -14,6 +14,118 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js">
+        // =========== সাইলেন্ট টোকেন রিফ্রেশ (কখনো ডিসকানেক্ট হবে না) ===========
+function silentRefreshToken() {
+    return new Promise((resolve, reject) => {
+        if (!tokenClientDrive) {
+            reject(new Error('Token client not ready'));
+            return;
+        }
+        // 'prompt: ""' দিলে পপআপ আসবে না, ব্যাকগ্রাউন্ডে রিফ্রেশ হবে
+        tokenClientDrive.requestAccessToken({ prompt: '' })
+            .then(function(resp) {
+                if (resp.error) {
+                    reject(new Error(resp.error));
+                    return;
+                }
+                gdriveAccessToken = resp.access_token;
+                localStorage.setItem('gdrive_token', gdriveAccessToken);
+                gdriveLoggedIn = true;
+                updateGdriveUI(true);
+                console.log('✅ টোকেন সাইলেন্টলি রিফ্রেশ হয়েছে!');
+                resolve(gdriveAccessToken);
+            })
+            .catch(reject);
+    });
+}
+
+// =========== uploadToDrive ওভাররাইড (401 পেলে অটো রিফ্রেশ) ===========
+var _origUpload = uploadToDrive;
+uploadToDrive = function(fileId, data, retry) {
+    retry = retry || 0;
+    if (!fileId || !gdriveAccessToken) return Promise.resolve(null);
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var metadata = { name: FILE_NAME, mimeType: 'application/json' };
+    var form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', blob);
+    return fetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=multipart', {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + gdriveAccessToken },
+        body: form,
+    }).then(function(response) {
+        if (response.status === 401 || response.status === 403) {
+            if (retry < 2) {
+                console.log('🔑 টোকন এক্সপায়ার, সাইলেন্টলি রিফ্রেশ করা হচ্ছে...');
+                return silentRefreshToken().then(function() {
+                    return uploadToDrive(fileId, data, retry + 1);
+                });
+            }
+            throw { status: response.status, message: 'Auth error' };
+        }
+        if (!response.ok) throw new Error('Upload failed: ' + response.statusText);
+        return response.json();
+    });
+};
+
+// =========== loadFromDrive ওভাররাইড (401 পেলে অটো রিফ্রেশ) ===========
+var _origLoad = loadFromDrive;
+loadFromDrive = function(retry) {
+    retry = retry || 0;
+    if (!gdriveFileId) {
+        return findOrCreateDriveFile().then(function(fileId) {
+            gdriveFileId = fileId;
+            return loadFromDrive(0);
+        });
+    }
+    if (!gdriveAccessToken) return Promise.resolve();
+    return gapi.client.drive.files.get({
+        fileId: gdriveFileId,
+        alt: 'media',
+    }).then(function(response) {
+        var data = response.result;
+        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+            importDriveData(data);
+        } else {
+            showToast('📭 Drive ফাইল খালি।', 'info');
+        }
+    }).catch(function(err) {
+        if ((err.status === 401 || err.status === 403) && retry < 2) {
+            console.log('🔑 লোড করার সময় টোকন এক্সপায়ার, রিফ্রেশ করা হচ্ছে...');
+            return silentRefreshToken().then(function() {
+                return loadFromDrive(retry + 1);
+            });
+        }
+        console.warn('Drive লোড করতে সমস্যা:', err);
+        if (err.status === 401 || err.status === 403) {
+            showToast('🔑 Session expired. Reconnecting silently...', 'info');
+        } else {
+            showToast('⚠️ Drive থেকে লোড করা যায়নি: ' + (err.message || 'Unknown'), 'err');
+        }
+        return null;
+    });
+};
+
+// =========== প্রতি ৪৫ মিনিট পর পর অটো রিফ্রেশ (এক্সপায়ার হওয়ার আগেই) ===========
+function startAutoRefresh() {
+    setInterval(function() {
+        if (gdriveLoggedIn) {
+            console.log('🔄 টোকন অটো-রিফ্রেশ করা হচ্ছে...');
+            silentRefreshToken().catch(function(e) {
+                console.warn('অটো-রিফ্রেশ ব্যর্থ:', e);
+            });
+        }
+    }, 45 * 60 * 1000); // ৪৫ মিনিট
+}
+
+// অটো রিফ্রেশ স্টার্ট করুন (পেজ লোড হলে)
+if (document.readyState === 'complete') {
+    startAutoRefresh();
+} else {
+    document.addEventListener('readystatechange', function() {
+        if (document.readyState === 'complete') startAutoRefresh();
+    });
+}
     </script>
     <!-- Google APIs for Drive -->
     <script src="https://apis.google.com/js/api.js"></script>
