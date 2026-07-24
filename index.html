@@ -8743,6 +8743,7 @@ var _refreshInFlight = null; // dedupe concurrent silent-refresh calls
 
 // ===== MAIN INIT =====
 var _gapiWaitAttempts = 0;
+var _driveInitStarted = false;
 function initGoogleDrive() {
     if (typeof gapi === 'undefined') {
         _gapiWaitAttempts++;
@@ -8756,6 +8757,8 @@ function initGoogleDrive() {
         }
         return;
     }
+    if (_driveInitStarted) return; // two separate triggers can both fire once gapi is ready — only run once
+    _driveInitStarted = true;
     _gapiWaitAttempts = 0;
     gapi.load('client', function() {
         gapi.client.init({
@@ -8770,6 +8773,7 @@ function initGoogleDrive() {
                 gdriveAccessToken = token;
                 gdriveTokenExpiry = expiry;
                 gdriveLoggedIn = true;
+                gapi.client.setToken({ access_token: token }); // <-- this was missing: without it every gapi.client.drive.* call went out unauthenticated and Google returned 403 PERMISSION_DENIED
                 updateGdriveUI(true);
                 console.log('🔑 Token found. UI set to Connected.');
                 // If the saved token is already expired (or close to it), refresh it
@@ -8827,6 +8831,7 @@ function handleAuthCallback(resp) {
     gdriveLoggedIn = true;
     localStorage.setItem('gdrive_token', gdriveAccessToken);
     localStorage.setItem('gdrive_token_expiry', String(gdriveTokenExpiry));
+    if (typeof gapi !== 'undefined' && gapi.client) gapi.client.setToken({ access_token: gdriveAccessToken });
     updateGdriveUI(true);
     showToast('✅ Connected to Google Drive', 'ok');
     startTokenAutoRefresh();
@@ -8856,6 +8861,7 @@ function silentRefreshToken() {
             gdriveTokenExpiry = Date.now() + (parseInt(resp.expires_in, 10) || 3600) * 1000;
             localStorage.setItem('gdrive_token', gdriveAccessToken);
             localStorage.setItem('gdrive_token_expiry', String(gdriveTokenExpiry));
+            if (typeof gapi !== 'undefined' && gapi.client) gapi.client.setToken({ access_token: gdriveAccessToken });
             gdriveLoggedIn = true;
             updateGdriveUI(true);
             console.log('✅ Token silently refreshed, expires in', Math.round((gdriveTokenExpiry - Date.now()) / 60000), 'min');
@@ -8920,6 +8926,7 @@ function logoutGoogleDrive() {
     gdriveAccessToken = null;
     gdriveTokenExpiry = 0;
     gdriveFileId = null;
+    if (typeof gapi !== 'undefined' && gapi.client) gapi.client.setToken(null);
     if (_tokenAutoRefreshInterval) { clearInterval(_tokenAutoRefreshInterval); _tokenAutoRefreshInterval = null; }
     updateGdriveUI(false);
     showToast('🔒 Disconnected from Google Drive', 'ok');
