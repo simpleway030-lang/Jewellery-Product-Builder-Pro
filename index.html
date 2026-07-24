@@ -2,8 +2,16 @@
 <html lang="bn">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <title>💎 Jewellery Manager Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Jewellery Pro">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -381,6 +389,104 @@
             }
             .tab .tab-icon {
                 font-size: 12px;
+            }
+        }
+        .hamburger-btn {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: none;
+            background: var(--border-soft);
+            color: var(--text);
+            font-size: 19px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex: none;
+        }
+        .mobile-drawer-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 300;
+            opacity: 0;
+            transition: opacity .25s ease;
+        }
+        .mobile-drawer-backdrop.open {
+            display: block;
+            opacity: 1;
+        }
+        .mobile-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 82%;
+            max-width: 320px;
+            background: var(--card-solid);
+            z-index: 301;
+            transform: translateX(-105%);
+            transition: transform .28s cubic-bezier(.2,.9,.3,1.1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 6px 0 24px rgba(0,0,0,0.18);
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .mobile-drawer.open {
+            transform: translateX(0);
+        }
+        .mobile-drawer-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 16px;
+            border-bottom: 1px solid var(--border-soft);
+        }
+        .mobile-drawer-links {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 10px;
+        }
+        .mobile-drawer-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 14px;
+            border-radius: 13px;
+            font-weight: 600;
+            font-size: 14.5px;
+            color: var(--text);
+            cursor: pointer;
+            margin-bottom: 3px;
+        }
+        .mobile-drawer-link .tab-icon {
+            font-size: 17px;
+            width: 22px;
+            text-align: center;
+        }
+        .mobile-drawer-link.active {
+            background: var(--accent);
+            color: #fff;
+        }
+        .mobile-drawer-link:not(.active):active {
+            background: var(--border-soft);
+        }
+        .mobile-drawer-foot {
+            padding: 14px 16px;
+            border-top: 1px solid var(--border-soft);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        @media(max-width:700px) {
+            .hamburger-btn {
+                display: flex;
+            }
+            .tabs {
+                display: none;
             }
         }
         @media(max-width:560px) {
@@ -3133,6 +3239,7 @@
 <body>
     <div class="wrap">
         <header>
+            <button class="hamburger-btn" onclick="openMobileDrawer()" aria-label="Menu">☰</button>
             <div class="logo">JP</div>
             <div>
                 <h1>Jewellery Product Builder Pro</h1>
@@ -3144,6 +3251,33 @@
                 <span class="ai-badge" onclick="openAIChat()"><span class="sparkle">✨</span> AI Chat</span>
             </div>
         </header>
+        <div class="mobile-drawer-backdrop" id="mobileDrawerBackdrop" onclick="closeMobileDrawer()"></div>
+        <nav class="mobile-drawer" id="mobileDrawer">
+            <div class="mobile-drawer-head">
+                <div class="logo">JP</div>
+                <div>
+                    <div style="font-weight:800;">Jewellery Builder Pro</div>
+                    <div class="muted" style="font-size:12px;">Offline · full business</div>
+                </div>
+                <button class="icon-btn" onclick="closeMobileDrawer()" aria-label="Close menu" style="margin-left:auto;">✕</button>
+            </div>
+            <div class="mobile-drawer-links">
+                <div class="mobile-drawer-link active" data-tab="dashboard" onclick="mobileDrawerNav('dashboard')"><span class="tab-icon">📊</span> Dashboard</div>
+                <div class="mobile-drawer-link" data-tab="products" onclick="mobileDrawerNav('products')"><span class="tab-icon">💍</span> Gallery</div>
+                <div class="mobile-drawer-link" data-tab="builder" onclick="mobileDrawerNav('builder')"><span class="tab-icon">🛠</span> Builder</div>
+                <div class="mobile-drawer-link" data-tab="itemdb" onclick="mobileDrawerNav('itemdb')"><span class="tab-icon">📦</span> Items DB</div>
+                <div class="mobile-drawer-link" data-tab="itemslist" onclick="mobileDrawerNav('itemslist')"><span class="tab-icon">📋</span> All Items</div>
+                <div class="mobile-drawer-link" data-tab="inventory" onclick="mobileDrawerNav('inventory')"><span class="tab-icon">🏭</span> Inventory</div>
+                <div class="mobile-drawer-link" data-tab="billing" onclick="mobileDrawerNav('billing')"><span class="tab-icon">💳</span> Billing</div>
+                <div class="mobile-drawer-link" data-tab="ledger" onclick="mobileDrawerNav('ledger')"><span class="tab-icon">📒</span> Ledger</div>
+                <div class="mobile-drawer-link" data-tab="categories" onclick="mobileDrawerNav('categories')"><span class="tab-icon">🏷️</span> Categories</div>
+                <div class="mobile-drawer-link" data-tab="settings" onclick="mobileDrawerNav('settings')"><span class="tab-icon">⚙</span> Settings</div>
+            </div>
+            <div class="mobile-drawer-foot">
+                <button class="icon-btn" title="Toggle dark mode" onclick="toggleThemeMode()" style="width:auto;padding:10px 14px;">🌗 Theme</button>
+                <span class="ai-badge" onclick="openAIChat();closeMobileDrawer()">✨ AI Chat</span>
+            </div>
+        </nav>
         <div class="tabs">
             <div class="tab active" data-tab="dashboard"><span class="tab-icon">📊</span> Dashboard</div>
             <div class="tab" data-tab="products"><span class="tab-icon">💍</span> Gallery</div>
@@ -3268,7 +3402,7 @@
                                 <div class="section-title" style="font-size:15px;margin-bottom:8px;">🏷️ Variations (Categories)</div>
                                 <div class="note">Add a category (colour) as variation. Each can have its own stock.</div>
                                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-                                    <select id="varCategory" onchange="handleVarCategoryChange()" style="flex:2;min-width:140px;margin-top:0;padding:10px 12px;border-radius:11px;border:1px solid transparent;background:var(--border-soft);color:var(--text);outline:none;font-size:14px;">
+                                    <select id="varCategory" style="flex:2;min-width:140px;margin-top:0;padding:10px 12px;border-radius:11px;border:1px solid transparent;background:var(--border-soft);color:var(--text);outline:none;font-size:14px;">
                                         <option value="">Choose category</option>
                                     </select>
                                     <input id="varStock" type="number" min="0" value="0" placeholder="Stock" style="width:80px;margin-top:0">
@@ -3810,6 +3944,16 @@
     <div id="ledgerEntryModal" class="modal-backdrop"><div class="modal-box dark" style="max-width:460px"><div class="section-title" id="ledgerEntryTitle">Record</div><div id="ledgerEntryForm"></div><div style="margin-top:14px;text-align:right;display:flex;gap:10px;justify-content:flex-end"><button onclick="saveLedgerEntry()">💾 Save</button><button onclick="closeModal('ledgerEntryModal')" class="ghost">Cancel</button></div></div></div>
     <div id="dashboardDetailModal" class="modal-backdrop"><div class="modal-box dark" style="max-width:720px;"><div class="section-title" id="ddTitle">Details</div><div id="ddContent" style="margin-top:12px;"></div><div style="margin-top:16px;text-align:right;display:flex;gap:10px;justify-content:flex-end;"><button onclick="exportDetailPDF()" class="pdf-export-btn">📄 Export PDF</button><button class="ghost" onclick="closeModal('dashboardDetailModal')">Close</button></div></div></div>
     <!-- AI CHAT MODAL -->
+    <div id="inputPromptModal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:420px;padding:22px;">
+            <h2 id="inputPromptTitle" style="font-size:16px;margin:0 0 14px;">Enter value</h2>
+            <input id="inputPromptField" type="text" placeholder="">
+            <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+                <button class="ghost" onclick="_inputPromptResolve(null)">Cancel</button>
+                <button onclick="_inputPromptSubmit()">OK</button>
+            </div>
+        </div>
+    </div>
     <div id="aiChatModal" class="modal-backdrop chat-modal">
         <div class="modal-box dark">
             <div class="chat-header">
@@ -4269,19 +4413,52 @@
             return Array.from(all).sort(function(a, b) { return a.localeCompare(b); });
         }
 
+        // ===== IN-PAGE PROMPT (replaces window.prompt so it works reliably in
+        // Android WebView/APK wrappers and looks native inside the app instead
+        // of a browser popup) =====
+        var _inputPromptResolveFn = null;
+        function showInputPrompt(title, defaultValue) {
+            return new Promise(function(resolve) {
+                _inputPromptResolveFn = resolve;
+                $('inputPromptTitle').textContent = title || 'Enter value';
+                var field = $('inputPromptField');
+                field.value = defaultValue || '';
+                $('inputPromptModal').style.display = 'flex';
+                field.onkeydown = function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); _inputPromptSubmit(); }
+                    else if (e.key === 'Escape') { _inputPromptResolve(null); }
+                };
+                setTimeout(function() { field.focus(); field.select(); }, 60);
+            });
+        }
+        function _inputPromptSubmit() {
+            var val = $('inputPromptField').value.trim();
+            _inputPromptResolve(val || null);
+        }
+        function _inputPromptResolve(val) {
+            $('inputPromptModal').style.display = 'none';
+            if (_inputPromptResolveFn) {
+                var fn = _inputPromptResolveFn;
+                _inputPromptResolveFn = null;
+                fn(val);
+            }
+        }
+
         function addGlobalCategory(promptTitle) {
-            var name = (prompt(promptTitle || 'New category name (e.g. White, Rose Gold, Studded):') || '').trim();
-            if (!name) return null;
-            var exists = getAllCategories().some(function(c) { return c.toLowerCase() === name.toLowerCase(); });
-            if (!exists) { globalCategories.push(name);
-                saveAll(true); }
-            renderCategories();
-            populateProductCategoryFilter();
-            populateVarCategorySelect();
-            renderCategoryManager();
-            populateCategorySelects();
-            showToast(exists ? 'Category "' + name + '" already exists — selected' : 'Category "' + name + '" added', 'ok');
-            return name;
+            return showInputPrompt(promptTitle || 'New category name (e.g. White, Rose Gold, Studded):').then(function(raw) {
+                var name = (raw || '').trim();
+                if (!name) return null;
+                var exists = getAllCategories().some(function(c) { return c.toLowerCase() === name.toLowerCase(); });
+                if (!exists) { globalCategories.push(name);
+                    saveAll(true); }
+                renderCategories();
+                populateProductCategoryFilter();
+                populateVarCategorySelect();
+                renderCategoryManager();
+                populateCategorySelects();
+                showToast(exists ? 'Category "' + name + '" already exists — selected' : 'Category "' + name + '" added', 'ok');
+                return name;
+            });
         }
 
         function addGlobalCategoryFromSettings() {
@@ -4318,26 +4495,27 @@
         }
 
         function editCategoryName(oldName) {
-            var newName = prompt('Edit category name:', oldName);
-            if (!newName || newName.trim() === oldName) return;
-            var trimmed = newName.trim();
-            if (globalCategories.some(function(c) { return c.toLowerCase() === trimmed.toLowerCase() && c !== oldName; })) {
-                showToast('Category "' + trimmed + '" already exists', 'err');
-                return;
-            }
-            var idx = globalCategories.indexOf(oldName);
-            if (idx >= 0) globalCategories[idx] = trimmed;
-            items.forEach(function(it) { if (it.category === oldName) it.category = trimmed; });
-            products.forEach(function(p) {
-                (p.variations || []).forEach(function(v) { if (v.category === oldName) v.category = trimmed; });
+            showInputPrompt('Edit category name:', oldName).then(function(newName) {
+                if (!newName || newName.trim() === oldName) return;
+                var trimmed = newName.trim();
+                if (globalCategories.some(function(c) { return c.toLowerCase() === trimmed.toLowerCase() && c !== oldName; })) {
+                    showToast('Category "' + trimmed + '" already exists', 'err');
+                    return;
+                }
+                var idx = globalCategories.indexOf(oldName);
+                if (idx >= 0) globalCategories[idx] = trimmed;
+                items.forEach(function(it) { if (it.category === oldName) it.category = trimmed; });
+                products.forEach(function(p) {
+                    (p.variations || []).forEach(function(v) { if (v.category === oldName) v.category = trimmed; });
+                });
+                saveAll(true);
+                renderCategories();
+                populateProductCategoryFilter();
+                populateVarCategorySelect();
+                renderCategoryManager();
+                populateCategorySelects();
+                showToast('Category renamed to "' + trimmed + '"', 'ok');
             });
-            saveAll(true);
-            renderCategories();
-            populateProductCategoryFilter();
-            populateVarCategorySelect();
-            renderCategoryManager();
-            populateCategorySelects();
-            showToast('Category renamed to "' + trimmed + '"', 'ok');
         }
 
         function viewCategoryItems(name) {
@@ -4391,12 +4569,19 @@
             }).join('') + '</div>';
         }
 
-        function quickAddCategoryFromItemDb() { var name = addGlobalCategory(); if (name && $('catInput')) $('catInput')
-                .value = name;
-            checkItemDuplicate(); }
+        function quickAddCategoryFromItemDb() {
+            addGlobalCategory().then(function(name) {
+                if (name && $('catInput')) $('catInput').value = name;
+                checkItemDuplicate();
+            });
+        }
 
-        function quickAddCategoryFromBuilder() { var name = addGlobalCategory(); if (name && $('varCategory')) { populateVarCategorySelect();
-                $('varCategory').value = name; } }
+        function quickAddCategoryFromBuilder() {
+            addGlobalCategory().then(function(name) {
+                if (name && $('varCategory')) { populateVarCategorySelect();
+                    $('varCategory').value = name; }
+            });
+        }
 
         function populateVarCategorySelect() {
             var sel = $('varCategory');
@@ -4811,11 +4996,28 @@
             applyAccent(ACCENTS.find(function(a) { return a.name === accentName; }) || ACCENTS[0]);
         }
 
+        // ===== MOBILE SIDE DRAWER =====
+        function openMobileDrawer() {
+            $('mobileDrawer').classList.add('open');
+            $('mobileDrawerBackdrop').classList.add('open');
+        }
+        function closeMobileDrawer() {
+            $('mobileDrawer').classList.remove('open');
+            $('mobileDrawerBackdrop').classList.remove('open');
+        }
+        function mobileDrawerNav(tabId) {
+            switchTab(tabId);
+            closeMobileDrawer();
+        }
+
         // ===== TABS =====
         document.querySelectorAll('.tab').forEach(function(t) {
             t.addEventListener('click', function(e) {
                 document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
                 e.currentTarget.classList.add('active');
+                document.querySelectorAll('.mobile-drawer-link').forEach(function(x) { x.classList.remove('active'); });
+                var drawerLink = document.querySelector('.mobile-drawer-link[data-tab="' + e.currentTarget.dataset.tab + '"]');
+                if (drawerLink) drawerLink.classList.add('active');
                 document.querySelectorAll('section.card').forEach(function(s) { s.style.display = 'none'; });
                 var id = e.currentTarget.dataset.tab;
                 var el = document.getElementById(id);
@@ -5214,9 +5416,11 @@
         $('varCategory').addEventListener('change', function() {
             var sel = this;
             if (sel.value === '__new__') {
-                var name = addGlobalCategory('New category name for this product:');
-                sel.value = name || '';
-                checkVarDuplicate();
+                sel.value = ''; // reset while the in-page prompt is open
+                addGlobalCategory('New category name for this product:').then(function(name) {
+                    sel.value = name || '';
+                    checkVarDuplicate();
+                });
                 return;
             }
             if (sel.value && checkVarDuplicate()) {
@@ -9165,6 +9369,17 @@ var gapiRetry = setInterval(function() {
         initGoogleDrive();
     }
 }, 500);
+
+// ===== PWA: register service worker (installable, works offline) =====
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('sw.js').then(function(reg) {
+            console.log('✅ Service worker registered:', reg.scope);
+        }).catch(function(err) {
+            console.warn('⚠️ Service worker registration failed:', err);
+        });
+    });
+}
   
     </script>
 </body>
