@@ -120,7 +120,7 @@
         [style*="display:flex"],
         [style*="display:flex"] > *,
         [style*="display:grid"] > * {
-            min-width: 0;
+            min-width: 0 !important;
         }
         @media (max-width: 1024px) {
             /* Tablet-range tightening on top of the existing phone breakpoints below */
@@ -1679,7 +1679,7 @@
                 grid-column: span 2;
             }
         }
-        @media(max-width:480px) {
+        @media(max-width:600px) {
             .manual-fields-grid {
                 grid-template-columns: 1fr;
             }
@@ -2100,7 +2100,7 @@
                 gap: 16px;
             }
         }
-        @media(max-width:480px) {
+        @media(max-width:600px) {
             .builder-add-section .builder-add-col .manual-item-grid {
                 grid-template-columns: 1fr;
             }
@@ -2110,11 +2110,11 @@
             .builder-add-section .builder-add-col .field-group input,
             .builder-add-section .builder-add-col .field-group select {
                 padding: 9px 10px;
-                font-size: 14px;
+                font-size: 16px;
             }
             .builder-add-section .builder-add-col .manual-item-grid .field-group input {
                 padding: 9px 10px;
-                font-size: 14px;
+                font-size: 16px;
             }
             .builder-add-section .builder-add-col .action-row {
                 flex-direction: column;
@@ -2270,7 +2270,7 @@
                 grid-template-columns: 1fr 1fr;
             }
         }
-        @media(max-width:480px) {
+        @media(max-width:600px) {
             .inv-full-form {
                 grid-template-columns: 1fr;
             }
