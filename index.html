@@ -114,6 +114,8 @@
         }
         .grid > *,
         .card,
+        .field-group,
+        [class*="-grid"] > *,
         [style*="display:flex"],
         [style*="display:flex"] > *,
         [style*="display:grid"] > * {
@@ -3371,11 +3373,37 @@
                         <div style="display:flex;align-items:center;gap:6px;margin-top:0"><label style="margin:0;font-size:12px;color:var(--muted)">Price ₹</label><input id="filterPriceMin" type="number" placeholder="Min" style="width:90px;margin-top:0" oninput="onProductFilterChange()"><span class="muted">–</span><input id="filterPriceMax" type="number" placeholder="Max" style="width:90px;margin-top:0" oninput="onProductFilterChange()"></div>
                         <button class="ghost small" onclick="clearProductFilters()">✕ Clear filters</button>
                     </div>
+                    <div class="toolbar" style="margin-top:8px">
+                        <button class="ghost small" id="prodSelectModeBtn" onclick="toggleProductSelectMode()">☑ Select to Share</button>
+                    </div>
                     <div id="productGrid" class="product-grid"></div>
                     <div id="productEmpty" class="empty-state" style="display:none"><div class="glyph">💎</div><div>No products yet — build your first piece.</div></div>
                     <div class="count-line" id="countLine"></div>
                     <div class="load-more-wrap"><button id="loadMoreBtn" class="ghost" onclick="loadMoreProducts()" style="display:none">Load More</button></div>
+                    <div id="shareSelectBar" style="display:none;position:sticky;bottom:10px;margin-top:14px;background:var(--card-solid);border-radius:16px;padding:12px 16px;box-shadow:var(--shadow-md);display:flex;gap:10px;align-items:center;flex-wrap:wrap;z-index:20;">
+                        <span id="shareSelectCount" style="font-weight:700;font-size:13px;">0 selected</span>
+                        <button onclick="openShareSelected()" style="margin-left:auto;">📤 Share Selected</button>
+                        <button class="ghost small" onclick="toggleProductSelectMode()">Cancel</button>
+                    </div>
                 </section>
+                <div id="shareProductsModal" class="modal-backdrop">
+                    <div class="modal-box" style="max-width:480px;padding:22px;max-height:85vh;overflow-y:auto;">
+                        <h2 style="font-size:16px;margin:0 0 4px;">📤 Share Products</h2>
+                        <div class="note" id="shareModalCount" style="font-size:12px;"></div>
+                        <div style="margin-top:14px;">
+                            <label style="font-size:12px;color:var(--muted);">Adjust price by (%) — positive to increase, negative to decrease</label>
+                            <input id="sharePricePct" type="number" placeholder="e.g. 5 or -10" value="0" oninput="renderSharePreview()">
+                        </div>
+                        <div id="sharePreviewList" style="margin-top:12px;max-height:260px;overflow-y:auto;"></div>
+                        <div style="display:flex;gap:10px;margin-top:18px;">
+                            <button style="flex:1;" onclick="shareSelectedViaWhatsApp()">💬 Share via WhatsApp</button>
+                        </div>
+                        <div style="display:flex;gap:10px;margin-top:10px;">
+                            <button class="ghost" style="flex:1;" onclick="shareSelectedWithImages()">🖼 Share with Images</button>
+                            <button class="ghost" onclick="closeModal('shareProductsModal')">Close</button>
+                        </div>
+                    </div>
+                </div>
                 <!-- BUILDER -->
                 <section id="builder" class="card" style="display:none">
                     <div class="section-head">
@@ -3824,6 +3852,26 @@
                         </div>
                     </div>
                     <hr>
+                    <div class="section-title" style="font-size:15px;">🕘 History & Data Retention</div>
+                    <div class="note">Controls how long price-change history (for items and products) is kept.</div>
+                    <div class="setting-group">
+                        <div class="inline-flex" style="gap:20px;flex-wrap:wrap;align-items:flex-end;">
+                            <div>
+                                <label>Keep history for</label>
+                                <select id="settingHistoryRetention" style="width:auto;margin-top:5px;">
+                                    <option value="90">90 days</option>
+                                    <option value="180">180 days</option>
+                                    <option value="365">1 year</option>
+                                    <option value="lifetime">Lifetime (never auto-delete)</option>
+                                </select>
+                            </div>
+                            <div><button onclick="saveHistoryRetentionSetting()" class="ghost small">💾 Save</button></div>
+                        </div>
+                        <div class="inline-flex" style="gap:10px;flex-wrap:wrap;margin-top:12px;">
+                            <button onclick="clearAllHistory()" class="danger small">🗑 Clear All Item & Product History</button>
+                        </div>
+                    </div>
+                    <hr>
                     <div class="section-title" style="font-size:15px;">🌐 AI Online Search</div>
                     <div class="note">Enable online search in AI Chat — queries that the AI can't answer will be searched online.</div>
                     <div class="ai-search-toggle">
@@ -3926,6 +3974,7 @@
                     <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
                         <button class="ghost" onclick="switchTab('builder'); startNewProduct();">➕ New Product</button>
                         <button class="ghost" onclick="switchTab('itemdb');">📦 Manage Items</button>
+                        <button class="ghost" onclick="switchTab('ledger'); openWalkinLedger();">🚶 Walk-in Ledger</button>
                         <button class="ghost" onclick="switchTab('billing');">🧾 Billing</button>
                         <button class="ghost" onclick="switchTab('ledger');">📒 Ledger</button>
                         <button class="ghost" onclick="switchTab('settings');">⚙ Settings</button>
@@ -4029,6 +4078,7 @@
             KEY_PURCHASES = "jp_purchases_v2",
             KEY_SALES = "jp_sales_v4",
             KEY_LOW_STOCK = "jp_low_stock_v1",
+            KEY_HISTORY_RETENTION = "jp_history_retention_v1",
             KEY_CUST_LEDGER = "jp_cust_ledger_v1",
             KEY_SUP_LEDGER = "jp_sup_ledger_v1",
             KEY_SETTINGS = "jp_settings_v1",
@@ -4724,6 +4774,8 @@
             if ($('settingLowStock')) $('settingLowStock').value = lowStock;
             if ($('settingDefaultTax')) $('settingDefaultTax').value = defaultTax;
             if ($('billTax')) $('billTax').value = defaultTax;
+            loadHistoryRetentionSetting();
+            pruneOldHistory();
             var savedFolder = localStorage.getItem(KEY_DATA_FOLDER);
             if (savedFolder) { dataFolderPath = savedFolder;
                 $('dataFolderStatus').textContent = '📁 ' + savedFolder; }
@@ -4749,6 +4801,46 @@
             renderPurchaseTable();
             renderStockTable();
             showToast('Settings saved', 'ok');
+        }
+
+        // ===== HISTORY RETENTION =====
+        function saveHistoryRetentionSetting() {
+            var val = $('settingHistoryRetention').value;
+            localStorage.setItem(KEY_HISTORY_RETENTION, val);
+            pruneOldHistory();
+            showToast('History retention set to ' + (val === 'lifetime' ? 'lifetime' : val + ' days'), 'ok');
+        }
+        function loadHistoryRetentionSetting() {
+            var val = localStorage.getItem(KEY_HISTORY_RETENTION) || '365';
+            if ($('settingHistoryRetention')) $('settingHistoryRetention').value = val;
+        }
+        function pruneOldHistory() {
+            var val = localStorage.getItem(KEY_HISTORY_RETENTION) || '365';
+            if (val === 'lifetime') return; // keep everything forever
+            var cutoff = Date.now() - (parseInt(val, 10) * 24 * 60 * 60 * 1000);
+            var pruned = false;
+            items.forEach(function(it) {
+                if (Array.isArray(it.history) && it.history.length) {
+                    var kept = it.history.filter(function(h) { return new Date(h.date).getTime() >= cutoff; });
+                    if (kept.length !== it.history.length) { it.history = kept;
+                        pruned = true; }
+                }
+            });
+            products.forEach(function(p) {
+                if (Array.isArray(p.history) && p.history.length) {
+                    var kept = p.history.filter(function(h) { return new Date(h.date).getTime() >= cutoff; });
+                    if (kept.length !== p.history.length) { p.history = kept;
+                        pruned = true; }
+                }
+            });
+            if (pruned) saveAll(true);
+        }
+        function clearAllHistory() {
+            if (!confirm('This will permanently delete ALL price-change history for every item and product. This cannot be undone. Continue?')) return;
+            items.forEach(function(it) { it.history = []; });
+            products.forEach(function(p) { p.history = []; });
+            saveAll(true);
+            showToast('🗑 All item & product history cleared', 'ok');
         }
 
         // ===== AI FUNCTIONS =====
@@ -6088,11 +6180,24 @@
                     prod.id = editingProductId;
                     prod.code = products[idx].code;
                     prod.createdAt = products[idx].createdAt || Date.now();
+                    var oldP = products[idx];
+                    var oldHistory = Array.isArray(oldP.history) ? oldP.history : [];
+                    var priceChanged = Number(oldP.totalCost || 0) !== totalCost || Number(oldP.finalSell || 0) !==
+                        finalSell || Number(oldP.profit || 0) !== profit;
+                    if (priceChanged) {
+                        oldHistory = oldHistory.concat([{ date: new Date().toISOString(), totalCost: totalCost,
+                            totalSell: totalSell, finalSell: finalSell, profit: profit }]);
+                    }
+                    prod.history = oldHistory;
                     products[idx] = prod;
                     editingProductId = null;
                 }
-            } else { prod.code = consumeNextCode();
-                products.push(prod); }
+            } else {
+                prod.code = consumeNextCode();
+                prod.history = [{ date: new Date().toISOString(), totalCost: totalCost, totalSell: totalSell,
+                    finalSell: finalSell, profit: profit }];
+                products.push(prod);
+            }
             saveAll();
             variations = [];
             prodImages = [];
@@ -6228,6 +6333,104 @@
             return list;
         }
 
+        var productSelectMode = false;
+        var selectedProductIds = [];
+        function toggleProductSelectMode() {
+            productSelectMode = !productSelectMode;
+            if (!productSelectMode) selectedProductIds = [];
+            $('prodSelectModeBtn').classList.toggle('active', productSelectMode);
+            $('prodSelectModeBtn').textContent = productSelectMode ? '✕ Cancel Select' : '☑ Select to Share';
+            renderProductGrid();
+            updateShareSelectBar();
+        }
+        function toggleProductSelected(id) {
+            var i = selectedProductIds.indexOf(id);
+            if (i >= 0) selectedProductIds.splice(i, 1);
+            else selectedProductIds.push(id);
+            renderProductGrid();
+            updateShareSelectBar();
+        }
+        function updateShareSelectBar() {
+            var bar = $('shareSelectBar');
+            if (!bar) return;
+            bar.style.display = productSelectMode ? 'flex' : 'none';
+            if ($('shareSelectCount')) $('shareSelectCount').textContent = selectedProductIds.length + ' selected';
+        }
+
+        // ===== SHARE SELECTED PRODUCTS =====
+        function openShareSelected() {
+            if (selectedProductIds.length === 0) { showToast('Select at least one product first', 'err'); return; }
+            $('sharePricePct').value = 0;
+            $('shareModalCount').textContent = selectedProductIds.length + ' product(s) selected';
+            renderSharePreview();
+            $('shareProductsModal').style.display = 'flex';
+        }
+        function getSelectedProductsWithAdjustedPrice() {
+            var pct = parseFloat($('sharePricePct').value) || 0;
+            return selectedProductIds.map(function(id) { return products.find(function(p) { return p.id === id; }); })
+                .filter(Boolean).map(function(p) {
+                    var base = p.listingPrice !== undefined ? p.listingPrice : (p.finalSell || 0);
+                    var adjusted = base * (1 + pct / 100);
+                    return { product: p, base: base, adjusted: adjusted, pct: pct };
+                });
+        }
+        function renderSharePreview() {
+            var rows = getSelectedProductsWithAdjustedPrice();
+            $('sharePreviewList').innerHTML = rows.map(function(r) {
+                var changed = Math.abs(r.pct) > 0.001;
+                return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:13px;"><span>' +
+                    escapeHtml(r.product.name) + '</span><span>' + (changed ?
+                        '<span class="muted" style="text-decoration:line-through;font-size:11px;margin-right:6px;">₹' +
+                        r.base.toFixed(2) + '</span>' : '') + '<b>₹' + r.adjusted.toFixed(2) +
+                    '</b></span></div>';
+            }).join('');
+        }
+        function shareSelectedViaWhatsApp() {
+            var rows = getSelectedProductsWithAdjustedPrice();
+            var lines = rows.map(function(r) {
+                return '💎 ' + r.product.name + ' — ₹' + r.adjusted.toFixed(2) + (r.product.code ? ' (Code: ' + r
+                    .product.code + ')' : '');
+            });
+            var text = lines.join('\n');
+            window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+        }
+        function shareSelectedWithImages() {
+            var rows = getSelectedProductsWithAdjustedPrice();
+            if (!navigator.share) {
+                showToast('Your browser doesn\'t support direct image sharing — using WhatsApp text share instead.', 'info');
+                shareSelectedViaWhatsApp();
+                return;
+            }
+            shareOneByOne(rows, 0);
+        }
+        function shareOneByOne(rows, idx) {
+            if (idx >= rows.length) return;
+            var r = rows[idx];
+            var text = '💎 ' + r.product.name + ' — ₹' + r.adjusted.toFixed(2) + (r.product.code ? ' (Code: ' + r
+                .product.code + ')' : '');
+            var imgSrc = productThumb(r.product);
+            var doShare = function(files) {
+                var payload = { title: r.product.name, text: text };
+                if (files && files.length) payload.files = files;
+                navigator.share(payload).catch(function() {}).finally(function() {
+                    if (idx + 1 < rows.length) {
+                        setTimeout(function() { shareOneByOne(rows, idx + 1); }, 400);
+                    }
+                });
+            };
+            if (imgSrc && imgSrc.indexOf('data:') === 0) {
+                fetch(imgSrc).then(function(res) { return res.blob(); }).then(function(blob) {
+                    var file = new File([blob], (r.product.name || 'product') + '.jpg', { type: blob.type ||
+                        'image/jpeg' });
+                    if (navigator.canShare && !navigator.canShare({ files: [file] })) { doShare(null);
+                        return; }
+                    doShare([file]);
+                }).catch(function() { doShare(null); });
+            } else {
+                doShare(null);
+            }
+        }
+
         function renderProductGrid() {
             var gridEl = $('productGrid');
             if (!gridEl) return;
@@ -6240,7 +6443,13 @@
                 var card = document.createElement('div');
                 card.className = 'p-card';
                 card.style.animationDelay = (i * 0.02) + 's';
-                card.onclick = function() { openQuickView(p.id); };
+                var isSelected = selectedProductIds.indexOf(p.id) >= 0;
+                if (productSelectMode) {
+                    if (isSelected) card.style.outline = '3px solid var(--accent)';
+                    card.onclick = function() { toggleProductSelected(p.id); };
+                } else {
+                    card.onclick = function() { openQuickView(p.id); };
+                }
                 var thumbSrc = productThumb(p);
                 var thumb = thumbSrc ? '<img class="thumb" src="' + thumbSrc + '" alt="' + escapeHtml(p.name) +
                     '">' :
@@ -6254,7 +6463,9 @@
                     bestVar = sorted[0] ? sorted[0].name + ': ₹' + sorted[0].profit.toFixed(2) : '';
                 }
                 card.innerHTML =
-                    thumb + '<div class="price-badge">₹' + formatCompact(listingPrice) +
+                    thumb + (productSelectMode ? '<div class="fav-btn ' + (isSelected ? 'active' : '') +
+                        '" style="left:10px;right:auto;">' + (isSelected ? '☑' : '☐') + '</div>' : '') +
+                    '<div class="price-badge">₹' + formatCompact(listingPrice) +
                     '</div><div class="fav-btn ' + (p.favorite ? 'active' : '') +
                     '" onclick="event.stopPropagation();toggleFavorite(' + p.id +
                     ')">' + (p.favorite ? '★' : '☆') +
@@ -6493,6 +6704,20 @@
                     '</span><b>₹' + stats2.profit.toFixed(2) +
                     '</b></div><div class="formula-line final"><span>Current Stock Value</span><b>₹' +
                     stockValue.toFixed(2) + '</b></div>';
+                var hist = Array.isArray(qvProduct.history) ? qvProduct.history.slice().reverse() : [];
+                var histHtml = '<div style="font-weight:700;margin:14px 0 6px;font-size:14px">📈 Price History</div>';
+                if (hist.length === 0) {
+                    histHtml += '<div class="note" style="font-size:12px;">No price changes recorded yet.</div>';
+                } else {
+                    histHtml += '<div class="table-scroll"><table><thead><tr><th>Date</th><th class="num">Cost</th><th class="num">Sell</th><th class="num">Profit</th></tr></thead><tbody>' +
+                        hist.map(function(h) {
+                            return '<tr><td>' + new Date(h.date).toLocaleDateString() + '</td><td class="num">₹' +
+                                Number(h.totalCost || 0).toFixed(2) + '</td><td class="num">₹' + Number(h
+                                    .finalSell || 0).toFixed(2) + '</td><td class="num">₹' + Number(h.profit ||
+                                    0).toFixed(2) + '</td></tr>';
+                        }).join('') + '</tbody></table></div>';
+                }
+                costContainer.innerHTML += histHtml;
             }
         }
 
@@ -7729,6 +7954,16 @@
         }
 
         // ===== LEDGER with Walk-in support =====
+        function openWalkinLedger() {
+            switchLedgerTab('customer');
+            if ($('ledgerCustSelect')) $('ledgerCustSelect').value = '';
+            renderCustomerLedger();
+            renderWalkinLedger();
+            setTimeout(function() {
+                var el = $('walkinLedgerSection');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 150);
+        }
         function switchLedgerTab(tab) {
             document.querySelectorAll('.ledger-tab').forEach(function(t) { t.classList.remove('active'); });
             var activeTab = document.querySelector('.ledger-tab[data-ltab="' + tab + '"]');
