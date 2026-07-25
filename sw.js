@@ -1,7 +1,7 @@
 // Jewellery Product Builder Pro — offline service worker
 // Cache-first for the app shell so it opens instantly and works offline,
 // falling back to network for anything not yet cached.
-const CACHE_NAME = 'jewellery-pro-v3';
+const CACHE_NAME = 'jewellery-pro-v4';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(event) {
