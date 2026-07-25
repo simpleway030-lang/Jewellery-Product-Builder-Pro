@@ -603,6 +603,7 @@
         input[type="number"],
         input[type="date"],
         input[type="file"],
+        input:not([type]),
         select,
         textarea {
             width: 100%;
@@ -3349,6 +3350,9 @@
                     <div id="recentWrap"><div class="note" style="margin-top:14px">Recently opened</div><div class="recent-strip" id="recentStrip"></div></div>
                     <div class="toolbar">
                         <input id="searchProd" class="grow" placeholder="Search by name, code or category…" oninput="onProductFilterChange()" style="margin-top:0">
+                        <button class="ghost" onclick="toggleProdFilters()" id="prodFilterToggleBtn">⚙ Filters</button>
+                    </div>
+                    <div class="toolbar" id="prodFilterPanel" style="display:none;">
                         <select id="filterProdCategory" onchange="onProductFilterChange()" style="margin-top:0;width:auto"><option value="">All categories</option></select>
                         <select id="sortProd" onchange="onProductFilterChange()" style="margin-top:0;width:auto">
                             <option value="new">Newest first</option>
@@ -3363,7 +3367,7 @@
                         </label>
                         <button onclick="loadProductList()" class="ghost">↻ Refresh</button>
                     </div>
-                    <div class="toolbar" style="margin-top:8px">
+                    <div class="toolbar" id="prodFilterPanel2" style="display:none;margin-top:8px">
                         <div style="display:flex;align-items:center;gap:6px;margin-top:0"><label style="margin:0;font-size:12px;color:var(--muted)">Price ₹</label><input id="filterPriceMin" type="number" placeholder="Min" style="width:90px;margin-top:0" oninput="onProductFilterChange()"><span class="muted">–</span><input id="filterPriceMax" type="number" placeholder="Max" style="width:90px;margin-top:0" oninput="onProductFilterChange()"></div>
                         <button class="ghost small" onclick="clearProductFilters()">✕ Clear filters</button>
                     </div>
@@ -3587,10 +3591,13 @@
                         <div><div class="section-title">📋 All Items</div><div class="note">Search, filter and manage your inventory items.</div></div>
                         <div class="search">
                             <input id="searchItemsList" type="text" placeholder="Search items…" oninput="renderItemsList()" style="margin-top:0;min-width:200px;">
-                            <select id="filterItemsListCat" onchange="renderItemsList()" style="margin-top:0;"><option value="">All categories</option></select>
+                            <button class="ghost" onclick="toggleShow('itemsListFilterPanel')">⚙ Filters</button>
                             <button class="ghost" onclick="document.querySelector('.tab[data-tab=&quot;itemdb&quot;]').click()">＋ Add New</button>
                             <button class="ghost" onclick="renderItemsList();showToast('🔄 Items refreshed', 'info')">↻ Refresh</button>
                         </div>
+                    </div>
+                    <div class="search" id="itemsListFilterPanel" style="display:none;margin-top:8px">
+                        <select id="filterItemsListCat" onchange="renderItemsList()" style="margin-top:0;"><option value="">All categories</option></select>
                     </div>
                     <div class="items-list-grid" id="itemsListGrid"></div>
                     <div id="itemsListEmpty" class="empty-state" style="display:none;"><div class="glyph">📦</div><div>No items found. Add some in Item DB.</div></div>
@@ -3944,6 +3951,30 @@
     <div id="ledgerEntryModal" class="modal-backdrop"><div class="modal-box dark" style="max-width:460px"><div class="section-title" id="ledgerEntryTitle">Record</div><div id="ledgerEntryForm"></div><div style="margin-top:14px;text-align:right;display:flex;gap:10px;justify-content:flex-end"><button onclick="saveLedgerEntry()">💾 Save</button><button onclick="closeModal('ledgerEntryModal')" class="ghost">Cancel</button></div></div></div>
     <div id="dashboardDetailModal" class="modal-backdrop"><div class="modal-box dark" style="max-width:720px;"><div class="section-title" id="ddTitle">Details</div><div id="ddContent" style="margin-top:12px;"></div><div style="margin-top:16px;text-align:right;display:flex;gap:10px;justify-content:flex-end;"><button onclick="exportDetailPDF()" class="pdf-export-btn">📄 Export PDF</button><button class="ghost" onclick="closeModal('dashboardDetailModal')">Close</button></div></div></div>
     <!-- AI CHAT MODAL -->
+    <div id="itemDetailModal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:560px;padding:22px;max-height:85vh;overflow-y:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                <div>
+                    <h2 id="itemDetailTitle" style="font-size:18px;margin:0 0 3px;"></h2>
+                    <div class="muted" id="itemDetailSub" style="font-size:13px;"></div>
+                </div>
+                <button class="icon-btn" onclick="closeModal('itemDetailModal')">✕</button>
+            </div>
+            <div id="itemDetailStats" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;"></div>
+            <div style="margin-top:18px;">
+                <div style="font-weight:700;font-size:13px;margin-bottom:8px;">📈 Price History</div>
+                <div id="itemDetailPriceHistory" class="table-scroll"></div>
+            </div>
+            <div style="margin-top:18px;">
+                <div style="font-weight:700;font-size:13px;margin-bottom:8px;">🧾 Purchase History</div>
+                <div id="itemDetailPurchaseHistory" class="table-scroll"></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+                <button style="flex:1;" onclick="editItemFromDetail()">✎ Edit Item</button>
+                <button class="ghost" onclick="closeModal('itemDetailModal')">Close</button>
+            </div>
+        </div>
+    </div>
     <div id="inputPromptModal" class="modal-backdrop">
         <div class="modal-box" style="max-width:420px;padding:22px;">
             <h2 id="inputPromptTitle" style="font-size:16px;margin:0 0 14px;">Enter value</h2>
@@ -4631,6 +4662,17 @@
                     .length - 1)]; return null; }
 
         function closeModal(id) { if ($(id)) $(id).style.display = 'none'; }
+        function toggleShow(id) {
+            var el = $(id);
+            if (!el) return;
+            el.style.display = (el.style.display === 'none' || !el.style.display) ? 'flex' : 'none';
+        }
+        function toggleProdFilters() {
+            toggleShow('prodFilterPanel');
+            toggleShow('prodFilterPanel2');
+            var btn = $('prodFilterToggleBtn');
+            if (btn) btn.classList.toggle('active');
+        }
 
         function showToast(msg, type, duration) {
             var stack = $('toastStack');
@@ -5088,8 +5130,11 @@
             if (empty) empty.style.display = 'none';
             var threshold = parseInt(localStorage.getItem(KEY_LOW_STOCK) || 5);
             filtered.forEach(function(it) {
+                var realIdx = items.indexOf(it);
                 var card = document.createElement('div');
                 card.className = 'item-card';
+                card.style.cursor = 'pointer';
+                card.onclick = function() { openItemDetail(realIdx); };
                 if ((it.stock || 0) <= threshold) card.style.borderLeftColor = 'var(--danger)';
                 var marginLabel = it.margin_mode === 'fixed' ? '₹' + Number(it.margin || 0).toFixed(0) : Number(
                     it.margin || 0).toFixed(1) + '%';
@@ -5098,11 +5143,72 @@
                         .category) + (it.size ? ' · ' + escapeHtml(it.size) : '') +
                     '</div><div class="ic-meta"><span>Stock: ' + (it.stock || 0) + '</span><span>₹' + Number(it
                         .price || 0).toFixed(2) + '</span></div><div style="margin-top:6px;font-size:10px;color:var(--muted);">Margin: ' +
-                    marginLabel + ' · Making: ₹' + Number(it.making || 0).toFixed(2) + '</div>';
+                    marginLabel + ' · Making: ₹' + Number(it.making || 0).toFixed(2) +
+                    '</div><div style="margin-top:6px;font-size:10px;color:var(--accent);">Tap for full history →</div>';
                 grid.appendChild(card);
             });
             if (count) count.textContent = filtered.length + ' items' + (filtered.length !== items.length ?
                 ' (filtered)' : '');
+        }
+
+        // ===== ITEM DETAIL / HISTORY MODAL =====
+        var _itemDetailIdx = -1;
+        function openItemDetail(idx) {
+            var it = items[idx];
+            if (!it) return;
+            _itemDetailIdx = idx;
+            $('itemDetailTitle').textContent = it.name;
+            $('itemDetailSub').textContent = it.category + (it.size ? ' · ' + it.size : '');
+            var marginLabel = it.margin_mode === 'fixed' ? '₹' + Number(it.margin || 0).toFixed(0) : Number(it
+                .margin || 0).toFixed(1) + '%';
+            $('itemDetailStats').innerHTML = [
+                ['Current Stock', it.stock || 0],
+                ['Selling Price', '₹' + Number(it.price || 0).toFixed(2)],
+                ['Purchase Price', '₹' + Number(it.purchase_price || 0).toFixed(2)],
+                ['Making Charge', '₹' + Number(it.making || 0).toFixed(2)],
+                ['Margin', marginLabel],
+            ].map(function(pair) {
+                return '<div style="background:var(--border-soft);border-radius:12px;padding:10px 12px;"><div style="font-size:11px;color:var(--muted);">' +
+                    pair[0] + '</div><div style="font-weight:700;font-size:14px;margin-top:2px;">' + pair[1] +
+                    '</div></div>';
+            }).join('');
+
+            var hist = Array.isArray(it.history) ? it.history.slice().reverse() : [];
+            if (hist.length === 0) {
+                $('itemDetailPriceHistory').innerHTML = '<div class="note" style="padding:8px 0;">No price changes recorded yet.</div>';
+            } else {
+                $('itemDetailPriceHistory').innerHTML = '<table><thead><tr><th>Date</th><th class="num">Purchase</th><th class="num">Making</th><th class="num">Margin</th><th class="num">Sell</th></tr></thead><tbody>' +
+                    hist.map(function(h) {
+                        var m = h.margin_mode === 'fixed' ? '₹' + Number(h.margin || 0).toFixed(0) : Number(h
+                            .margin || 0).toFixed(1) + '%';
+                        return '<tr><td>' + new Date(h.date).toLocaleDateString() + (h.note ? ' <span class="muted" style="font-size:10px;">(' +
+                                escapeHtml(h.note) + ')</span>' : '') + '</td><td class="num">₹' + Number(h
+                                .purchase_price || 0).toFixed(2) + '</td><td class="num">₹' + Number(h.making ||
+                                0).toFixed(2) + '</td><td class="num">' + m + '</td><td class="num">₹' + Number(h
+                                .price || 0).toFixed(2) + '</td></tr>';
+                    }).join('') + '</tbody></table>';
+            }
+
+            var relatedPurchases = purchases.filter(function(p) { return p.item === it.name && p.category === it
+                    .category; }).slice().sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+            if (relatedPurchases.length === 0) {
+                $('itemDetailPurchaseHistory').innerHTML = '<div class="note" style="padding:8px 0;">No purchases recorded for this item yet.</div>';
+            } else {
+                $('itemDetailPurchaseHistory').innerHTML = '<table><thead><tr><th>Date</th><th>Supplier</th><th class="num">Qty</th><th class="num">Unit Cost</th><th class="num">Total</th></tr></thead><tbody>' +
+                    relatedPurchases.map(function(p) {
+                        return '<tr><td>' + new Date(p.date).toLocaleDateString() + '</td><td>' + escapeHtml(p
+                                .supplier || '—') + '</td><td class="num">' + p.qty + '</td><td class="num">₹' +
+                            Number(p.unitCost || 0).toFixed(2) + '</td><td class="num">₹' + Number(p.total || 0)
+                            .toFixed(2) + '</td></tr>';
+                    }).join('') + '</tbody></table>';
+            }
+            $('itemDetailModal').style.display = 'flex';
+        }
+        function editItemFromDetail() {
+            if (_itemDetailIdx < 0) return;
+            closeModal('itemDetailModal');
+            switchTab('itemdb');
+            setTimeout(function() { editItem(_itemDetailIdx); }, 150);
         }
 
         // ===== ITEM DB =====
@@ -5280,6 +5386,8 @@
                 var oldName = it.name,
                     oldCat = it.category,
                     oldSize = it.size;
+                var pricingChanged = Number(it.purchase_price || 0) !== purchase_price || Number(it.making || 0) !==
+                    making || Number(it.margin || 0) !== margin || (it.margin_mode || 'percent') !== itemMarginMode;
                 it.category = cat;
                 it.name = name;
                 it.size = size;
@@ -5289,12 +5397,19 @@
                 it.margin = margin;
                 it.margin_mode = itemMarginMode;
                 it.price = price;
+                if (pricingChanged) {
+                    if (!Array.isArray(it.history)) it.history = [];
+                    it.history.push({ date: new Date().toISOString(), purchase_price: purchase_price, making:
+                        making, margin: margin, margin_mode: itemMarginMode, price: price });
+                }
                 syncItemAcrossProducts(oldName, oldCat, oldSize, it);
                 editingItemIndex = -1;
                 showToast('Item updated', 'ok');
             } else {
                 items.push({ category: cat, name: name, size: size, stock: stock, purchase_price: purchase_price,
-                    making: making, margin: margin, margin_mode: itemMarginMode, price: price });
+                    making: making, margin: margin, margin_mode: itemMarginMode, price: price, history: [{ date:
+                        new Date().toISOString(), purchase_price: purchase_price, making: making, margin: margin,
+                        margin_mode: itemMarginMode, price: price }] });
                 showToast('Item saved', 'ok');
             }
             syncAllLivePrices(false);
@@ -7417,6 +7532,10 @@
                 var making = items[idx].making || 0;
                 var margin = items[idx].margin || 0;
                 items[idx].price = (newPrice + making) * (1 + margin / 100);
+                if (!Array.isArray(items[idx].history)) items[idx].history = [];
+                items[idx].history.push({ date: new Date().toISOString(), purchase_price: newPrice, making: making,
+                    margin: margin, margin_mode: items[idx].margin_mode || 'percent', price: items[idx].price,
+                    note: 'Updated from purchase entry' });
                 saveAll(true);
                 renderItemTable();
                 $('purchasePriceNotice').innerHTML = '';
