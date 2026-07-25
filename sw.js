@@ -1,7 +1,10 @@
 // Jewellery Product Builder Pro — offline service worker
-// Cache-first for the app shell so it opens instantly and works offline,
-// falling back to network for anything not yet cached.
-const CACHE_NAME = 'jewellery-pro-v6';
+// NETWORK-FIRST for the app shell: always try to fetch the latest version
+// first. Only fall back to the cached copy if the network request fails
+// (i.e. genuinely offline). This is the opposite of "cache-first" — it means
+// updates show up immediately on next reload instead of needing a cache
+// version bump + manual browser cache clear every time.
+const CACHE_NAME = 'jewellery-pro-v7';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(event) {
@@ -23,16 +26,15 @@ self.addEventListener('activate', function(event) {
 self.addEventListener('fetch', function(event) {
     if (event.request.method !== 'GET') return;
     event.respondWith(
-        caches.match(event.request).then(function(cached) {
-            var networkFetch = fetch(event.request).then(function(response) {
-                if (response && response.status === 200 && response.type === 'basic') {
-                    var copy = response.clone();
-                    caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, copy); });
-                }
-                return response;
-            }).catch(function() { return cached; });
-            // Serve from cache immediately if we have it, update cache in background.
-            return cached || networkFetch;
+        fetch(event.request).then(function(response) {
+            if (response && response.status === 200 && response.type === 'basic') {
+                var copy = response.clone();
+                caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, copy); });
+            }
+            return response;
+        }).catch(function() {
+            // Offline (or network error) — fall back to whatever we have cached.
+            return caches.match(event.request);
         })
     );
 });
