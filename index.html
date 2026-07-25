@@ -102,6 +102,22 @@
         .table-wrap, .card, .modal, .modal-body, .panel {
             max-width: 100%;
         }
+        @media (max-width: 900px) {
+            /* DECISIVE FIX: several different forms (Item DB, Manual Item, Builder,
+               Inventory) each had their own separate two-column grid class with its
+               own breakpoint (480/600/768px), which kept causing narrow, clipped,
+               or even overlapping fields depending on exact device width. Rather
+               than keep chasing individual breakpoints, force every known
+               data-entry form grid to a single column up to a generous 900px —
+               there is no meaningful downside to single-column entry forms on a
+               phone or small tablet, and this removes the ambiguity entirely. */
+            .itemdb-form-grid,
+            .manual-item-grid,
+            .manual-fields-grid,
+            .inv-full-form {
+                grid-template-columns: 1fr !important;
+            }
+        }
         /* ===== SYSTEMIC MOBILE OVERFLOW FIX =====
            Flex/grid children default to min-width:auto, meaning they refuse to
            shrink below their own content's natural width. A <select> with a long
