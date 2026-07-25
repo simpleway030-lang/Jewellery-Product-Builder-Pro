@@ -131,6 +131,19 @@
                 min-height: 40px;
             }
         }
+        @media (max-width: 700px) {
+            /* Different forms across the app (Item DB, Manual Item, Builder, etc.)
+               each set their own input font-size (13px, 14px, 15px...), which made
+               fields look inconsistent and — since anything under 16px triggers
+               iOS Safari's auto-zoom on focus — made typed text appear to jump/
+               vanish while typing on iPhones. Force one consistent, zoom-safe size. */
+            input, select, textarea,
+            .field-group input, .field-group select,
+            .manual-fields-grid input, .manual-fields-grid select {
+                font-size: 16px !important;
+                padding: 12px 14px !important;
+            }
+        }
         @media (max-width: 768px) {
             /* Fallback for the handful of tables not already inside a .table-scroll
                wrapper — makes them scroll sideways within their own box instead of
@@ -6406,48 +6419,98 @@
             var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
             var pageW = doc.internal.pageSize.getWidth(),
                 pageH = doc.internal.pageSize.getHeight();
-            var margin = 36,
-                imgSize = 160,
-                rowH = imgSize + 40,
-                y = margin;
-            doc.setFontSize(16);
-            doc.text((company && company.name ? company.name : 'Product Catalog'), margin, y);
-            y += 24;
-            doc.setFontSize(10);
-            doc.setTextColor(120);
-            doc.text('Generated ' + new Date().toLocaleDateString(), margin, y);
-            doc.setTextColor(0);
-            y += 20;
-            rows.forEach(function(r, i) {
-                if (y + rowH > pageH - margin) { doc.addPage();
-                    y = margin; }
+            var margin = 40;
+
+            function drawHeader() {
+                var y = margin;
+                var textX = margin;
+                if (company && company.logo) {
+                    try {
+                        var fmt = company.logo.indexOf('data:image/png') === 0 ? 'PNG' : 'JPEG';
+                        doc.addImage(company.logo, fmt, margin, y - 6, 42, 42, undefined, 'FAST');
+                        textX = margin + 54;
+                    } catch (e) {}
+                }
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(19);
+                doc.setTextColor(20);
+                doc.text((company && company.name ? company.name : 'Product Catalog'), textX, y + 16);
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(9.5);
+                doc.setTextColor(110);
+                var subLine = [company && company.tagline, company && company.phone].filter(Boolean).join('  ·  ');
+                if (subLine) doc.text(subLine, textX, y + 30);
+                doc.setFontSize(9);
+                doc.setTextColor(150);
+                doc.text('Generated ' + new Date().toLocaleDateString(), pageW - margin, y + 8, { align: 'right' });
+                doc.text(rows.length + ' item(s)', pageW - margin, y + 20, { align: 'right' });
+                doc.setDrawColor(210);
+                doc.setLineWidth(1);
+                doc.line(margin, y + 44, pageW - margin, y + 44);
+                doc.setTextColor(0);
+                return y + 44 + 22;
+            }
+
+            var cols = 2,
+                gap = 16;
+            var cardW = (pageW - margin * 2 - gap * (cols - 1)) / cols;
+            var imgH = cardW * 0.82,
+                textH = 78,
+                cardH = imgH + textH;
+            var y = drawHeader();
+            var col = 0;
+
+            rows.forEach(function(r) {
+                if (y + cardH > pageH - margin) {
+                    doc.addPage();
+                    y = drawHeader();
+                    col = 0;
+                }
+                var x = margin + col * (cardW + gap);
+                doc.setDrawColor(225);
+                doc.setLineWidth(0.75);
+                doc.roundedRect(x, y, cardW, cardH, 6, 6);
                 var imgSrc = productThumb(r.product);
+                var pad = 8;
                 if (imgSrc && imgSrc.indexOf('data:image') === 0) {
                     try {
-                        var fmt = imgSrc.indexOf('data:image/png') === 0 ? 'PNG' : 'JPEG';
-                        doc.addImage(imgSrc, fmt, margin, y, imgSize, imgSize, undefined, 'FAST');
+                        var ifmt = imgSrc.indexOf('data:image/png') === 0 ? 'PNG' : 'JPEG';
+                        doc.addImage(imgSrc, ifmt, x + pad, y + pad, cardW - pad * 2, imgH - pad * 2 - 6,
+                            undefined, 'FAST');
                     } catch (e) {}
                 } else {
-                    doc.setDrawColor(200);
-                    doc.rect(margin, y, imgSize, imgSize);
+                    doc.setFillColor(245, 245, 247);
+                    doc.rect(x + pad, y + pad, cardW - pad * 2, imgH - pad * 2 - 6, 'F');
                 }
-                var textX = margin + imgSize + 18;
-                doc.setFontSize(13);
-                doc.text(r.product.name, textX, y + 20);
-                doc.setFontSize(10);
-                doc.setTextColor(120);
-                if (r.product.code) doc.text('Code: ' + r.product.code, textX, y + 38);
-                doc.setTextColor(0);
-                doc.setFontSize(18);
-                doc.text('\u20B9' + r.adjusted.toFixed(2), textX, y + 66);
+                var ty = y + imgH + 12;
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(12);
+                doc.setTextColor(20);
+                var nameLines = doc.splitTextToSize(r.product.name, cardW - pad * 2);
+                doc.text(nameLines.slice(0, 1), x + pad, ty);
+                ty += 15;
+                if (r.product.code) {
+                    doc.setFont(undefined, 'normal');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(140);
+                    doc.text('Code: ' + r.product.code, x + pad, ty);
+                    ty += 15;
+                }
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(15);
+                doc.setTextColor(20);
+                doc.text('Rs. ' + r.adjusted.toFixed(2), x + pad, ty + 4);
                 if (Math.abs(r.pct) > 0.001) {
-                    doc.setFontSize(10);
+                    doc.setFont(undefined, 'normal');
+                    doc.setFontSize(8.5);
                     doc.setTextColor(150);
-                    doc.text('(was \u20B9' + r.base.toFixed(2) + ', ' + (r.pct > 0 ? '+' : '') + r.pct + '%)',
-                        textX, y + 82);
-                    doc.setTextColor(0);
+                    doc.text('(was Rs. ' + r.base.toFixed(2) + ', ' + (r.pct > 0 ? '+' : '') + r.pct + '%)', x +
+                        pad, ty + 17);
                 }
-                y += rowH;
+                doc.setTextColor(0);
+                col++;
+                if (col >= cols) { col = 0;
+                    y += cardH + gap; }
             });
             return doc;
         }
