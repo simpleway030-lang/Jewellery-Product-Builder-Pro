@@ -22,6 +22,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Google APIs for Drive -->
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
@@ -3396,10 +3397,13 @@
                         </div>
                         <div id="sharePreviewList" style="margin-top:12px;max-height:260px;overflow-y:auto;"></div>
                         <div style="display:flex;gap:10px;margin-top:18px;">
-                            <button style="flex:1;" onclick="shareSelectedViaWhatsApp()">💬 Share via WhatsApp</button>
+                            <button style="flex:1;" onclick="shareSelectedViaWhatsApp()">💬 Share via WhatsApp (text)</button>
                         </div>
                         <div style="display:flex;gap:10px;margin-top:10px;">
-                            <button class="ghost" style="flex:1;" onclick="shareSelectedWithImages()">🖼 Share with Images</button>
+                            <button class="ghost" style="flex:1;" onclick="shareSelectedWithImages()">📄 Share as PDF</button>
+                            <button class="ghost" style="flex:1;" onclick="downloadShareCatalogPDF()">⬇ Download PDF</button>
+                        </div>
+                        <div style="margin-top:10px;text-align:right;">
                             <button class="ghost" onclick="closeModal('shareProductsModal')">Close</button>
                         </div>
                     </div>
@@ -6394,40 +6398,77 @@
             var text = lines.join('\n');
             window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
         }
+
+        // Builds one combined PDF catalog (image + name + code + adjusted price per
+        // product) and returns it as a jsPDF instance. Used for both download and share.
+        function buildShareCatalogPDF(rows) {
+            if (typeof window.jspdf === 'undefined') { showToast('PDF library not loaded — check your internet connection and try again.', 'err'); return null; }
+            var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+            var pageW = doc.internal.pageSize.getWidth(),
+                pageH = doc.internal.pageSize.getHeight();
+            var margin = 36,
+                imgSize = 160,
+                rowH = imgSize + 40,
+                y = margin;
+            doc.setFontSize(16);
+            doc.text((company && company.name ? company.name : 'Product Catalog'), margin, y);
+            y += 24;
+            doc.setFontSize(10);
+            doc.setTextColor(120);
+            doc.text('Generated ' + new Date().toLocaleDateString(), margin, y);
+            doc.setTextColor(0);
+            y += 20;
+            rows.forEach(function(r, i) {
+                if (y + rowH > pageH - margin) { doc.addPage();
+                    y = margin; }
+                var imgSrc = productThumb(r.product);
+                if (imgSrc && imgSrc.indexOf('data:image') === 0) {
+                    try {
+                        var fmt = imgSrc.indexOf('data:image/png') === 0 ? 'PNG' : 'JPEG';
+                        doc.addImage(imgSrc, fmt, margin, y, imgSize, imgSize, undefined, 'FAST');
+                    } catch (e) {}
+                } else {
+                    doc.setDrawColor(200);
+                    doc.rect(margin, y, imgSize, imgSize);
+                }
+                var textX = margin + imgSize + 18;
+                doc.setFontSize(13);
+                doc.text(r.product.name, textX, y + 20);
+                doc.setFontSize(10);
+                doc.setTextColor(120);
+                if (r.product.code) doc.text('Code: ' + r.product.code, textX, y + 38);
+                doc.setTextColor(0);
+                doc.setFontSize(18);
+                doc.text('\u20B9' + r.adjusted.toFixed(2), textX, y + 66);
+                if (Math.abs(r.pct) > 0.001) {
+                    doc.setFontSize(10);
+                    doc.setTextColor(150);
+                    doc.text('(was \u20B9' + r.base.toFixed(2) + ', ' + (r.pct > 0 ? '+' : '') + r.pct + '%)',
+                        textX, y + 82);
+                    doc.setTextColor(0);
+                }
+                y += rowH;
+            });
+            return doc;
+        }
+        function downloadShareCatalogPDF() {
+            var rows = getSelectedProductsWithAdjustedPrice();
+            var doc = buildShareCatalogPDF(rows);
+            if (!doc) return;
+            doc.save('product-catalog-' + Date.now() + '.pdf');
+        }
         function shareSelectedWithImages() {
             var rows = getSelectedProductsWithAdjustedPrice();
-            if (!navigator.share) {
-                showToast('Your browser doesn\'t support direct image sharing — using WhatsApp text share instead.', 'info');
-                shareSelectedViaWhatsApp();
-                return;
-            }
-            shareOneByOne(rows, 0);
-        }
-        function shareOneByOne(rows, idx) {
-            if (idx >= rows.length) return;
-            var r = rows[idx];
-            var text = '💎 ' + r.product.name + ' — ₹' + r.adjusted.toFixed(2) + (r.product.code ? ' (Code: ' + r
-                .product.code + ')' : '');
-            var imgSrc = productThumb(r.product);
-            var doShare = function(files) {
-                var payload = { title: r.product.name, text: text };
-                if (files && files.length) payload.files = files;
-                navigator.share(payload).catch(function() {}).finally(function() {
-                    if (idx + 1 < rows.length) {
-                        setTimeout(function() { shareOneByOne(rows, idx + 1); }, 400);
-                    }
-                });
-            };
-            if (imgSrc && imgSrc.indexOf('data:') === 0) {
-                fetch(imgSrc).then(function(res) { return res.blob(); }).then(function(blob) {
-                    var file = new File([blob], (r.product.name || 'product') + '.jpg', { type: blob.type ||
-                        'image/jpeg' });
-                    if (navigator.canShare && !navigator.canShare({ files: [file] })) { doShare(null);
-                        return; }
-                    doShare([file]);
-                }).catch(function() { doShare(null); });
+            var doc = buildShareCatalogPDF(rows);
+            if (!doc) return;
+            var blob = doc.output('blob');
+            var file = new File([blob], 'product-catalog.pdf', { type: 'application/pdf' });
+            if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+                navigator.share({ title: 'Product Catalog', text: rows.length + ' product(s)', files: [file] })
+                    .catch(function() {});
             } else {
-                doShare(null);
+                showToast('Direct share not supported here — downloading the PDF instead, share it manually.', 'info');
+                doc.save('product-catalog-' + Date.now() + '.pdf');
             }
         }
 
