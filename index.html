@@ -129,6 +129,11 @@
                 grid-column: 1 !important;
             }
         }
+        .dash-period-btn.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
         /* ===== SYSTEMIC MOBILE OVERFLOW FIX =====
            Flex/grid children default to min-width:auto, meaning they refuse to
            shrink below their own content's natural width. A <select> with a long
@@ -3345,13 +3350,19 @@
                         <div><button class="pdf-export-btn" onclick="exportDashboardPDF()">📄 PDF Report</button></div>
                     </div>
                     <div class="note">Click any stat to drill down into details.</div>
+                    <div class="toolbar" style="margin-top:10px;">
+                        <button class="ghost small dash-period-btn active" data-period="week" onclick="setDashboardPeriod('week')">This Week</button>
+                        <button class="ghost small dash-period-btn" data-period="month" onclick="setDashboardPeriod('month')">This Month</button>
+                        <button class="ghost small dash-period-btn" data-period="year" onclick="setDashboardPeriod('year')">This Year</button>
+                        <button class="ghost small dash-period-btn" data-period="all" onclick="setDashboardPeriod('all')">All Time</button>
+                    </div>
                     <div class="dash-stats">
                         <div class="dash-stat" onclick="switchTab('products')"><div class="val" id="dTotalProducts">0</div><div class="lbl">Products</div></div>
-                        <div class="dash-stat" onclick="openDashboardDetail('totalvalue')"><div class="val" id="dTotalValue">₹0</div><div class="lbl">Catalog Value</div></div>
-                        <div class="dash-stat" onclick="openDashboardDetail('totalsales')"><div class="val" id="dTotalSales">0</div><div class="lbl">Total Sales</div></div>
-                        <div class="dash-stat" onclick="openDashboardDetail('revenue')"><div class="val" id="dRevenue">₹0</div><div class="lbl">Revenue</div></div>
-                        <div class="dash-stat" onclick="openDashboardDetail('totalcost')" title="Cost of Goods Sold — the purchase+making cost of everything you've sold so far (not your total inventory value)"><div class="val" id="dTotalCost">₹0</div><div class="lbl">Cost of Goods Sold</div></div>
-                        <div class="dash-stat" onclick="openDashboardDetail('totalprofit')"><div class="val" id="dTotalProfit">₹0</div><div class="lbl">Total Profit</div></div>
+                        <div class="dash-stat" onclick="openDashboardDetail('totalvalue')" title="Sum of the current selling price of every product in your catalog"><div class="val" id="dTotalValue">₹0</div><div class="lbl">Catalog Value</div></div>
+                        <div class="dash-stat" onclick="openDashboardDetail('totalsales')" title="Total number of items/pieces sold in the selected period"><div class="val" id="dTotalSales">0</div><div class="lbl">Total Sales (units)</div></div>
+                        <div class="dash-stat" onclick="openDashboardDetail('revenue')" title="Sum of the full invoice amount (grand total) of every sale in the selected period — this is total sales booked, whether or not it has been fully paid yet"><div class="val" id="dRevenue">₹0</div><div class="lbl">Revenue</div></div>
+                        <div class="dash-stat" onclick="openDashboardDetail('totalcost')" title="The cost (purchase + making) of everything currently sitting in your stock, based on today's stock levels"><div class="val" id="dTotalCost">₹0</div><div class="lbl">Inventory Cost (Stock)</div></div>
+                        <div class="dash-stat" onclick="openDashboardDetail('totalprofit')" title="Sum of profit across every sale in the selected period"><div class="val" id="dTotalProfit">₹0</div><div class="lbl">Total Profit</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('due')"><div class="val" id="dDue">₹0</div><div class="lbl">Outstanding Due</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('lowstock')"><div class="val" id="dLowStock">0</div><div class="lbl">Low Stock</div></div>
                         <div class="dash-stat" onclick="openAIChat()"><div class="val" id="dAIRecommend">✨</div><div class="lbl">AI Suggestion</div></div>
@@ -3359,6 +3370,16 @@
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px">
                         <div><div class="section-title" style="font-size:15px">Monthly Sales & Profit</div><div class="chart-wrap"><canvas id="chartMonthly"></canvas></div></div>
                         <div><div class="section-title" style="font-size:15px">Inventory by Category</div><div class="chart-wrap"><canvas id="chartCategory"></canvas></div></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px">
+                        <div>
+                            <div class="section-title" style="font-size:15px">🏆 Top Selling Products</div>
+                            <div id="dashTopProducts" class="table-scroll"></div>
+                        </div>
+                        <div>
+                            <div class="section-title" style="font-size:15px">🕓 Recent Activity</div>
+                            <div id="dashRecentActivity"></div>
+                        </div>
                     </div>
                     <div style="margin-top:18px;">
                         <div class="section-title" style="font-size:14px;">💡 Quick Help</div>
@@ -6509,8 +6530,17 @@
                     var pageW = doc.internal.pageSize.getWidth(),
                         pageH = doc.internal.pageSize.getHeight();
                     var margin = 40;
+                    var ACCENT = [30, 58, 138]; // deep navy-blue accent
+
+                    function paintPageBackground() {
+                        doc.setFillColor(250, 249, 246); // warm off-white, more professional than pure white
+                        doc.rect(0, 0, pageW, pageH, 'F');
+                        doc.setFillColor(ACCENT[0], ACCENT[1], ACCENT[2]);
+                        doc.rect(0, 0, pageW, 6, 'F'); // top accent bar
+                    }
 
                     function drawHeader() {
+                        paintPageBackground();
                         var y = margin;
                         var textX = margin;
                         if (company && company.logo) {
@@ -6535,8 +6565,8 @@
                         doc.text('Generated ' + new Date().toLocaleDateString(), pageW - margin, y + 8, { align:
                             'right' });
                         doc.text(rows.length + ' item(s)', pageW - margin, y + 20, { align: 'right' });
-                        doc.setDrawColor(210);
-                        doc.setLineWidth(1);
+                        doc.setDrawColor(ACCENT[0], ACCENT[1], ACCENT[2]);
+                        doc.setLineWidth(1.2);
                         doc.line(margin, y + 44, pageW - margin, y + 44);
                         doc.setTextColor(0);
                         return y + 44 + 22;
@@ -6546,7 +6576,7 @@
                         gap = 16;
                     var cardW = (pageW - margin * 2 - gap * (cols - 1)) / cols;
                     var imgH = cardW * 0.82,
-                        textH = 78,
+                        textH = 82,
                         cardH = imgH + textH;
                     var y = drawHeader();
                     var col = 0;
@@ -6558,7 +6588,11 @@
                             col = 0;
                         }
                         var x = margin + col * (cardW + gap);
-                        doc.setDrawColor(225);
+                        var centerX = x + cardW / 2;
+                        // White card on the warm page background, with a soft border for definition.
+                        doc.setFillColor(255, 255, 255);
+                        doc.roundedRect(x, y, cardW, cardH, 6, 6, 'F');
+                        doc.setDrawColor(222, 222, 226);
                         doc.setLineWidth(0.75);
                         doc.roundedRect(x, y, cardW, cardH, 6, 6);
                         var pad = 8;
@@ -6580,30 +6614,30 @@
                                 doc.addImage(dims.src, ifmt, drawX, drawY, drawW, drawH, undefined, 'FAST');
                             } catch (e) {}
                         }
-                        var ty = y + imgH + 12;
+                        var ty = y + imgH + 14;
                         doc.setFont(undefined, 'bold');
                         doc.setFontSize(12);
                         doc.setTextColor(20);
                         var nameLines = doc.splitTextToSize(r.product.name, cardW - pad * 2);
-                        doc.text(nameLines.slice(0, 1), x + pad, ty);
+                        doc.text(nameLines.slice(0, 1), centerX, ty, { align: 'center' });
                         ty += 15;
                         if (r.product.code) {
                             doc.setFont(undefined, 'normal');
                             doc.setFontSize(8.5);
                             doc.setTextColor(140);
-                            doc.text('Code: ' + r.product.code, x + pad, ty);
-                            ty += 15;
+                            doc.text('Code: ' + r.product.code, centerX, ty, { align: 'center' });
+                            ty += 16;
                         }
                         doc.setFont(undefined, 'bold');
                         doc.setFontSize(15);
-                        doc.setTextColor(20);
-                        doc.text('Rs. ' + r.adjusted.toFixed(2), x + pad, ty + 4);
+                        doc.setTextColor(ACCENT[0], ACCENT[1], ACCENT[2]);
+                        doc.text('Rs. ' + r.adjusted.toFixed(2), centerX, ty + 4, { align: 'center' });
                         if (Math.abs(r.pct) > 0.001) {
                             doc.setFont(undefined, 'normal');
                             doc.setFontSize(8.5);
                             doc.setTextColor(150);
                             doc.text('(was Rs. ' + r.base.toFixed(2) + ', ' + (r.pct > 0 ? '+' : '') + r.pct +
-                                '%)', x + pad, ty + 17);
+                                '%)', centerX, ty + 18, { align: 'center' });
                         }
                         doc.setTextColor(0);
                         col++;
@@ -8945,35 +8979,76 @@
         }
 
         // ===== DASHBOARD =====
+        var dashboardPeriod = 'week';
+        function setDashboardPeriod(period) {
+            dashboardPeriod = period;
+            document.querySelectorAll('.dash-period-btn').forEach(function(b) { b.classList.toggle('active', b
+                .dataset.period === period); });
+            renderDashboard();
+        }
+        function getDashboardPeriodRange() {
+            var now = new Date();
+            var start;
+            if (dashboardPeriod === 'week') {
+                start = new Date(now);
+                start.setDate(now.getDate() - now.getDay());
+                start.setHours(0, 0, 0, 0);
+            } else if (dashboardPeriod === 'month') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+            } else if (dashboardPeriod === 'year') {
+                start = new Date(now.getFullYear(), 0, 1);
+            } else {
+                start = new Date(0); // all time
+            }
+            return { start: start, end: now };
+        }
+        function getSalesInPeriod() {
+            var range = getDashboardPeriodRange();
+            return sales.filter(function(s) { var d = new Date(s.date); return d >= range.start && d <= range
+                .end; });
+        }
+
         function renderDashboard() {
             $('dTotalProducts').textContent = products.length;
+
+            // Catalog Value: current selling price of everything in the catalog (point-in-time, not period-filtered)
             var totalVal = products.reduce(function(s, p) { return s + Number(p.finalSell || 0); }, 0);
             $('dTotalValue').textContent = '₹' + formatCompact(totalVal);
-            $('dTotalSales').textContent = sales.length;
-            var revenue = sales.reduce(function(s, x) { return s + Number(x.paid || 0); }, 0);
+
+            var periodSales = getSalesInPeriod();
+
+            // Total Sales: total units/pieces sold in the selected period (not invoice count)
+            var unitsSold = periodSales.reduce(function(s, sale) { return s + (sale.lines || []).reduce(function(
+                ss, line) { return ss + Number(line.qty || 0); }, 0); }, 0);
+            $('dTotalSales').textContent = unitsSold;
+
+            // Revenue: full invoice amount (grandTotal) of every sale in the period — total sales booked,
+            // regardless of how much has actually been collected yet.
+            var revenue = periodSales.reduce(function(s, x) { return s + Number(x.grandTotal || 0); }, 0);
             $('dRevenue').textContent = '₹' + formatCompact(revenue);
-            var totalCostAcc = 0,
-                totalProfitAcc = 0;
-            sales.forEach(function(sale) {
-                sale.lines.forEach(function(line) {
-                    var prod = products.find(function(p) { return p.id === line.productId; });
-                    if (prod) {
-                        var totalQty = (prod.variations || []).reduce(function(s, v) { return s +
-                                v.items.reduce(function(ss, it) { return ss + it.qty; }, 0); },
-                            0) || 1;
-                        var costPerUnit = (prod.totalCost || 0) / totalQty;
-                        totalCostAcc += costPerUnit * line.qty;
-                    }
-                });
-                totalProfitAcc += sale.profit || 0;
-            });
+
+            // Total Profit: profit across sales in the selected period
+            var totalProfitAcc = periodSales.reduce(function(s, sale) { return s + Number(sale.profit || 0); }, 0);
+            $('dTotalProfit').textContent = '₹' + formatCompact(totalProfitAcc);
+
+            // Inventory Cost (Stock): cost basis of what's currently sitting in stock right now —
+            // this is a point-in-time snapshot, not filtered by period.
+            var inventoryCost = items.reduce(function(s, it) { return s + (Number(it.purchase_price || 0) +
+                Number(it.making || 0)) * Number(it.stock || 0); }, 0);
+            $('dTotalCost').textContent = '₹' + formatCompact(inventoryCost);
+
+            // Outstanding Due: current total across ALL sales regardless of period (a debt doesn't disappear
+            // just because it's outside the selected date range)
             var due = sales.reduce(function(s, x) { return s + Number(x.due || 0); }, 0);
             $('dDue').textContent = '₹' + formatCompact(due);
+
             var threshold = parseInt(localStorage.getItem(KEY_LOW_STOCK) || '5', 10);
             $('dLowStock').textContent = items.filter(function(it) { return (it.stock || 0) <= threshold; })
                 .length;
-            $('dTotalCost').textContent = '₹' + totalCostAcc.toFixed(0);
-            $('dTotalProfit').textContent = '₹' + totalProfitAcc.toFixed(0);
+
+            renderDashTopProducts(periodSales);
+            renderDashRecentActivity();
+
             var monthSales = {};
             sales.forEach(function(s) {
                 var m = new Date(s.date).toLocaleDateString('en', { month: 'short', year: 'numeric' });
@@ -9036,6 +9111,51 @@
             updateMiniStats();
             updateQuickStatsInSettings();
             updateAIStats();
+        }
+
+        function renderDashTopProducts(periodSales) {
+            var el = $('dashTopProducts');
+            if (!el) return;
+            var totals = {};
+            periodSales.forEach(function(sale) {
+                (sale.lines || []).forEach(function(line) {
+                    var key = line.productId;
+                    if (!totals[key]) totals[key] = { name: line.name || 'Unknown', qty: 0, revenue: 0 };
+                    totals[key].qty += Number(line.qty || 0);
+                    totals[key].revenue += Number(line.total || 0);
+                });
+            });
+            var top = Object.values(totals).sort(function(a, b) { return b.revenue - a.revenue; }).slice(0, 5);
+            if (top.length === 0) {
+                el.innerHTML = '<div class="note" style="padding:8px 0;">No sales in this period yet.</div>';
+                return;
+            }
+            el.innerHTML = '<table><thead><tr><th>Product</th><th class="num">Units</th><th class="num">Revenue</th></tr></thead><tbody>' +
+                top.map(function(t) {
+                    return '<tr><td>' + escapeHtml(t.name) + '</td><td class="num">' + t.qty +
+                        '</td><td class="num">₹' + t.revenue.toFixed(2) + '</td></tr>';
+                }).join('') + '</tbody></table>';
+        }
+
+        function renderDashRecentActivity() {
+            var el = $('dashRecentActivity');
+            if (!el) return;
+            var events = [];
+            sales.slice(-5).forEach(function(s) { events.push({ date: s.date, text: '💳 Sale to ' + (s.customer &&
+                s.customer.name || 'Walk-in') + ' — ₹' + Number(s.grandTotal || 0).toFixed(0) }); });
+            purchases.slice(-5).forEach(function(p) { events.push({ date: p.date, text: '📦 Purchased ' + p.qty +
+                'x ' + (p.item || '') + ' from ' + (p.supplier || '—') }); });
+            events.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+            events = events.slice(0, 6);
+            if (events.length === 0) {
+                el.innerHTML = '<div class="note" style="padding:8px 0;">No recent activity yet.</div>';
+                return;
+            }
+            el.innerHTML = events.map(function(e) {
+                return '<div style="padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:12.5px;display:flex;justify-content:space-between;gap:8px;"><span>' +
+                    escapeHtml(e.text) + '</span><span class="muted" style="font-size:11px;white-space:nowrap;">' +
+                    new Date(e.date).toLocaleDateString() + '</span></div>';
+            }).join('');
         }
 
         // ===== MINI STATS (right panel) =====
