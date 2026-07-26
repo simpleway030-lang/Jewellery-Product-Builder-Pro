@@ -117,6 +117,17 @@
             .inv-full-form {
                 grid-template-columns: 1fr !important;
             }
+            /* Some fields (e.g. the Save button row) use grid-column:span 2 so they
+               stretch across both columns on desktop. With only one column left on
+               mobile, that leftover span forces the browser to invent an implicit
+               second column to satisfy it — and every other field then zigzags
+               across both the real and implicit column. Neutralize it here. */
+            .itemdb-form-grid > *,
+            .manual-item-grid > *,
+            .manual-fields-grid > *,
+            .inv-full-form > * {
+                grid-column: 1 !important;
+            }
         }
         /* ===== SYSTEMIC MOBILE OVERFLOW FIX =====
            Flex/grid children default to min-width:auto, meaning they refuse to
@@ -6430,125 +6441,150 @@
 
         // Builds one combined PDF catalog (image + name + code + adjusted price per
         // product) and returns it as a jsPDF instance. Used for both download and share.
-        function buildShareCatalogPDF(rows) {
-            if (typeof window.jspdf === 'undefined') { showToast('PDF library not loaded — check your internet connection and try again.', 'err'); return null; }
-            var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
-            var pageW = doc.internal.pageSize.getWidth(),
-                pageH = doc.internal.pageSize.getHeight();
-            var margin = 40;
-
-            function drawHeader() {
-                var y = margin;
-                var textX = margin;
-                if (company && company.logo) {
-                    try {
-                        var fmt = company.logo.indexOf('data:image/png') === 0 ? 'PNG' : 'JPEG';
-                        doc.addImage(company.logo, fmt, margin, y - 6, 42, 42, undefined, 'FAST');
-                        textX = margin + 54;
-                    } catch (e) {}
-                }
-                doc.setFont(undefined, 'bold');
-                doc.setFontSize(19);
-                doc.setTextColor(20);
-                doc.text((company && company.name ? company.name : 'Product Catalog'), textX, y + 16);
-                doc.setFont(undefined, 'normal');
-                doc.setFontSize(9.5);
-                doc.setTextColor(110);
-                var subLine = [company && company.tagline, company && company.phone].filter(Boolean).join('  ·  ');
-                if (subLine) doc.text(subLine, textX, y + 30);
-                doc.setFontSize(9);
-                doc.setTextColor(150);
-                doc.text('Generated ' + new Date().toLocaleDateString(), pageW - margin, y + 8, { align: 'right' });
-                doc.text(rows.length + ' item(s)', pageW - margin, y + 20, { align: 'right' });
-                doc.setDrawColor(210);
-                doc.setLineWidth(1);
-                doc.line(margin, y + 44, pageW - margin, y + 44);
-                doc.setTextColor(0);
-                return y + 44 + 22;
-            }
-
-            var cols = 2,
-                gap = 16;
-            var cardW = (pageW - margin * 2 - gap * (cols - 1)) / cols;
-            var imgH = cardW * 0.82,
-                textH = 78,
-                cardH = imgH + textH;
-            var y = drawHeader();
-            var col = 0;
-
-            rows.forEach(function(r) {
-                if (y + cardH > pageH - margin) {
-                    doc.addPage();
-                    y = drawHeader();
-                    col = 0;
-                }
-                var x = margin + col * (cardW + gap);
-                doc.setDrawColor(225);
-                doc.setLineWidth(0.75);
-                doc.roundedRect(x, y, cardW, cardH, 6, 6);
-                var imgSrc = productThumb(r.product);
-                var pad = 8;
-                if (imgSrc && imgSrc.indexOf('data:image') === 0) {
-                    try {
-                        var ifmt = imgSrc.indexOf('data:image/png') === 0 ? 'PNG' : 'JPEG';
-                        doc.addImage(imgSrc, ifmt, x + pad, y + pad, cardW - pad * 2, imgH - pad * 2 - 6,
-                            undefined, 'FAST');
-                    } catch (e) {}
-                } else {
-                    doc.setFillColor(245, 245, 247);
-                    doc.rect(x + pad, y + pad, cardW - pad * 2, imgH - pad * 2 - 6, 'F');
-                }
-                var ty = y + imgH + 12;
-                doc.setFont(undefined, 'bold');
-                doc.setFontSize(12);
-                doc.setTextColor(20);
-                var nameLines = doc.splitTextToSize(r.product.name, cardW - pad * 2);
-                doc.text(nameLines.slice(0, 1), x + pad, ty);
-                ty += 15;
-                if (r.product.code) {
-                    doc.setFont(undefined, 'normal');
-                    doc.setFontSize(8.5);
-                    doc.setTextColor(140);
-                    doc.text('Code: ' + r.product.code, x + pad, ty);
-                    ty += 15;
-                }
-                doc.setFont(undefined, 'bold');
-                doc.setFontSize(15);
-                doc.setTextColor(20);
-                doc.text('Rs. ' + r.adjusted.toFixed(2), x + pad, ty + 4);
-                if (Math.abs(r.pct) > 0.001) {
-                    doc.setFont(undefined, 'normal');
-                    doc.setFontSize(8.5);
-                    doc.setTextColor(150);
-                    doc.text('(was Rs. ' + r.base.toFixed(2) + ', ' + (r.pct > 0 ? '+' : '') + r.pct + '%)', x +
-                        pad, ty + 17);
-                }
-                doc.setTextColor(0);
-                col++;
-                if (col >= cols) { col = 0;
-                    y += cardH + gap; }
+        function loadImageDimensions(src) {
+            return new Promise(function(resolve) {
+                if (!src || src.indexOf('data:image') !== 0) { resolve(null); return; }
+                var img = new Image();
+                img.onload = function() { resolve({ src: src, w: img.naturalWidth || 1, h: img.naturalHeight || 1 }); };
+                img.onerror = function() { resolve(null); };
+                img.src = src;
             });
-            return doc;
+        }
+
+        function buildShareCatalogPDF(rows) {
+            if (typeof window.jspdf === 'undefined') { showToast('PDF library not loaded — check your internet connection and try again.', 'err'); return Promise.resolve(null); }
+            return Promise.all(rows.map(function(r) { return loadImageDimensions(productThumb(r.product)); })).then(
+                function(imgDims) {
+                    var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+                    var pageW = doc.internal.pageSize.getWidth(),
+                        pageH = doc.internal.pageSize.getHeight();
+                    var margin = 40;
+
+                    function drawHeader() {
+                        var y = margin;
+                        var textX = margin;
+                        if (company && company.logo) {
+                            try {
+                                var fmt = company.logo.indexOf('data:image/png') === 0 ? 'PNG' : 'JPEG';
+                                doc.addImage(company.logo, fmt, margin, y - 6, 42, 42, undefined, 'FAST');
+                                textX = margin + 54;
+                            } catch (e) {}
+                        }
+                        doc.setFont(undefined, 'bold');
+                        doc.setFontSize(19);
+                        doc.setTextColor(20);
+                        doc.text((company && company.name ? company.name : 'Product Catalog'), textX, y + 16);
+                        doc.setFont(undefined, 'normal');
+                        doc.setFontSize(9.5);
+                        doc.setTextColor(110);
+                        var subLine = [company && company.tagline, company && company.phone].filter(Boolean).join(
+                            '  ·  ');
+                        if (subLine) doc.text(subLine, textX, y + 30);
+                        doc.setFontSize(9);
+                        doc.setTextColor(150);
+                        doc.text('Generated ' + new Date().toLocaleDateString(), pageW - margin, y + 8, { align:
+                            'right' });
+                        doc.text(rows.length + ' item(s)', pageW - margin, y + 20, { align: 'right' });
+                        doc.setDrawColor(210);
+                        doc.setLineWidth(1);
+                        doc.line(margin, y + 44, pageW - margin, y + 44);
+                        doc.setTextColor(0);
+                        return y + 44 + 22;
+                    }
+
+                    var cols = 2,
+                        gap = 16;
+                    var cardW = (pageW - margin * 2 - gap * (cols - 1)) / cols;
+                    var imgH = cardW * 0.82,
+                        textH = 78,
+                        cardH = imgH + textH;
+                    var y = drawHeader();
+                    var col = 0;
+
+                    rows.forEach(function(r, idx) {
+                        if (y + cardH > pageH - margin) {
+                            doc.addPage();
+                            y = drawHeader();
+                            col = 0;
+                        }
+                        var x = margin + col * (cardW + gap);
+                        doc.setDrawColor(225);
+                        doc.setLineWidth(0.75);
+                        doc.roundedRect(x, y, cardW, cardH, 6, 6);
+                        var pad = 8;
+                        var boxW = cardW - pad * 2,
+                            boxH = imgH - pad * 2 - 6;
+                        doc.setFillColor(248, 248, 250);
+                        doc.rect(x + pad, y + pad, boxW, boxH, 'F');
+                        var dims = imgDims[idx];
+                        if (dims) {
+                            try {
+                                // Fit (not stretch) the image inside the box, preserving its
+                                // natural aspect ratio — like CSS object-fit:contain.
+                                var scale = Math.min(boxW / dims.w, boxH / dims.h);
+                                var drawW = dims.w * scale,
+                                    drawH = dims.h * scale;
+                                var drawX = x + pad + (boxW - drawW) / 2,
+                                    drawY = y + pad + (boxH - drawH) / 2;
+                                var ifmt = dims.src.indexOf('data:image/png') === 0 ? 'PNG' : 'JPEG';
+                                doc.addImage(dims.src, ifmt, drawX, drawY, drawW, drawH, undefined, 'FAST');
+                            } catch (e) {}
+                        }
+                        var ty = y + imgH + 12;
+                        doc.setFont(undefined, 'bold');
+                        doc.setFontSize(12);
+                        doc.setTextColor(20);
+                        var nameLines = doc.splitTextToSize(r.product.name, cardW - pad * 2);
+                        doc.text(nameLines.slice(0, 1), x + pad, ty);
+                        ty += 15;
+                        if (r.product.code) {
+                            doc.setFont(undefined, 'normal');
+                            doc.setFontSize(8.5);
+                            doc.setTextColor(140);
+                            doc.text('Code: ' + r.product.code, x + pad, ty);
+                            ty += 15;
+                        }
+                        doc.setFont(undefined, 'bold');
+                        doc.setFontSize(15);
+                        doc.setTextColor(20);
+                        doc.text('Rs. ' + r.adjusted.toFixed(2), x + pad, ty + 4);
+                        if (Math.abs(r.pct) > 0.001) {
+                            doc.setFont(undefined, 'normal');
+                            doc.setFontSize(8.5);
+                            doc.setTextColor(150);
+                            doc.text('(was Rs. ' + r.base.toFixed(2) + ', ' + (r.pct > 0 ? '+' : '') + r.pct +
+                                '%)', x + pad, ty + 17);
+                        }
+                        doc.setTextColor(0);
+                        col++;
+                        if (col >= cols) { col = 0;
+                            y += cardH + gap; }
+                    });
+                    return doc;
+                });
         }
         function downloadShareCatalogPDF() {
             var rows = getSelectedProductsWithAdjustedPrice();
-            var doc = buildShareCatalogPDF(rows);
-            if (!doc) return;
-            doc.save('product-catalog-' + Date.now() + '.pdf');
+            buildShareCatalogPDF(rows).then(function(doc) {
+                if (!doc) return;
+                doc.save('product-catalog-' + Date.now() + '.pdf');
+            });
         }
         function shareSelectedWithImages() {
             var rows = getSelectedProductsWithAdjustedPrice();
-            var doc = buildShareCatalogPDF(rows);
-            if (!doc) return;
-            var blob = doc.output('blob');
-            var file = new File([blob], 'product-catalog.pdf', { type: 'application/pdf' });
-            if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
-                navigator.share({ title: 'Product Catalog', text: rows.length + ' product(s)', files: [file] })
-                    .catch(function() {});
-            } else {
-                showToast('Direct share not supported here — downloading the PDF instead, share it manually.', 'info');
-                doc.save('product-catalog-' + Date.now() + '.pdf');
-            }
+            buildShareCatalogPDF(rows).then(function(doc) {
+                if (!doc) return;
+                var blob = doc.output('blob');
+                var file = new File([blob], 'product-catalog.pdf', { type: 'application/pdf' });
+                if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+                    navigator.share({ title: 'Product Catalog', text: rows.length + ' product(s)', files: [
+                        file
+                    ] }).catch(function() {});
+                } else {
+                    showToast('Direct share not supported here — downloading the PDF instead, share it manually.', 'info');
+                    doc.save('product-catalog-' + Date.now() + '.pdf');
+                }
+            });
         }
 
         function renderProductGrid() {
