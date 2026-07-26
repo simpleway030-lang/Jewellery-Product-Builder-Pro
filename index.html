@@ -3350,7 +3350,7 @@
                         <div class="dash-stat" onclick="openDashboardDetail('totalvalue')"><div class="val" id="dTotalValue">₹0</div><div class="lbl">Catalog Value</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('totalsales')"><div class="val" id="dTotalSales">0</div><div class="lbl">Total Sales</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('revenue')"><div class="val" id="dRevenue">₹0</div><div class="lbl">Revenue</div></div>
-                        <div class="dash-stat" onclick="openDashboardDetail('totalcost')"><div class="val" id="dTotalCost">₹0</div><div class="lbl">Total Cost</div></div>
+                        <div class="dash-stat" onclick="openDashboardDetail('totalcost')" title="Cost of Goods Sold — the purchase+making cost of everything you've sold so far (not your total inventory value)"><div class="val" id="dTotalCost">₹0</div><div class="lbl">Cost of Goods Sold</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('totalprofit')"><div class="val" id="dTotalProfit">₹0</div><div class="lbl">Total Profit</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('due')"><div class="val" id="dDue">₹0</div><div class="lbl">Outstanding Due</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('lowstock')"><div class="val" id="dLowStock">0</div><div class="lbl">Low Stock</div></div>
@@ -3817,7 +3817,10 @@
                         <div id="custLedgerSummary" class="ledger-summary"></div>
                         <div id="custLedgerEntries" style="margin-top:12px;max-height:300px;overflow:auto"></div>
                         <div class="walkin-ledger-section" id="walkinLedgerSection">
-                            <div class="wl-title">🚶 Walk-in Customer Ledger</div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                                <div class="wl-title">🚶 Walk-in Customer Ledger</div>
+                                <button class="ghost small" onclick="newWalkinSale()">+ New Walk-in Sale</button>
+                            </div>
                             <div class="note" style="font-size:11px;">All sales to walk-in customers are tracked here.</div>
                             <div class="wl-entries" id="walkinLedgerEntries"></div>
                             <div class="walkin-ledger-summary-grid" id="walkinLedgerSummary"></div>
@@ -3894,6 +3897,26 @@
                             <div><label>Default Tax %</label><input id="settingDefaultTax" type="number" step="0.01" min="0" max="100" value="0" style="width:80px;margin-top:0;"></div>
                             <div><button onclick="saveSettings()" class="ghost small">💾 Save</button></div>
                         </div>
+                    </div>
+                    <hr>
+                    <div class="section-title" style="font-size:15px;">🏠 Default Home Screen</div>
+                    <div class="note">Choose which tab opens automatically when you launch the app.</div>
+                    <div class="inline-flex" style="gap:14px;flex-wrap:wrap;align-items:flex-end;">
+                        <div>
+                            <select id="settingDefaultTab" style="width:auto;margin-top:5px;">
+                                <option value="dashboard">Dashboard</option>
+                                <option value="products">Gallery</option>
+                                <option value="builder">Builder</option>
+                                <option value="itemdb">Items DB</option>
+                                <option value="itemslist">All Items</option>
+                                <option value="inventory">Inventory</option>
+                                <option value="billing">Billing</option>
+                                <option value="ledger">Ledger</option>
+                                <option value="categories">Categories</option>
+                                <option value="settings">Settings</option>
+                            </select>
+                        </div>
+                        <div><button onclick="saveDefaultHomeTab()" class="ghost small">💾 Save</button></div>
                     </div>
                     <hr>
                     <div class="section-title" style="font-size:15px;">🕘 History & Data Retention</div>
@@ -4819,6 +4842,7 @@
             if ($('settingDefaultTax')) $('settingDefaultTax').value = defaultTax;
             if ($('billTax')) $('billTax').value = defaultTax;
             loadHistoryRetentionSetting();
+            loadDefaultHomeTabSetting();
             pruneOldHistory();
             var savedFolder = localStorage.getItem(KEY_DATA_FOLDER);
             if (savedFolder) { dataFolderPath = savedFolder;
@@ -4845,6 +4869,19 @@
             renderPurchaseTable();
             renderStockTable();
             showToast('Settings saved', 'ok');
+        }
+
+        // ===== DEFAULT HOME TAB =====
+        function saveDefaultHomeTab() {
+            var val = $('settingDefaultTab').value;
+            localStorage.setItem('jp_default_home_tab_v1', val);
+            showToast('Default home screen set to "' + $('settingDefaultTab').selectedOptions[0].textContent +
+                '"', 'ok');
+        }
+        function loadDefaultHomeTabSetting() {
+            var val = localStorage.getItem('jp_default_home_tab_v1') || 'dashboard';
+            if ($('settingDefaultTab')) $('settingDefaultTab').value = val;
+            return val;
         }
 
         // ===== HISTORY RETENTION =====
@@ -5189,6 +5226,16 @@
         }
 
         // ===== TABS =====
+        var _suppressHistoryPush = false;
+        if (!history.state || !history.state.tab) {
+            history.replaceState({ tab: 'dashboard' }, '', location.pathname + location.search + '#dashboard');
+        }
+        window.addEventListener('popstate', function(e) {
+            var tab = (e.state && e.state.tab) || 'dashboard';
+            _suppressHistoryPush = true;
+            switchTab(tab);
+            _suppressHistoryPush = false;
+        });
         document.querySelectorAll('.tab').forEach(function(t) {
             t.addEventListener('click', function(e) {
                 document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
@@ -5200,6 +5247,9 @@
                 var id = e.currentTarget.dataset.tab;
                 var el = document.getElementById(id);
                 if (el) el.style.display = 'block';
+                if (!_suppressHistoryPush && (!history.state || history.state.tab !== id)) {
+                    history.pushState({ tab: id }, '', location.pathname + location.search + '#' + id);
+                }
                 populateItemSelect();
                 populateExportSelect();
                 if (id === 'products') { visibleProductCount = LOAD_STEP;
@@ -7640,7 +7690,8 @@
                         s.status) +
                     '</span></td><td><button class="small ghost" onclick="openInvoiceModal(sales.find(function(x){return x.id===' +
                     s.id + '}),\'sale\')">View</button>' + (s.due > 0 ?
-                        '<button class="small" onclick="markPaid(' + s.id + ')">Pay</button>' : '') +
+                        '<button class="small" onclick="recordPayment(' + s.id + ')">Record Payment</button>' :
+                        '') +
                     '<button class="small danger" onclick="deleteSale(' + s.id + ')">Del</button></td>';
                 tbody.appendChild(tr);
             });
@@ -7654,6 +7705,33 @@
         function toggleSalesShowMore() { salesShowAll = !salesShowAll;
             renderSalesHistory(); }
 
+        function recordPayment(id) {
+            var s = sales.find(function(x) { return x.id === id; });
+            if (!s) return;
+            showInputPrompt('Payment amount received (due: ₹' + Number(s.due).toFixed(2) + ')', Number(s.due)
+                .toFixed(2)).then(function(raw) {
+                if (raw === null) return;
+                var amount = parseFloat(raw);
+                if (isNaN(amount) || amount <= 0) { showToast('Enter a valid payment amount', 'err'); return; }
+                if (amount > s.due + 0.01) amount = s.due;
+                s.paid = Number(s.paid || 0) + amount;
+                s.due = Math.max(Number(s.grandTotal) - s.paid, 0);
+                s.status = s.due <= 0.01 ? 'Paid' : 'Partial';
+                if (s.customer.id && s.customer.id !== 'walkin') {
+                    var entry = custLedger.find(function(e) { return e.invoiceId === s.id && e.type === 'sale'; });
+                    if (entry) { entry.credit = s.paid;
+                        entry.balance = s.due;
+                        entry.notes = 'Invoice ' + s.invoiceNo + (s.due <= 0.01 ? ' (paid)' : ' (partial payment)'); }
+                }
+                saveAll(true);
+                renderSalesHistory();
+                renderDashboard();
+                renderWalkinLedger();
+                updateStats();
+                showToast('✅ Payment of ₹' + amount.toFixed(2) + ' recorded' + (s.due > 0.01 ? ' — ₹' + s.due
+                    .toFixed(2) + ' still due' : ' — fully paid'), 'ok');
+            });
+        }
         function markPaid(id) {
             var s = sales.find(function(x) { return x.id === id; });
             if (!s) return;
@@ -8110,6 +8188,13 @@
         }
 
         // ===== LEDGER with Walk-in support =====
+        function newWalkinSale() {
+            switchTab('billing');
+            setTimeout(function() {
+                if ($('customerSelect')) $('customerSelect').value = '';
+                showToast('🚶 Ready for a walk-in sale — add products below', 'info');
+            }, 150);
+        }
         function openWalkinLedger() {
             switchLedgerTab('customer');
             if ($('ledgerCustSelect')) $('ledgerCustSelect').value = '';
@@ -8866,6 +8951,7 @@
             $('dTotalValue').textContent = '₹' + formatCompact(totalVal);
             $('dTotalSales').textContent = sales.length;
             var revenue = sales.reduce(function(s, x) { return s + Number(x.paid || 0); }, 0);
+            $('dRevenue').textContent = '₹' + formatCompact(revenue);
             var totalCostAcc = 0,
                 totalProfitAcc = 0;
             sales.forEach(function(sale) {
@@ -9438,6 +9524,12 @@
                 if (e.target === modal) modal.style.display = 'none';
             });
         });
+        var _defaultHomeTab = loadDefaultHomeTabSetting();
+        if (_defaultHomeTab && _defaultHomeTab !== 'dashboard') {
+            history.replaceState({ tab: _defaultHomeTab }, '', location.pathname + location.search + '#' +
+                _defaultHomeTab);
+            switchTab(_defaultHomeTab);
+        }
         console.log('Jewellery Product Builder Pro loaded successfully. AI features active!');
 
       // ==================== GOOGLE DRIVE SYNC (v2 - silent auto refresh, no more disconnects) ====================
