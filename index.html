@@ -3767,13 +3767,13 @@
                                         <option value="">Choose category</option>
                                     </select>
                                     <input id="varStock" type="number" min="0" value="0" placeholder="Stock" style="width:80px;margin-top:0">
-                                    <input id="varColor" type="color" value="#d4af37" style="width:44px;margin-top:0;padding:4px;height:42px">
+                                    <span id="varColorWrap"><input id="varColor" type="color" value="#d4af37" style="width:44px;margin-top:0;padding:4px;height:42px"></span>
                                     <button onclick="quickAddCategoryFromBuilder()" class="ghost small" style="white-space:nowrap;">＋ New</button>
                                     <button onclick="addVariation()" style="white-space:nowrap;">+ Add</button>
                                 </div>
                                 <div class="note" style="margin-top:4px;">💡 Picking a category from the list adds it instantly.</div>
                                 <div id="varDuplicateWarning" style="margin-top:6px;"></div>
-                                <div class="quick-colors">
+                                <div class="quick-colors" id="varColorPresetsWrap">
                                     <span class="muted" style="font-size:11px;margin-right:4px;">Presets:</span>
                                     <div class="qc" style="background:#ffffff;" onclick="document.getElementById('varColor').value='#ffffff';document.getElementById('varCategory').value='White'"></div>
                                     <div class="qc" style="background:#d4af37;" onclick="document.getElementById('varColor').value='#d4af37';document.getElementById('varCategory').value='Gold'"></div>
@@ -4248,6 +4248,20 @@
                         </div>
                     </div>
                     <hr>
+                    <div class="section-title" style="font-size:15px;">🎨 Cost/Sell/Profit Colors</div>
+                    <div class="note">Show Cost, Sell and Profit as separate colored lines in product details. Turn off for plain black text.</div>
+                    <div class="ai-search-toggle">
+                        <div class="switch" id="statColorsToggle" onclick="toggleStatColors(!statColorsEnabled())"></div>
+                        <span class="muted" id="statColorsToggleLabel">On</span>
+                    </div>
+                    <hr>
+                    <div class="section-title" style="font-size:15px;">🎨 Variation Colour Picker</div>
+                    <div class="note">Show the colour swatch and quick-colour presets when adding a product variation in Builder. Turn off if you don't use colour tagging.</div>
+                    <div class="ai-search-toggle">
+                        <div class="switch" id="varColorToggle" onclick="toggleVarColorUI(!varColorUIEnabled())"></div>
+                        <span class="muted" id="varColorToggleLabel">On</span>
+                    </div>
+                    <hr>
                     <div class="section-title" style="font-size:15px;">🌐 AI Online Search</div>
                     <div class="note">Enable online search in AI Chat — queries that the AI can't answer will be searched online.</div>
                     <div class="ai-search-toggle">
@@ -4376,6 +4390,40 @@
     <div id="ledgerEntryModal" class="modal-backdrop"><div class="modal-box dark" style="max-width:460px"><div class="section-title" id="ledgerEntryTitle">Record</div><div id="ledgerEntryForm"></div><div style="margin-top:14px;text-align:right;display:flex;gap:10px;justify-content:flex-end"><button onclick="saveLedgerEntry()">💾 Save</button><button onclick="closeModal('ledgerEntryModal')" class="ghost">Cancel</button></div></div></div>
     <div id="dashboardDetailModal" class="modal-backdrop"><div class="modal-box dark" style="max-width:720px;"><div class="section-title" id="ddTitle">Details</div><div id="ddContent" style="margin-top:12px;"></div><div style="margin-top:16px;text-align:right;display:flex;gap:10px;justify-content:flex-end;"><button onclick="exportDetailPDF()" class="pdf-export-btn">📄 Export PDF</button><button class="ghost" onclick="closeModal('dashboardDetailModal')">Close</button></div></div></div>
     <!-- AI CHAT MODAL -->
+    <div id="karigarListModal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:520px;padding:22px;max-height:85vh;overflow-y:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h2 style="font-size:16px;margin:0;">📋 Karigar List</h2>
+                <button class="icon-btn" onclick="closeModal('karigarListModal')">✕</button>
+            </div>
+            <div id="karigarRegisterList" style="margin-top:14px;"></div>
+        </div>
+    </div>
+    <div id="karigarJobEditModal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:560px;padding:22px;max-height:88vh;overflow-y:auto;">
+            <h2 style="font-size:16px;margin:0 0 4px;">✎ Edit Job — <span id="kjeJobId"></span></h2>
+            <div class="note" id="kjeKarigarName" style="font-size:12px;"></div>
+            <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <label style="grid-column:1/-1;">Work details<textarea id="kjeWork" style="min-height:60px;"></textarea></label>
+                <label>Delivery date<input id="kjeDueDate" type="date"></label>
+                <label>Work bill amount (₹)<input id="kjeLaborCharge" type="number" min="0" step="0.01"></label>
+                <label style="grid-column:1/-1;">Notes<textarea id="kjeNotes" style="min-height:50px;"></textarea></label>
+            </div>
+            <div style="margin-top:16px;border-top:1px solid var(--border-soft);padding-top:12px;">
+                <div style="font-weight:700;font-size:13px;margin-bottom:8px;">📦 Inventory Items Issued</div>
+                <div id="kjeItemsList"></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                    <select id="kjeItemSelect" style="flex:1;min-width:160px;margin-top:0;"></select>
+                    <input id="kjeItemQty" type="number" min="0.001" step="0.001" value="1" style="width:90px;margin-top:0;">
+                    <button class="ghost small" onclick="kjeAddItem()">+ Add item</button>
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+                <button style="flex:1;" onclick="saveKarigarJobEditV3()">💾 Save Changes</button>
+                <button class="ghost" onclick="closeModal('karigarJobEditModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
     <div id="fullscreenImgModal" class="modal-backdrop" onclick="closeModal('fullscreenImgModal')" style="background:rgba(0,0,0,0.9);z-index:500;">
         <img id="fullscreenImgTag" src="" style="max-width:95vw;max-height:95vh;object-fit:contain;margin:auto;">
     </div>
@@ -5244,6 +5292,8 @@
             if ($('billTax')) $('billTax').value = defaultTax;
             loadHistoryRetentionSetting();
             loadDefaultHomeTabSetting();
+            loadStatColorsSetting();
+            loadVarColorSetting();
             pruneOldHistory();
             var savedFolder = localStorage.getItem(KEY_DATA_FOLDER);
             if (savedFolder) { dataFolderPath = savedFolder;
@@ -5740,6 +5790,65 @@
 
         // ===== ITEM DETAIL / HISTORY MODAL =====
         var _itemDetailIdx = -1;
+        // ===== COLORED STAT LINES (Cost/Sell/Profit) — togglable in Settings =====
+        function statColorsEnabled() {
+            return localStorage.getItem('jp_stat_colors_v1') !== 'off'; // on by default
+        }
+        function statLinesHtml(cost, sell, profit) {
+            var colored = statColorsEnabled();
+            var costColor = colored ? '#8e8e93' : 'inherit'; // neutral gray
+            var sellColor = colored ? 'var(--accent)' : 'inherit'; // blue/brand
+            var profitColor = colored ? (profit >= 0 ? 'var(--success)' : 'var(--danger)') : 'inherit';
+            return '<div style="margin-top:6px;font-size:12px;font-weight:600;">' +
+                '<div style="color:' + costColor + ';">Cost: ₹' + Number(cost).toFixed(2) + '</div>' +
+                '<div style="color:' + sellColor + ';">Sell: ₹' + Number(sell).toFixed(2) + '</div>' +
+                '<div style="color:' + profitColor + ';">Profit: ₹' + Number(profit).toFixed(2) + '</div>' +
+                '</div>';
+        }
+        // ===== VARIATION COLOR PICKER TOGGLE =====
+        function varColorUIEnabled() {
+            return localStorage.getItem('jp_var_color_ui_v1') !== 'off'; // on by default
+        }
+        function applyVarColorUIVisibility() {
+            var on = varColorUIEnabled();
+            if ($('varColorWrap')) $('varColorWrap').style.display = on ? '' : 'none';
+            if ($('varColorPresetsWrap')) $('varColorPresetsWrap').style.display = on ? '' : 'none';
+        }
+        function toggleVarColorUI(enabled) {
+            localStorage.setItem('jp_var_color_ui_v1', enabled ? 'on' : 'off');
+            applyVarColorUIVisibility();
+            updateVarColorToggleUI();
+            showToast('Variation colour picker ' + (enabled ? 'shown' : 'hidden'), 'ok');
+        }
+        function updateVarColorToggleUI() {
+            var sw = $('varColorToggle'),
+                label = $('varColorToggleLabel');
+            var on = varColorUIEnabled();
+            if (sw) sw.classList.toggle('on', on);
+            if (label) label.textContent = on ? 'On' : 'Off';
+        }
+        function loadVarColorSetting() {
+            updateVarColorToggleUI();
+            applyVarColorUIVisibility();
+        }
+
+        function toggleStatColors(enabled) {
+            localStorage.setItem('jp_stat_colors_v1', enabled ? 'on' : 'off');
+            updateStatColorsToggleUI();
+            if (typeof qvProduct !== 'undefined' && qvProduct) renderQuickView();
+            showToast('Stat line colors ' + (enabled ? 'enabled' : 'disabled'), 'ok');
+        }
+        function updateStatColorsToggleUI() {
+            var sw = $('statColorsToggle'),
+                label = $('statColorsToggleLabel');
+            var on = statColorsEnabled();
+            if (sw) sw.classList.toggle('on', on);
+            if (label) label.textContent = on ? 'On' : 'Off';
+        }
+        function loadStatColorsSetting() {
+            updateStatColorsToggleUI();
+        }
+
         function openItemDetail(idx) {
             var it = items[idx];
             if (!it) return;
@@ -7305,11 +7414,8 @@
                                     .toFixed(2) + '</td></tr>';
                             }).join('') + '</tbody></table></div>' :
                             '<div class="note" style="font-size:11px">No items</div>' +
-                            '<div style="margin-top:6px;font-size:12px;font-weight:600;color:' + (s
-                                .profit >= 0 ? 'var(--success)' : 'var(--danger)') +
-                            '">Profit: ₹' + s.profit.toFixed(2) + ' (Cost: ₹' + s.totalCost.toFixed(
-                                2) + ' | Sell: ₹' + s.totalSell.toFixed(2) +
-                            ')</div><div class="qv-stock-edit" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:var(--border-soft);padding:6px 8px;border-radius:9px;flex-wrap:wrap;"><span style="font-size:12px;font-weight:600;">📦 Stock:</span><input type="number" min="0" id="qvStockInput' +
+                            statLinesHtml(s.totalCost, s.totalSell, s.profit) +
+                            '<div class="qv-stock-edit" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:var(--border-soft);padding:6px 8px;border-radius:9px;flex-wrap:wrap;"><span style="font-size:12px;font-weight:600;">📦 Stock:</span><input type="number" min="0" id="qvStockInput' +
                             vi + '" value="' + Number(v.stock || 0) +
                             '" style="width:70px;margin:0;padding:6px 8px;font-size:12px;"><button class="small ghost" style="margin:0;" onclick="qvSaveVariationStock(' +
                             vi + ')">💾 Save</button></div></div>';
@@ -7983,21 +8089,19 @@
                     }
                 }
             });
-            if (custSnapshot.id !== 'walkin') {
-                custLedger.push({
-                    id: Date.now(),
-                    customerId: custSnapshot.id,
-                    customerName: custSnapshot.name,
-                    type: 'sale',
-                    invoiceId: sale.id,
-                    invoiceNo: sale.invoiceNo,
-                    date: sale.date,
-                    debit: sale.grandTotal,
-                    credit: sale.paid,
-                    balance: sale.due,
-                    notes: 'Invoice ' + sale.invoiceNo
-                });
-            }
+            custLedger.push({
+                id: Date.now(),
+                customerId: custSnapshot.id,
+                customerName: custSnapshot.name,
+                type: 'sale',
+                invoiceId: sale.id,
+                invoiceNo: sale.invoiceNo,
+                date: sale.date,
+                debit: sale.grandTotal,
+                credit: sale.paid,
+                balance: sale.due,
+                notes: 'Invoice ' + sale.invoiceNo
+            });
             saveAll(true);
             billQueue = [];
             $('billTax').value = '0';
@@ -8143,7 +8247,7 @@
                 s.paid = Number(s.paid || 0) + amount;
                 s.due = Math.max(Number(s.grandTotal) - s.paid, 0);
                 s.status = s.due <= 0.01 ? 'Paid' : 'Partial';
-                if (s.customer.id && s.customer.id !== 'walkin') {
+                if (s.customer.id) {
                     var entry = custLedger.find(function(e) { return e.invoiceId === s.id && e.type === 'sale'; });
                     if (entry) { entry.credit = s.paid;
                         entry.balance = s.due;
@@ -8164,7 +8268,7 @@
             s.paid = s.grandTotal;
             s.due = 0;
             s.status = 'Paid';
-            if (s.customer.id && s.customer.id !== 'walkin') {
+            if (s.customer.id) {
                 var entry = custLedger.find(function(e) { return e.invoiceId === s.id && e.type === 'sale'; });
                 if (entry) { entry.credit = s.paid;
                     entry.balance = 0;
@@ -8193,7 +8297,7 @@
                     }
                 });
             }
-            if (s && s.customer.id && s.customer.id !== 'walkin') { custLedger = custLedger.filter(function(
+            if (s && s.customer.id) { custLedger = custLedger.filter(function(
                 e) { return e.invoiceId !== s.id; }); }
             sales = sales.filter(function(s2) { return s2.id !== id; });
             saveAll(true);
@@ -8647,6 +8751,7 @@
             var custSel = $('ledgerCustSelect');
             if (custSel) {
                 custSel.innerHTML = '<option value="">Select customer</option>';
+                custSel.appendChild(Object.assign(document.createElement('option'), { value: 'walkin', textContent: 'Walk-in Customer' }));
                 customers.forEach(function(c) { custSel.appendChild(Object.assign(document.createElement(
                     'option'), { value: c.id, textContent: c.name + ' (' + (c.phone || '—') + ')' })); });
             }
@@ -8702,10 +8807,10 @@
 
         function renderCustomerLedger(id) {
             if (id) { var sel = $('ledgerCustSelect'); if (sel) sel.value = id; }
-            var custId = Number($('ledgerCustSelect').value);
+            var custId = $('ledgerCustSelect').value;
             if (!custId) { $('custLedgerSummary').innerHTML = '';
                 $('custLedgerEntries').innerHTML = '<div class="note">Select a customer.</div>'; return; }
-            var entries = filterEntriesByDate(custLedger.filter(function(e) { return e.customerId === custId; }),
+            var entries = filterEntriesByDate(custLedger.filter(function(e) { return String(e.customerId) === String(custId); }),
                 'custLedgerFrom', 'custLedgerTo');
             var totalDebit = 0,
                 totalCredit = 0;
@@ -9109,7 +9214,7 @@
                 case 'totalprofit': {
                     title.textContent = '💰 Total Profit — Product-wise Breakdown';
                     var profitMap = {};
-                    sales.forEach(function(s) {
+                    getSalesInPeriod().forEach(function(s) {
                         (s.lines || []).forEach(function(l) {
                             var key = l.name + ' (' + l.code + ')';
                             if (!profitMap[key]) profitMap[key] = { name: l.name, code: l
@@ -9141,7 +9246,7 @@
                 }
                 case 'revenue': {
                     title.textContent = '📊 Revenue — Sales Details';
-                    var salesList = [].concat(sales).reverse().slice(0, 50);
+                    var salesList = getSalesInPeriod().slice().reverse().slice(0, 50);
                     if (salesList.length === 0) html = '<div class="note">No sales yet.</div>';
                     else {
                         html =
@@ -9221,8 +9326,7 @@
                                     .due });
                         }
                     });
-                    var entries = Object.values(dueMap).sort(function(a, b) { return b.due - a
-                            .due; });
+                    var entries = getAllCustomerDueBreakdown();
                     if (entries.length === 0) html =
                     '<div class="note">✅ No outstanding dues.</div>';
                     else {
@@ -9274,7 +9378,7 @@
                 }
                 case 'totalsales': {
                     title.textContent = '📈 Total Sales — Invoice Summary';
-                    var sorted = [].concat(sales).reverse();
+                    var sorted = getSalesInPeriod().slice().reverse();
                     if (sorted.length === 0) html = '<div class="note">No sales.</div>';
                     else {
                         html =
@@ -9386,6 +9490,30 @@
                 .end; });
         }
 
+        function getUnifiedCustomerLedgerEntries(customerId) {
+            var id = String(customerId);
+            var entries = custLedger.filter(function(entry) { return String(entry.customerId) === id; }).slice();
+            if (id !== 'walkin') return entries;
+            var recordedInvoiceIds = entries.reduce(function(map, entry) { if (entry.invoiceId) map[String(entry.invoiceId)] = true; return map; }, {});
+            sales.filter(function(sale) { return sale.customer && String(sale.customer.id) === 'walkin' && !recordedInvoiceIds[String(sale.id)]; }).forEach(function(sale) {
+                entries.push({ id: 'legacy-' + sale.id, customerId: 'walkin', customerName: 'Walk-in Customer', type: 'sale', invoiceId: sale.id, invoiceNo: sale.invoiceNo, date: sale.date, debit: Number(sale.grandTotal || 0), credit: Number(sale.paid || 0), balance: Number(sale.due || 0), notes: 'Invoice ' + sale.invoiceNo });
+            });
+            return entries;
+        }
+
+        function getAllCustomerDueBreakdown() {
+            var people = {};
+            customers.forEach(function(customer) { people[String(customer.id)] = customer.name; });
+            custLedger.forEach(function(entry) { if (entry.customerId !== undefined && entry.customerId !== null) people[String(entry.customerId)] = entry.customerName || people[String(entry.customerId)] || 'Customer'; });
+            if (sales.some(function(sale) { return sale.customer && String(sale.customer.id) === 'walkin'; })) people.walkin = 'Walk-in Customer';
+            return Object.keys(people).map(function(id) {
+                var entries = getUnifiedCustomerLedgerEntries(id);
+                var balance = entries.reduce(function(sum, entry) { return sum + Number(entry.debit || 0) - Number(entry.credit || 0); }, 0);
+                return { id: id, name: people[id], due: Math.max(0, balance), balance: balance, entries: entries,
+                    invoices: entries.filter(function(entry) { return entry.invoiceNo; }).map(function(entry) { return { inv: entry.invoiceNo, due: Math.max(0, Number(entry.balance || 0)) }; }) };
+            }).filter(function(person) { return person.due > 0; }).sort(function(a, b) { return b.due - a.due; });
+        }
+
         function renderDashboard() {
             $('dTotalProducts').textContent = products.length;
 
@@ -9415,9 +9543,8 @@
                 Number(it.making || 0)) * Number(it.stock || 0); }, 0);
             $('dTotalCost').textContent = '₹' + formatCompact(inventoryCost);
 
-            // Outstanding Due: current total across ALL sales regardless of period (a debt doesn't disappear
-            // just because it's outside the selected date range)
-            var due = sales.reduce(function(s, x) { return s + Number(x.due || 0); }, 0);
+            // Outstanding Due: aggregate ledger balance of every customer. This matches the customer-wise detail.
+            var due = getAllCustomerDueBreakdown().reduce(function(sum, entry) { return sum + entry.due; }, 0);
             $('dDue').textContent = '₹' + formatCompact(due);
 
             var threshold = parseInt(localStorage.getItem(KEY_LOW_STOCK) || '5', 10);
@@ -10495,6 +10622,752 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
                     break;
                 }
             }
+        })();
+    </script>
+    <script>
+        // ===== CUSTOMER LEDGER UNIFICATION + KARIGAR WORK MANAGEMENT =====
+        (function() {
+            var baseRenderLedgerPersonList = renderLedgerPersonList;
+
+            function getAllCustomerBalances() {
+                var people = {};
+                customers.forEach(function(customer) { people[String(customer.id)] = customer.name; });
+                custLedger.forEach(function(entry) { if (entry.customerId !== undefined && entry.customerId !== null) people[String(entry.customerId)] = entry.customerName || people[String(entry.customerId)] || 'Customer'; });
+                if (sales.some(function(sale) { return sale.customer && String(sale.customer.id) === 'walkin'; })) people.walkin = 'Walk-in Customer';
+                return Object.keys(people).map(function(id) {
+                    var entries = getUnifiedCustomerLedgerEntries(id);
+                    var balance = entries.reduce(function(sum, entry) { return sum + Number(entry.debit || 0) - Number(entry.credit || 0); }, 0);
+                    return { id: id, name: people[id], balance: balance };
+                }).sort(function(a, b) { return b.balance - a.balance; });
+            }
+
+            renderLedgerPersonList = function(type) {
+                if (type !== 'customer') { baseRenderLedgerPersonList(type); return; }
+                var container = $('custLedgerList');
+                if (!container) return;
+                var people = getAllCustomerBalances();
+                if (!people.length) { container.innerHTML = '<div class="note">No customers yet.</div>'; return; }
+                container.innerHTML = people.map(function(person) {
+                    var label = person.balance > 0 ? '(Due)' : person.balance < 0 ? '(Credit)' : '(Settled)';
+                    var cls = person.balance > 0 ? 'due' : person.balance < 0 ? 'credit' : '';
+                    return '<div class="ledger-person-item" onclick="renderCustomerLedger(\'' + person.id + '\')" style="cursor:pointer"><span class="ledger-detail-name">' + escapeHtml(person.name) + '</span><span class="bal ' + cls + '">₹' + Math.abs(person.balance).toFixed(2) + ' ' + label + '</span></div>';
+                }).join('');
+            };
+
+            var basePopulateLedgerSelects = populateLedgerSelects;
+            populateLedgerSelects = function() {
+                basePopulateLedgerSelects();
+                var select = $('ledgerCustSelect');
+                if (select && !Array.from(select.options).some(function(option) { return option.value === 'walkin'; })) {
+                    select.insertBefore(Object.assign(document.createElement('option'), { value: 'walkin', textContent: 'Walk-in Customer' }), select.options[1] || null);
+                }
+                renderLedgerPersonList('customer');
+            };
+
+            renderCustomerLedger = function(id) {
+                var select = $('ledgerCustSelect');
+                if (!select) return;
+                if (id !== undefined && id !== null) select.value = String(id);
+                var customerId = select.value;
+                if (!customerId) {
+                    $('custLedgerSummary').innerHTML = '';
+                    $('custLedgerEntries').innerHTML = '<div class="note">Select a customer.</div>';
+                    renderLedgerPersonList('customer');
+                    return;
+                }
+                var entries = filterEntriesByDate(getUnifiedCustomerLedgerEntries(customerId), 'custLedgerFrom', 'custLedgerTo').slice().sort(function(a, b) { return new Date(a.date || 0) - new Date(b.date || 0); });
+                var debit = 0, credit = 0, running = 0;
+                entries.forEach(function(entry) { debit += Number(entry.debit || 0); credit += Number(entry.credit || 0); running += Number(entry.debit || 0) - Number(entry.credit || 0); entry._running = running; });
+                var balance = debit - credit;
+                $('custLedgerSummary').innerHTML = '<div class="ls-item"><div class="ls-val" style="color:var(--danger);">₹' + debit.toFixed(2) + '</div><div class="ls-lbl">Total Sales</div></div><div class="ls-item"><div class="ls-val" style="color:var(--success);">₹' + credit.toFixed(2) + '</div><div class="ls-lbl">Total Paid</div></div><div class="ls-item"><div class="ls-val" style="color:' + (balance > 0 ? 'var(--danger)' : 'var(--success)') + ';">₹' + Math.abs(balance).toFixed(2) + '</div><div class="ls-lbl">' + (balance > 0 ? 'Due' : balance < 0 ? 'Credit' : 'Settled') + '</div></div>';
+                $('custLedgerEntries').innerHTML = entries.length ? entries.slice().reverse().map(function(entry) {
+                    return '<div class="ledger-entry"><div><div style="font-weight:600;">' + (entry.type === 'sale' ? 'Sale' : entry.type === 'payment' ? 'Payment' : 'Advance') + '</div><div class="muted" style="font-size:11px;">' + escapeHtml(entry.invoiceNo || '') + ' ' + (entry.date ? new Date(entry.date).toLocaleDateString() : '') + '</div><div style="font-size:11px;color:var(--muted-2);">' + escapeHtml(entry.notes || '') + '</div></div><div style="text-align:right;">' + (entry.debit ? '<div class="amt debit">+ ₹' + Number(entry.debit).toFixed(2) + '</div>' : '') + (entry.credit ? '<div class="amt credit">− ₹' + Number(entry.credit).toFixed(2) + '</div>' : '') + '<div style="font-size:11px;color:var(--muted-2);">bal: ₹' + Number(entry._running || 0).toFixed(2) + '</div></div></div>';
+                }).join('') : '<div class="note">No entries.</div>';
+                renderLedgerPersonList('customer');
+            };
+
+            openWalkinLedger = function() {
+                switchTab('ledger');
+                switchLedgerTab('customer');
+                setTimeout(function() { renderCustomerLedger('walkin'); }, 100);
+            };
+
+            var walkinSection = $('walkinLedgerSection');
+            if (walkinSection) walkinSection.remove();
+            Array.from(document.querySelectorAll('button')).forEach(function(button) {
+                if (button.textContent.indexOf('Walk-in Ledger') >= 0) { button.textContent = 'New Walk-in Sale'; button.onclick = newWalkinSale; }
+            });
+            var productPassport = document.querySelector('.v3-profile');
+            if (productPassport) productPassport.remove();
+            var v3QuickView = renderQuickView;
+            renderQuickView = function() {
+                v3QuickView();
+                if ($('qvMeta') && qvProduct) $('qvMeta').textContent = (qvProduct.variations || []).length + ' variations · ₹' + Number(qvProduct.finalSell || 0).toFixed(2);
+            };
+
+            var baseRecordCustomerPayment = recordCustomerPayment;
+            recordCustomerPayment = function() {
+                if ($('ledgerCustSelect').value !== 'walkin') { baseRecordCustomerPayment(); return; }
+                var walkinSales = sales.filter(function(sale) { return sale.customer && String(sale.customer.id) === 'walkin' && Number(sale.due || 0) > 0; });
+                var totalDue = walkinSales.reduce(function(sum, sale) { return sum + Number(sale.due || 0); }, 0);
+                if (!totalDue) { showToast('Walk-in customer has no outstanding due', 'info'); return; }
+                showInputPrompt('Walk-in payment received (due: ₹' + totalDue.toFixed(2) + ')', totalDue.toFixed(2)).then(function(value) {
+                    if (value === null) return;
+                    var remaining = Math.max(0, parseFloat(value) || 0);
+                    if (!remaining) { showToast('Enter a valid payment', 'err'); return; }
+                    walkinSales.forEach(function(sale) {
+                        if (!remaining || !sale.due) return;
+                        var paid = Math.min(remaining, Number(sale.due || 0));
+                        sale.paid = Number(sale.paid || 0) + paid;
+                        sale.due = Math.max(0, Number(sale.grandTotal || 0) - Number(sale.paid || 0));
+                        sale.status = sale.due <= 0.01 ? 'Paid' : 'Partial';
+                        var entry = custLedger.find(function(ledgerEntry) { return ledgerEntry.invoiceId === sale.id && ledgerEntry.type === 'sale'; });
+                        if (entry) { entry.credit = sale.paid; entry.balance = sale.due; }
+                        remaining -= paid;
+                    });
+                    saveAll(true); renderCustomerLedger('walkin'); renderSalesHistory(); renderDashboard(); showToast('Walk-in payment recorded', 'ok');
+                });
+            };
+
+            if (!v3Data.karigars) v3Data.karigars = [];
+            if (!v3Data.karigarJobs) v3Data.karigarJobs = [];
+            var karigarIssueQueue = [];
+
+            function karigarMoney(value) { return '₹' + Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+            function karigarById(id) { return v3Data.karigars.find(function(person) { return String(person.id) === String(id); }); }
+            function jobPaid(job) { return (job.payments || []).reduce(function(total, payment) { return total + Number(payment.amount || 0); }, 0); }
+            function jobDue(job) { return Math.max(0, Number(job.laborCharge || 0) - jobPaid(job)); }
+            function jobItemsOut(job) { return (job.items || []).reduce(function(total, item) { return total + Math.max(0, Number(item.qty || 0) - Number(item.returned || 0)); }, 0); }
+
+            function renderKarigarOptions() {
+                var select = $('karigarJobPerson');
+                if (!select) return;
+                var selected = select.value;
+                select.innerHTML = '<option value="">Select karigar</option>' + v3Data.karigars.map(function(person) { return '<option value="' + person.id + '">' + escapeHtml(person.name) + (person.specialty ? ' — ' + escapeHtml(person.specialty) : '') + '</option>'; }).join('');
+                if (selected) select.value = selected;
+                var itemSelect = $('karigarItemSelect');
+                if (itemSelect) {
+                    var selectedItem = itemSelect.value;
+                    itemSelect.innerHTML = '<option value="">Select inventory item</option>' + items.map(function(item, index) { return '<option value="' + index + '">' + escapeHtml(item.category + ' · ' + item.name + (item.size ? ' (' + item.size + ')' : '')) + ' — stock ' + Number(item.stock || 0) + '</option>'; }).join('');
+                    if (selectedItem) itemSelect.value = selectedItem;
+                }
+            }
+
+            function renderKarigarIssueQueue() {
+                var target = $('karigarIssueQueue');
+                if (!target) return;
+                target.innerHTML = karigarIssueQueue.length ? karigarIssueQueue.map(function(line, index) { return '<div class="v3-queue-item"><span>' + escapeHtml(line.name) + ' × ' + line.qty + '</span><button class="ghost small" onclick="removeKarigarIssue(' + index + ')">Remove</button></div>'; }).join('') : '<div class="note" style="font-size:11px;padding:8px 0;">No inventory item added.</div>';
+            }
+
+            window.addKarigarIssue = function() {
+                var selectedItem = $('karigarItemSelect').value;
+                var itemIndex = Number(selectedItem);
+                var quantity = Math.max(0, parseFloat($('karigarItemQty').value) || 0);
+                var item = items[itemIndex];
+                if (selectedItem === '' || !item || !quantity) { showToast('Select an inventory item and quantity', 'err'); return; }
+                var alreadyQueued = karigarIssueQueue.filter(function(line) { return line.itemIndex === itemIndex; }).reduce(function(total, line) { return total + line.qty; }, 0);
+                if (quantity + alreadyQueued > Number(item.stock || 0)) { showToast('Quantity exceeds available inventory', 'err'); return; }
+                karigarIssueQueue.push({ itemIndex: itemIndex, name: item.name + (item.size ? ' (' + item.size + ')' : ''), qty: quantity, returned: 0 });
+                $('karigarItemQty').value = '1';
+                renderKarigarIssueQueue();
+            };
+            window.removeKarigarIssue = function(index) { karigarIssueQueue.splice(index, 1); renderKarigarIssueQueue(); };
+
+            window.saveKarigar = function() {
+                var name = $('karigarName').value.trim();
+                if (!name) { showToast('Karigar name is required', 'err'); return; }
+                v3Data.karigars.push({ id: 'K-' + Date.now().toString(36).toUpperCase(), name: name, phone: $('karigarPhone').value.trim(), specialty: $('karigarSpecialty').value.trim(), createdAt: new Date().toISOString() });
+                $('karigarName').value = ''; $('karigarPhone').value = ''; $('karigarSpecialty').value = '';
+                saveV3Data(); renderKarigarStudio(); showToast('Karigar added', 'ok');
+            };
+
+            window.createKarigarJob = function() {
+                var karigarId = $('karigarJobPerson').value;
+                var work = $('karigarWork').value.trim();
+                if (!karigarId || !work) { showToast('Select karigar and enter work details', 'err'); return; }
+                var person = karigarById(karigarId);
+                var paidNow = Math.max(0, parseFloat($('karigarPaidNow').value) || 0);
+                var job = { id: 'JW-' + Date.now().toString(36).toUpperCase(), karigarId: karigarId, karigarName: person.name, work: work,
+                    dueDate: $('karigarDueDate').value, laborCharge: Math.max(0, parseFloat($('karigarLaborCharge').value) || 0),
+                    payments: paidNow ? [{ amount: paidNow, date: new Date().toISOString(), notes: 'Initial payment' }] : [],
+                    items: JSON.parse(JSON.stringify(karigarIssueQueue)), notes: $('karigarNotes').value.trim(), status: 'assigned', createdAt: new Date().toISOString() };
+                job.items.forEach(function(line) { if (items[line.itemIndex]) items[line.itemIndex].stock = Math.max(0, Number(items[line.itemIndex].stock || 0) - Number(line.qty || 0)); });
+                v3Data.karigarJobs.unshift(job); karigarIssueQueue = [];
+                ['karigarWork', 'karigarDueDate', 'karigarLaborCharge', 'karigarPaidNow', 'karigarNotes'].forEach(function(id) { $(id).value = ''; });
+                saveV3Data(); saveAll(true); renderKarigarStudio(); renderStockTable(); renderDashboard(); showToast('Karigar job ' + job.id + ' created', 'ok');
+            };
+
+            window.addKarigarPayment = function(jobId) {
+                var job = v3Data.karigarJobs.find(function(entry) { return entry.id === jobId; });
+                if (!job) return;
+                showInputPrompt('Payment to ' + job.karigarName + ' (due: ' + karigarMoney(jobDue(job)) + ')', jobDue(job).toFixed(2)).then(function(value) {
+                    if (value === null) return;
+                    var amount = Math.max(0, parseFloat(value) || 0);
+                    if (!amount) { showToast('Enter a valid payment', 'err'); return; }
+                    job.payments.push({ amount: amount, date: new Date().toISOString(), notes: 'Payment recorded' });
+                    saveV3Data(); renderKarigarStudio(); showToast('Payment recorded', 'ok');
+                });
+            };
+
+            window.receiveKarigarReturns = function(jobId) {
+                var job = v3Data.karigarJobs.find(function(entry) { return entry.id === jobId; });
+                if (!job) return;
+                var pending = (job.items || []).filter(function(line) { return Number(line.qty || 0) > Number(line.returned || 0); });
+                if (!pending.length) { showToast('All issued inventory is already returned', 'info'); return; }
+                function receiveAt(index) {
+                    if (index >= pending.length) { saveV3Data(); saveAll(true); renderKarigarStudio(); renderStockTable(); renderDashboard(); showToast('Returned inventory received', 'ok'); return; }
+                    var line = pending[index], available = Number(line.qty || 0) - Number(line.returned || 0);
+                    showInputPrompt('Returned quantity for ' + line.name + ' (out: ' + available + ')', available).then(function(value) {
+                        if (value === null) return;
+                        var amount = Math.max(0, Math.min(available, parseFloat(value) || 0));
+                        line.returned = Number(line.returned || 0) + amount;
+                        if (items[line.itemIndex]) items[line.itemIndex].stock = Number(items[line.itemIndex].stock || 0) + amount;
+                        receiveAt(index + 1);
+                    });
+                }
+                receiveAt(0);
+            };
+
+            window.completeKarigarJob = function(jobId) {
+                var job = v3Data.karigarJobs.find(function(entry) { return entry.id === jobId; });
+                if (!job) return;
+                job.status = 'completed'; job.completedAt = new Date().toISOString(); saveV3Data(); renderKarigarStudio(); showToast('Job marked completed', 'ok');
+            };
+
+            function renderKarigarJobs() {
+                var target = $('karigarJobsList');
+                if (!target) return;
+                target.innerHTML = v3Data.karigarJobs.length ? v3Data.karigarJobs.map(function(job) {
+                    var itemsText = (job.items || []).map(function(line) { return escapeHtml(line.name) + ': ' + Number(line.returned || 0) + '/' + Number(line.qty || 0) + ' returned'; }).join('<br>') || 'No inventory issued';
+                    return '<div class="v3-job"><div class="v3-job-title">' + escapeHtml(job.karigarName) + ' — ' + escapeHtml(job.work) + '</div><div class="v3-job-meta">' + escapeHtml(job.id) + ' · ' + (job.dueDate ? 'Due ' + escapeHtml(v3Date(job.dueDate)) : 'No delivery date') + '<br>Labor: ' + karigarMoney(job.laborCharge) + ' · Paid: ' + karigarMoney(jobPaid(job)) + ' · Due: ' + karigarMoney(jobDue(job)) + '<br>Inventory: ' + itemsText + (job.notes ? '<br>Notes: ' + escapeHtml(job.notes) : '') + '</div><div class="v3-job-actions">' + (job.status !== 'completed' ? '<button onclick="addKarigarPayment(\'' + job.id + '\')">Payment</button><button class="ghost" onclick="receiveKarigarReturns(\'' + job.id + '\')">Receive return</button><button class="ghost" onclick="completeKarigarJob(\'' + job.id + '\')">Complete</button>' : '<span class="badge badge-success">Completed</span>') + '</div></div>';
+                }).join('') : '<div class="note">No karigar jobs yet.</div>';
+            }
+
+            function renderKarigarMonthlyReport() {
+                var target = $('karigarMonthlyReport');
+                if (!target) return;
+                var month = $('karigarMonth').value || new Date().toISOString().slice(0, 7);
+                var rows = v3Data.karigars.map(function(person) {
+                    var jobs = v3Data.karigarJobs.filter(function(job) { return job.karigarId === person.id && String(job.createdAt || '').slice(0, 7) === month; });
+                    var labor = jobs.reduce(function(sum, job) { return sum + Number(job.laborCharge || 0); }, 0);
+                    var paid = jobs.reduce(function(sum, job) { return sum + jobPaid(job); }, 0);
+                    var out = jobs.reduce(function(sum, job) { return sum + jobItemsOut(job); }, 0);
+                    return { person: person, jobs: jobs.length, labor: labor, paid: paid, due: Math.max(0, labor - paid), out: out };
+                }).filter(function(row) { return row.jobs > 0; });
+                target.innerHTML = rows.length ? '<div class="table-scroll"><table><thead><tr><th>Karigar</th><th class="num">Jobs</th><th class="num">Labor</th><th class="num">Paid</th><th class="num">Due to Karigar</th><th class="num">Items out</th></tr></thead><tbody>' + rows.map(function(row) { return '<tr><td>' + escapeHtml(row.person.name) + '</td><td class="num">' + row.jobs + '</td><td class="num">' + karigarMoney(row.labor) + '</td><td class="num">' + karigarMoney(row.paid) + '</td><td class="num" style="color:var(--danger);">' + karigarMoney(row.due) + '</td><td class="num">' + row.out + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<div class="note">No karigar work for the selected month.</div>';
+            }
+
+            function renderKarigarStudio() {
+                renderKarigarOptions(); renderKarigarIssueQueue(); renderKarigarJobs(); renderKarigarMonthlyReport();
+                var open = v3Data.karigarJobs.filter(function(job) { return job.status !== 'completed'; });
+                var totalDue = open.reduce(function(sum, job) { return sum + jobDue(job); }, 0);
+                var itemsOut = open.reduce(function(sum, job) { return sum + jobItemsOut(job); }, 0);
+                $('karigarSummary').innerHTML = '<div><b>' + open.length + '</b><span>Open jobs</span></div><div><b>' + karigarMoney(totalDue) + '</b><span>Due to karigars</span></div><div><b>' + itemsOut + '</b><span>Items pending return</span></div>';
+            }
+
+            function buildKarigarWorkspace() {
+                var studio = $('studio');
+                if (!studio) return;
+                studio.innerHTML = '<div class="section-head"><div><div class="section-title">Karigar Work Management</div><div class="note">কারিগরকে দেওয়া কাজ, টাকা, inventory issue ও return এক জায়গায় রাখুন।</div></div><div class="code-chip">Karigar Ledger</div></div><div class="v3-summary" id="karigarSummary"></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">Karigar register</div><h3>নতুন কারিগর</h3><div class="v3-form-grid"><label>Name<input id="karigarName" placeholder="Karigar name"></label><label>Phone<input id="karigarPhone" placeholder="Phone"></label><label style="grid-column:1/-1;">Specialty<input id="karigarSpecialty" placeholder="Polish, setting, casting, repair..."></label></div><button style="margin-top:12px" onclick="saveKarigar()">Add karigar</button></div><div class="v3-panel"><div class="v3-kicker">Monthly account</div><h3>এক মাসের কাজের হিসাব</h3><label style="display:block;font-size:11px;color:var(--muted);font-weight:700;">Month<input id="karigarMonth" type="month" onchange="renderKarigarStudio()" style="width:100%;margin-top:4px"></label><div id="karigarMonthlyReport" style="margin-top:12px"></div></div></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">New job work</div><h3>কারিগরকে কাজ দিন</h3><div class="v3-form-grid"><label>Karigar<select id="karigarJobPerson"></select></label><label>Delivery date<input id="karigarDueDate" type="date"></label><label style="grid-column:1/-1;">Work details<textarea id="karigarWork" placeholder="কি কাজ করতে দেওয়া হলো"></textarea></label><label>Labor charge<input id="karigarLaborCharge" type="number" min="0" step="0.01" placeholder="Total work charge"></label><label>Paid now<input id="karigarPaidNow" type="number" min="0" step="0.01" placeholder="Advance payment"></label><label style="grid-column:1/-1;">Notes<textarea id="karigarNotes" placeholder="Design, size, special instruction..."></textarea></label></div><div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px"><div class="v3-kicker">Issue inventory</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><select id="karigarItemSelect" style="flex:1;min-width:190px"></select><input id="karigarItemQty" type="number" min="0.001" step="0.001" value="1" style="width:100px"><button class="ghost" onclick="addKarigarIssue()">Add item</button></div><div id="karigarIssueQueue"></div></div><button style="margin-top:14px" onclick="createKarigarJob()">Create job work</button></div><div class="v3-panel"><div class="v3-kicker">Open jobs</div><h3>কাকে কী দেওয়া আছে</h3><div id="karigarJobsList"></div></div></div>';
+                var month = $('karigarMonth'); if (month) month.value = new Date().toISOString().slice(0, 7);
+                renderKarigarStudio();
+            }
+
+            window.renderKarigarStudio = renderKarigarStudio;
+            window.openKarigarStudio = function() {
+                document.querySelectorAll('.tab').forEach(function(tab) { tab.classList.toggle('active', tab.dataset.tab === 'studio'); });
+                document.querySelectorAll('.mobile-drawer-link').forEach(function(link) { link.classList.toggle('active', link.dataset.tab === 'studio'); });
+                document.querySelectorAll('section.card').forEach(function(section) { section.style.display = 'none'; });
+                $('studio').style.display = 'block'; renderKarigarStudio();
+            };
+            window.openV3Studio = window.openKarigarStudio;
+            Array.from(document.querySelectorAll('.tab[data-tab="studio"], .mobile-drawer-link[data-tab="studio"]')).forEach(function(node) { node.innerHTML = '<span class="tab-icon">🔧</span> Karigar'; node.onclick = function() { openKarigarStudio(); if (node.classList.contains('mobile-drawer-link')) closeMobileDrawer(); }; });
+            buildKarigarWorkspace();
+            populateLedgerSelects();
+        })();
+    </script>
+    <script>
+        // ===== KARIGAR LEDGER V2 =====
+        (function() {
+            if (!v3Data.karigars) v3Data.karigars = [];
+            if (!v3Data.karigarJobs) v3Data.karigarJobs = [];
+            if (!v3Data.karigarTransactions) v3Data.karigarTransactions = [];
+            var issueQueue = [];
+            var selectedKarigarId = '';
+
+            function money(value) { return '₹' + Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+            function findKarigar(id) { return v3Data.karigars.find(function(person) { return String(person.id) === String(id); }); }
+            function activeKarigars() { return v3Data.karigars.filter(function(person) { return !person.deleted; }); }
+            function jobPaymentTotal(job) { return (job.payments || []).reduce(function(sum, payment) { return sum + Number(payment.amount || 0); }, 0); }
+            function jobItemsHeld(job) { return (job.items || []).reduce(function(sum, item) { return sum + Math.max(0, Number(item.qty || 0) - Number(item.returned || 0)); }, 0); }
+            function karigarTransactions(id) { return v3Data.karigarTransactions.filter(function(transaction) { return String(transaction.karigarId) === String(id); }); }
+            function karigarStatement(id) {
+                var jobs = v3Data.karigarJobs.filter(function(job) { return String(job.karigarId) === String(id); });
+                var purchases = karigarTransactions(id).filter(function(transaction) { return transaction.type === 'purchase'; });
+                var directPayments = karigarTransactions(id).filter(function(transaction) { return transaction.type === 'payment'; });
+                var workBills = jobs.reduce(function(sum, job) { return sum + Number(job.laborCharge || 0); }, 0);
+                var purchaseBills = purchases.reduce(function(sum, transaction) { return sum + Number(transaction.amount || 0); }, 0);
+                var jobPayments = jobs.reduce(function(sum, job) { return sum + jobPaymentTotal(job); }, 0);
+                var paid = jobPayments + directPayments.reduce(function(sum, transaction) { return sum + Number(transaction.amount || 0); }, 0);
+                return { jobs: jobs, purchases: purchases, directPayments: directPayments, workBills: workBills, purchaseBills: purchaseBills, paid: paid, payable: Math.max(0, workBills + purchaseBills - paid), credit: Math.max(0, paid - workBills - purchaseBills) };
+            }
+            function heldInventory(id) {
+                var result = {};
+                v3Data.karigarJobs.filter(function(job) { return String(job.karigarId) === String(id); }).forEach(function(job) {
+                    (job.items || []).forEach(function(item) {
+                        var held = Math.max(0, Number(item.qty || 0) - Number(item.returned || 0));
+                        if (!held) return;
+                        var key = String(item.itemIndex) + '|' + item.name;
+                        if (!result[key]) result[key] = { name: item.name, quantity: 0, jobs: [] };
+                        result[key].quantity += held;
+                        result[key].jobs.push(job.id);
+                    });
+                });
+                return Object.keys(result).map(function(key) { return result[key]; });
+            }
+            function persist() { saveV3Data(); saveAll(true); }
+
+            function fillKarigarSelects() {
+                ['karigarV2JobPerson', 'karigarLedgerPerson'].forEach(function(id) {
+                    var select = $(id); if (!select) return;
+                    var previous = select.value;
+                    select.innerHTML = '<option value="">Select karigar</option>' + activeKarigars().map(function(person) { return '<option value="' + person.id + '">' + escapeHtml(person.name) + (person.specialty ? ' — ' + escapeHtml(person.specialty) : '') + '</option>'; }).join('');
+                    select.value = previous || (id === 'karigarLedgerPerson' ? selectedKarigarId : '');
+                });
+                var itemSelect = $('karigarV2Item');
+                if (itemSelect) itemSelect.innerHTML = '<option value="">Select inventory item</option>' + items.map(function(item, index) { return '<option value="' + index + '">' + escapeHtml(item.category + ' · ' + item.name + (item.size ? ' (' + item.size + ')' : '')) + ' — stock ' + Number(item.stock || 0) + '</option>'; }).join('');
+            }
+            function renderIssueQueue() {
+                var target = $('karigarV2IssueQueue'); if (!target) return;
+                target.innerHTML = issueQueue.length ? issueQueue.map(function(line, index) { return '<div class="v3-queue-item"><span>' + escapeHtml(line.name) + ' × ' + line.qty + '</span><button class="ghost small" onclick="removeKarigarV2Issue(' + index + ')">Remove</button></div>'; }).join('') : '<div class="note" style="font-size:11px;padding:7px 0;">No inventory item selected.</div>';
+            }
+            function renderRegister() {
+                var target = $('karigarRegisterList'); if (!target) return;
+                var people = activeKarigars();
+                target.innerHTML = people.length ? people.map(function(person) {
+                    var statement = karigarStatement(person.id);
+                    return '<div class="v3-queue-item"><div><b>' + escapeHtml(person.name) + '</b><div class="muted" style="font-size:11px;">' + escapeHtml(person.phone || 'No phone') + (person.specialty ? ' · ' + escapeHtml(person.specialty) : '') + '<br>Payable: ' + money(statement.payable) + '</div></div><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="ghost small" onclick="openKarigarLedger(\'' + person.id + '\')">Ledger</button><button class="ghost small" onclick="editKarigar(\'' + person.id + '\')">Edit</button><button class="ghost small" onclick="deleteKarigar(\'' + person.id + '\')">Delete</button></div></div>';
+                }).join('') : '<div class="note">No karigar registered yet.</div>';
+            }
+            function renderJobs() {
+                var target = $('karigarV2Jobs'); if (!target) return;
+                target.innerHTML = v3Data.karigarJobs.length ? v3Data.karigarJobs.map(function(job) {
+                    var held = (job.items || []).map(function(item) { return escapeHtml(item.name) + ': ' + Math.max(0, Number(item.qty || 0) - Number(item.returned || 0)) + ' held'; }).join('<br>') || 'No inventory issued';
+                    return '<div class="v3-job"><div class="v3-job-title">' + escapeHtml(job.karigarName) + ' — ' + escapeHtml(job.work) + '</div><div class="v3-job-meta">' + escapeHtml(job.id) + ' · ' + (job.createdAt ? new Date(job.createdAt).toLocaleDateString() : '') + ' · ' + (job.status || 'assigned') + '<br>Bill: ' + money(job.laborCharge) + ' · Paid: ' + money(jobPaymentTotal(job)) + ' · Due: ' + money(Math.max(0, Number(job.laborCharge || 0) - jobPaymentTotal(job))) + '<br>Inventory: ' + held + '</div><div class="v3-job-actions"><button class="ghost" onclick="openKarigarLedger(\'' + job.karigarId + '\')">Ledger</button><button onclick="addJobPaymentV2(\'' + job.id + '\')">Payment</button><button class="ghost" onclick="receiveKarigarReturnsV2(\'' + job.id + '\')">Receive return</button>' + (job.status !== 'completed' ? '<button class="ghost" onclick="setKarigarJobRunning(\'' + job.id + '\')">Running</button><button class="ghost" onclick="completeKarigarJobV2(\'' + job.id + '\')">Complete</button>' : '<span class="badge badge-success">Completed</span>') + '</div></div>';
+                }).join('') : '<div class="note">No job work recorded.</div>';
+            }
+            function renderMonthly() {
+                var target = $('karigarV2Monthly'); if (!target) return;
+                var month = $('karigarV2Month').value || new Date().toISOString().slice(0, 7);
+                var rows = activeKarigars().map(function(person) {
+                    var statement = karigarStatement(person.id);
+                    var jobs = statement.jobs.filter(function(job) { return String(job.createdAt || '').slice(0, 7) === month; });
+                    var purchase = statement.purchases.filter(function(item) { return String(item.date || '').slice(0, 7) === month; }).reduce(function(sum, item) { return sum + Number(item.amount || 0); }, 0);
+                    var bills = jobs.reduce(function(sum, job) { return sum + Number(job.laborCharge || 0); }, 0) + purchase;
+                    var paid = jobs.reduce(function(sum, job) { return sum + jobPaymentTotal(job); }, 0) + statement.directPayments.filter(function(item) { return String(item.date || '').slice(0, 7) === month; }).reduce(function(sum, item) { return sum + Number(item.amount || 0); }, 0);
+                    return { name: person.name, jobs: jobs.length, bills: bills, paid: paid, due: Math.max(0, bills - paid) };
+                }).filter(function(row) { return row.jobs || row.bills || row.paid; });
+                target.innerHTML = rows.length ? '<div class="table-scroll"><table><thead><tr><th>Karigar</th><th class="num">Jobs</th><th class="num">Bills</th><th class="num">Paid</th><th class="num">Month Due</th></tr></thead><tbody>' + rows.map(function(row) { return '<tr><td>' + escapeHtml(row.name) + '</td><td class="num">' + row.jobs + '</td><td class="num">' + money(row.bills) + '</td><td class="num">' + money(row.paid) + '</td><td class="num">' + money(row.due) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<div class="note">No karigar account activity for this month.</div>';
+            }
+            function renderLedger(id) {
+                if (id) selectedKarigarId = id;
+                var target = $('karigarFullLedger'); if (!target) return;
+                var person = findKarigar(selectedKarigarId);
+                if (!person) { target.innerHTML = '<div class="note">Select a karigar to view full ledger.</div>'; return; }
+                var statement = karigarStatement(person.id), inventory = heldInventory(person.id), runningJobs = statement.jobs.filter(function(job) { return job.status !== 'completed'; });
+                var events = [];
+                statement.jobs.forEach(function(job) {
+                    events.push({ date: job.createdAt, type: 'Work bill', notes: job.id + ' · ' + job.work, debit: Number(job.laborCharge || 0), credit: 0 });
+                    (job.payments || []).forEach(function(payment) { events.push({ date: payment.date, type: 'Payment', notes: job.id + ' · ' + (payment.notes || ''), debit: 0, credit: Number(payment.amount || 0) }); });
+                });
+                karigarTransactions(person.id).forEach(function(transaction) { events.push({ date: transaction.date, type: transaction.type === 'purchase' ? 'Purchase bill' : 'Payment', notes: transaction.notes || '', debit: transaction.type === 'purchase' ? Number(transaction.amount || 0) : 0, credit: transaction.type === 'payment' ? Number(transaction.amount || 0) : 0 }); });
+                events.sort(function(a, b) { return new Date(a.date || 0) - new Date(b.date || 0); });
+                var balance = 0; events.forEach(function(event) { balance += event.debit - event.credit; event.balance = balance; });
+                target.innerHTML = '<div class="v3-summary"><div><b>' + money(statement.workBills) + '</b><span>Work bills</span></div><div><b>' + money(statement.purchaseBills) + '</b><span>Purchase bills</span></div><div><b>' + money(statement.paid) + '</b><span>Total paid</span></div><div><b>' + money(statement.payable) + '</b><span>Payable now</span></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button onclick="addKarigarDirectPayment(\'' + person.id + '\')">+ Payment Add</button><button class="ghost" onclick="addKarigarPurchase(\'' + person.id + '\')">+ Purchase Bill</button></div><div class="v3-grid" style="margin-top:8px"><div><div class="v3-kicker">Items with karigar</div>' + (inventory.length ? '<div class="table-scroll"><table><thead><tr><th>Item</th><th class="num">Qty held</th><th>Jobs</th></tr></thead><tbody>' + inventory.map(function(item) { return '<tr><td>' + escapeHtml(item.name) + '</td><td class="num">' + item.quantity + '</td><td>' + item.jobs.map(escapeHtml).join(', ') + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<div class="note">No inventory currently held.</div>') + '</div><div><div class="v3-kicker">Work status</div><div class="note">Running jobs: <b>' + runningJobs.length + '</b><br>Completed jobs: <b>' + statement.jobs.filter(function(job) { return job.status === 'completed'; }).length + '</b><br>Payments received: <b>' + events.filter(function(event) { return event.credit > 0; }).length + '</b> time(s)</div></div></div><div class="v3-kicker" style="margin-top:16px">Complete money ledger</div><div class="table-scroll"><table><thead><tr><th>Date</th><th>Type</th><th>Details</th><th class="num">Bill / Due</th><th class="num">Paid</th><th class="num">Balance</th></tr></thead><tbody>' + (events.length ? events.map(function(event) { return '<tr><td>' + (event.date ? new Date(event.date).toLocaleDateString() : '') + '</td><td>' + escapeHtml(event.type) + '</td><td>' + escapeHtml(event.notes) + '</td><td class="num">' + (event.debit ? money(event.debit) : '') + '</td><td class="num">' + (event.credit ? money(event.credit) : '') + '</td><td class="num">' + money(event.balance) + '</td></tr>'; }).join('') : '<tr><td colspan="6" class="note">No ledger entry yet.</td></tr>') + '</tbody></table></div>';
+            }
+            function refresh() {
+                fillKarigarSelects(); renderIssueQueue(); renderRegister(); renderJobs(); renderMonthly(); renderLedger();
+                var running = v3Data.karigarJobs.filter(function(job) { return job.status !== 'completed'; }).length;
+                var payable = activeKarigars().reduce(function(sum, person) { return sum + karigarStatement(person.id).payable; }, 0);
+                var held = activeKarigars().reduce(function(sum, person) { return sum + heldInventory(person.id).reduce(function(total, item) { return total + item.quantity; }, 0); }, 0);
+                $('karigarV2Summary').innerHTML = '<div><b>' + running + '</b><span>Running jobs</span></div><div><b>' + money(payable) + '</b><span>Payable to karigars</span></div><div><b>' + held + '</b><span>Items held outside</span></div>';
+            }
+
+            window.addKarigarV2Issue = function() {
+                var raw = $('karigarV2Item').value, index = Number(raw), quantity = Math.max(0, parseFloat($('karigarV2Qty').value) || 0), item = items[index];
+                if (raw === '' || !item || !quantity) { showToast('Select an item and quantity', 'err'); return; }
+                var queued = issueQueue.filter(function(line) { return line.itemIndex === index; }).reduce(function(sum, line) { return sum + line.qty; }, 0);
+                if (queued + quantity > Number(item.stock || 0)) { showToast('Quantity exceeds stock', 'err'); return; }
+                issueQueue.push({ itemIndex: index, name: item.name + (item.size ? ' (' + item.size + ')' : ''), qty: quantity, returned: 0 }); $('karigarV2Qty').value = '1'; renderIssueQueue();
+            };
+            window.removeKarigarV2Issue = function(index) { issueQueue.splice(index, 1); renderIssueQueue(); };
+            window.saveKarigarV2 = function() {
+                var name = $('karigarV2Name').value.trim(); if (!name) { showToast('Karigar name is required', 'err'); return; }
+                v3Data.karigars.push({ id: 'K-' + Date.now().toString(36).toUpperCase(), name: name, phone: $('karigarV2Phone').value.trim(), specialty: $('karigarV2Specialty').value.trim(), createdAt: new Date().toISOString() });
+                $('karigarV2Name').value = ''; $('karigarV2Phone').value = ''; $('karigarV2Specialty').value = ''; persist(); refresh(); showToast('Karigar added', 'ok');
+            };
+            window.editKarigar = function(id) {
+                var person = findKarigar(id); if (!person) return;
+                showInputPrompt('Karigar name', person.name).then(function(name) { if (name === null || !name.trim()) return; showInputPrompt('Phone', person.phone || '').then(function(phone) { if (phone === null) return; showInputPrompt('Specialty', person.specialty || '').then(function(specialty) { if (specialty === null) return; person.name = name.trim(); person.phone = phone.trim(); person.specialty = specialty.trim(); v3Data.karigarJobs.forEach(function(job) { if (job.karigarId === person.id) job.karigarName = person.name; }); persist(); refresh(); showToast('Karigar updated', 'ok'); }); }); });
+            };
+            window.deleteKarigar = function(id) {
+                var person = findKarigar(id); if (!person) return;
+                var hasHistory = v3Data.karigarJobs.some(function(job) { return job.karigarId === id; }) || karigarTransactions(id).length;
+                if (!confirm(hasHistory ? 'This karigar has job history. Delete will hide the register but preserve history. Continue?' : 'Delete this karigar?')) return;
+                if (hasHistory) person.deleted = true; else v3Data.karigars = v3Data.karigars.filter(function(entry) { return entry.id !== id; });
+                if (selectedKarigarId === id) selectedKarigarId = ''; persist(); refresh(); showToast('Karigar deleted', 'ok');
+            };
+            window.createKarigarJobV2 = function() {
+                var person = findKarigar($('karigarV2JobPerson').value), work = $('karigarV2Work').value.trim();
+                if (!person || !work) { showToast('Select karigar and enter work details', 'err'); return; }
+                var initial = Math.max(0, parseFloat($('karigarV2Paid').value) || 0);
+                var job = { id: 'JW-' + Date.now().toString(36).toUpperCase(), karigarId: person.id, karigarName: person.name, work: work, dueDate: $('karigarV2Due').value, laborCharge: Math.max(0, parseFloat($('karigarV2Charge').value) || 0), payments: initial ? [{ amount: initial, date: new Date().toISOString(), notes: 'Initial payment' }] : [], items: JSON.parse(JSON.stringify(issueQueue)), notes: $('karigarV2Notes').value.trim(), status: 'assigned', createdAt: new Date().toISOString() };
+                job.items.forEach(function(line) { if (items[line.itemIndex]) items[line.itemIndex].stock = Math.max(0, Number(items[line.itemIndex].stock || 0) - Number(line.qty || 0)); });
+                v3Data.karigarJobs.unshift(job); issueQueue = []; ['karigarV2Work', 'karigarV2Due', 'karigarV2Charge', 'karigarV2Paid', 'karigarV2Notes'].forEach(function(id) { $(id).value = ''; }); persist(); renderStockTable(); renderDashboard(); refresh(); showToast('Job work created', 'ok');
+            };
+            window.addJobPaymentV2 = function(id) { var job = v3Data.karigarJobs.find(function(entry) { return entry.id === id; }); if (!job) return; showInputPrompt('Payment to ' + job.karigarName, Math.max(0, Number(job.laborCharge || 0) - jobPaymentTotal(job)).toFixed(2)).then(function(value) { if (value === null) return; var amount = Math.max(0, parseFloat(value) || 0); if (!amount) return; job.payments.push({ amount: amount, date: new Date().toISOString(), notes: 'Job payment' }); persist(); refresh(); }); };
+            window.addKarigarDirectPayment = function(id) { var person = findKarigar(id); if (!person) return; showInputPrompt('Payment to ' + person.name, '0').then(function(amountValue) { if (amountValue === null) return; var amount = Math.max(0, parseFloat(amountValue) || 0); if (!amount) return; showInputPrompt('Payment note', 'Payment').then(function(notes) { if (notes === null) return; v3Data.karigarTransactions.push({ id: Date.now(), karigarId: id, type: 'payment', amount: amount, notes: notes, date: new Date().toISOString() }); persist(); refresh(); }); }); };
+            window.addKarigarPurchase = function(id) { var person = findKarigar(id); if (!person) return; showInputPrompt('Purchase bill submitted by ' + person.name, '0').then(function(amountValue) { if (amountValue === null) return; var amount = Math.max(0, parseFloat(amountValue) || 0); if (!amount) return; showInputPrompt('Purchase details / bill note', 'Material purchase').then(function(notes) { if (notes === null) return; v3Data.karigarTransactions.push({ id: Date.now(), karigarId: id, type: 'purchase', amount: amount, notes: notes, date: new Date().toISOString() }); persist(); refresh(); showToast('Purchase bill added', 'ok'); }); }); };
+            window.setKarigarJobRunning = function(id) { var job = v3Data.karigarJobs.find(function(entry) { return entry.id === id; }); if (!job) return; job.status = 'running'; persist(); refresh(); };
+            window.completeKarigarJobV2 = function(id) { var job = v3Data.karigarJobs.find(function(entry) { return entry.id === id; }); if (!job) return; job.status = 'completed'; job.completedAt = new Date().toISOString(); persist(); refresh(); showToast('Job completed. Items can remain in karigar custody until returned.', 'ok'); };
+            window.receiveKarigarReturnsV2 = function(id) { var job = v3Data.karigarJobs.find(function(entry) { return entry.id === id; }); if (!job) return; var pending = (job.items || []).filter(function(line) { return Number(line.qty || 0) > Number(line.returned || 0); }); if (!pending.length) { showToast('No pending item return', 'info'); return; } function receive(index) { if (index >= pending.length) { persist(); renderStockTable(); renderDashboard(); refresh(); showToast('Returned inventory received', 'ok'); return; } var line = pending[index], available = Number(line.qty || 0) - Number(line.returned || 0); showInputPrompt('Return quantity: ' + line.name + ' (held: ' + available + ')', available).then(function(value) { if (value === null) return; var quantity = Math.max(0, Math.min(available, parseFloat(value) || 0)); line.returned = Number(line.returned || 0) + quantity; if (items[line.itemIndex]) items[line.itemIndex].stock = Number(items[line.itemIndex].stock || 0) + quantity; receive(index + 1); }); } receive(0); };
+            window.openKarigarLedger = function(id) { selectedKarigarId = id; var select = $('karigarLedgerPerson'); if (select) select.value = id; renderLedger(id); document.getElementById('karigarFullLedger').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+            window.renderKarigarLedgerV2 = function() { selectedKarigarId = $('karigarLedgerPerson').value; renderLedger(); };
+            window.renderKarigarV2 = refresh;
+
+            var studio = $('studio');
+            studio.innerHTML = '<div class="section-head"><div><div class="section-title">Karigar Work & Full Ledger</div><div class="note">কাজ, কারিগরের কাছে থাকা inventory, bill, purchase ও payment এক জায়গায়।</div></div><div class="code-chip">Karigar Ledger</div></div><div class="v3-summary" id="karigarV2Summary"></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">Karigar register</div><h3>New karigar</h3><div class="v3-form-grid"><label>Name<input id="karigarV2Name" placeholder="Karigar name"></label><label>Phone<input id="karigarV2Phone" placeholder="Phone"></label><label style="grid-column:1/-1">Specialty<input id="karigarV2Specialty" placeholder="Polish, casting, setting, repair..."></label></div><button style="margin-top:12px" onclick="saveKarigarV2()">Add karigar</button><button style="margin-top:12px;margin-left:8px;" class="ghost" onclick="openKarigarListModal()">📋 Karigar List</button></div><div class="v3-panel"><div class="v3-kicker">Monthly account</div><h3>One month work summary</h3><label style="display:block;font-size:11px;color:var(--muted);font-weight:700">Month<input id="karigarV2Month" type="month" onchange="renderKarigarV2()" style="width:100%;margin-top:4px"></label><div id="karigarV2Monthly" style="margin-top:12px"></div></div></div><div class="v3-panel" style="margin-top:16px"><div class="v3-kicker">Karigar full ledger</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><label style="flex:1;min-width:200px;font-size:11px;color:var(--muted);font-weight:700">Karigar<select id="karigarLedgerPerson" onchange="renderKarigarLedgerV2()" style="width:100%;margin-top:4px"></select></label><button class="ghost" onclick="renderKarigarLedgerV2()">Open ledger</button></div><div id="karigarFullLedger" style="margin-top:12px"></div></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">New job work</div><h3>Give work to karigar</h3><div class="v3-form-grid"><label>Karigar<select id="karigarV2JobPerson"></select></label><label>Expected delivery<input id="karigarV2Due" type="date"></label><label style="grid-column:1/-1">Work details<textarea id="karigarV2Work" placeholder="কি কাজ দেওয়া হলো"></textarea></label><label>Karigar work bill<input id="karigarV2Charge" type="number" min="0" step="0.01" placeholder="Total labor bill"></label><label>Payment now<input id="karigarV2Paid" type="number" min="0" step="0.01" placeholder="Paid now"></label><label style="grid-column:1/-1">Notes<textarea id="karigarV2Notes" placeholder="Design, size, instruction..."></textarea></label></div><div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><div class="v3-kicker">Issue inventory</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><select id="karigarV2Item" style="flex:1;min-width:190px"></select><input id="karigarV2Qty" type="number" min="0.001" step="0.001" value="1" style="width:100px"><button class="ghost" onclick="addKarigarV2Issue()">Add item</button></div><div id="karigarV2IssueQueue"></div></div><button style="margin-top:14px" onclick="createKarigarJobV2()">Create job work</button></div><div class="v3-panel"><div class="v3-kicker">All jobs</div><h3>Running and completed work</h3><div id="karigarV2Jobs"></div></div></div>';
+            $('karigarV2Month').value = new Date().toISOString().slice(0, 7);
+            window.openKarigarStudio = function() { document.querySelectorAll('.tab').forEach(function(tab) { tab.classList.toggle('active', tab.dataset.tab === 'studio'); }); document.querySelectorAll('.mobile-drawer-link').forEach(function(link) { link.classList.toggle('active', link.dataset.tab === 'studio'); }); document.querySelectorAll('section.card').forEach(function(section) { section.style.display = 'none'; }); studio.style.display = 'block'; refresh(); };
+            window.openV3Studio = window.openKarigarStudio;
+            Array.from(document.querySelectorAll('.tab[data-tab="studio"], .mobile-drawer-link[data-tab="studio"]')).forEach(function(node) { node.onclick = function() { openKarigarStudio(); if (node.classList.contains('mobile-drawer-link')) closeMobileDrawer(); }; });
+            refresh();
+        })();
+    </script>
+    <script>
+        // ===== KARIGAR EDITING, TRANSACTION CONTROL, AND COLOR STATES =====
+        (function() {
+            var style = document.createElement('style');
+            style.textContent = '.kg-job{border-left:5px solid #64748b!important}.kg-job.kg-running{border-left-color:#2563eb!important;background:linear-gradient(135deg,rgba(37,99,235,.13),var(--card-solid))}.kg-job.kg-completed{border-left-color:#16a34a!important;background:linear-gradient(135deg,rgba(22,163,74,.13),var(--card-solid))}.kg-job.kg-assigned{border-left-color:#f59e0b!important;background:linear-gradient(135deg,rgba(245,158,11,.13),var(--card-solid))}.kg-badge{display:inline-block;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.kg-badge.running{background:#dbeafe;color:#1d4ed8}.kg-badge.completed{background:#dcfce7;color:#15803d}.kg-badge.assigned{background:#fef3c7;color:#b45309}.kg-money{display:inline-block;border-radius:8px;padding:3px 6px;font-size:11px;font-weight:800;margin-top:4px}.kg-money.payment{background:#dbeafe;color:#1d4ed8}.kg-money.due{background:#fee2e2;color:#b91c1c}.kg-money.bill{background:#fef3c7;color:#92400e}.kg-action{font-size:10px!important;padding:5px 7px!important}.kg-action.payment{background:#2563eb!important;color:#fff!important}.kg-action.due{background:#dc2626!important;color:#fff!important}.kg-ledger-summary .ls-item:nth-child(1){background:#fef3c7}.kg-ledger-summary .ls-item:nth-child(2){background:#e0e7ff}.kg-ledger-summary .ls-item:nth-child(3){background:#dbeafe}.kg-ledger-summary .ls-item:nth-child(4){background:#fee2e2}.kg-row-payment{background:rgba(37,99,235,.08)}.kg-row-purchase,.kg-row-workbill{background:rgba(245,158,11,.08)}.kg-row-due{background:rgba(220,38,38,.07)}.kg-row-actions{white-space:nowrap}.kg-row-actions button{font-size:10px;padding:4px 6px;margin-left:4px}';
+            document.head.appendChild(style);
+
+            function findPerson(id) { return v3Data.karigars.find(function(person) { return String(person.id) === String(id); }); }
+            function isActive(person) { return person && !person.deleted; }
+            function paymentTotal(job) { return (job.payments || []).reduce(function(sum, payment) { return sum + Number(payment.amount || 0); }, 0); }
+            function heldItems(job) { return (job.items || []).reduce(function(sum, item) { return sum + Math.max(0, Number(item.qty || 0) - Number(item.returned || 0)); }, 0); }
+            function currency(value) { return '₹' + Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+            function transactionsFor(id) { return (v3Data.karigarTransactions || []).filter(function(entry) { return String(entry.karigarId) === String(id); }); }
+            function extraWorkBills(id) { return transactionsFor(id).filter(function(entry) { return entry.type === 'work_bill'; }); }
+            function financial(id) {
+                var jobs = v3Data.karigarJobs.filter(function(job) { return String(job.karigarId) === String(id); });
+                var transactions = transactionsFor(id), extra = transactions.filter(function(entry) { return entry.type === 'work_bill'; }), purchases = transactions.filter(function(entry) { return entry.type === 'purchase'; }), payments = transactions.filter(function(entry) { return entry.type === 'payment'; });
+                var jobBills = jobs.reduce(function(sum, job) { return sum + Number(job.laborCharge || 0); }, 0);
+                var workBills = extra.reduce(function(sum, entry) { return sum + Number(entry.amount || 0); }, 0);
+                var purchaseBills = purchases.reduce(function(sum, entry) { return sum + Number(entry.amount || 0); }, 0);
+                var jobPayments = jobs.reduce(function(sum, job) { return sum + paymentTotal(job); }, 0);
+                var directPayments = payments.reduce(function(sum, entry) { return sum + Number(entry.amount || 0); }, 0);
+                var debit = jobBills + workBills + purchaseBills, credit = jobPayments + directPayments;
+                return { jobs: jobs, transactions: transactions, jobBills: jobBills, workBills: workBills, purchaseBills: purchaseBills, paid: credit, payable: Math.max(0, debit - credit), credit: Math.max(0, credit - debit) };
+            }
+            function ensurePaymentIds(job) { (job.payments || []).forEach(function(payment, index) { if (!payment._id) payment._id = job.id + '-P-' + index + '-' + (payment.date || ''); }); }
+            function custody(id) {
+                var map = {};
+                v3Data.karigarJobs.filter(function(job) { return String(job.karigarId) === String(id); }).forEach(function(job) { (job.items || []).forEach(function(item) { var quantity = Math.max(0, Number(item.qty || 0) - Number(item.returned || 0)); if (!quantity) return; var key = item.itemIndex + '|' + item.name; if (!map[key]) map[key] = { name: item.name, quantity: 0, jobs: [] }; map[key].quantity += quantity; map[key].jobs.push(job.id); }); });
+                return Object.keys(map).map(function(key) { return map[key]; });
+            }
+            function saveAndRender() { saveV3Data(); saveAll(true); renderKarigarV3(); }
+            function statusClass(status) { return status === 'completed' ? 'completed' : status === 'running' ? 'running' : 'assigned'; }
+            function labelStatus(status) { return status === 'completed' ? 'Completed' : status === 'running' ? 'Running' : 'Assigned'; }
+
+            function populateSelects() {
+                var people = v3Data.karigars.filter(isActive);
+                ['karigarV2JobPerson', 'karigarLedgerPerson'].forEach(function(id) { var select = $(id); if (!select) return; var selected = select.value; select.innerHTML = '<option value="">Select karigar</option>' + people.map(function(person) { return '<option value="' + person.id + '">' + escapeHtml(person.name) + '</option>'; }).join(''); select.value = selected; });
+                var itemSelect = $('karigarV2Item'); if (itemSelect) { var selectedItem = itemSelect.value; itemSelect.innerHTML = '<option value="">Select inventory item</option>' + items.map(function(item, index) { return '<option value="' + index + '">' + escapeHtml(item.category + ' · ' + item.name + (item.size ? ' (' + item.size + ')' : '')) + ' — stock ' + Number(item.stock || 0) + '</option>'; }).join(''); itemSelect.value = selectedItem; }
+            }
+            function renderJobsV3() {
+                var target = $('karigarV2Jobs'); if (!target) return;
+                target.innerHTML = v3Data.karigarJobs.length ? v3Data.karigarJobs.map(function(job) {
+                    ensurePaymentIds(job);
+                    var remainingBill = Math.max(0, Number(job.laborCharge || 0) - paymentTotal(job));
+                    var inventory = (job.items || []).map(function(item) { return escapeHtml(item.name) + ': ' + Math.max(0, Number(item.qty || 0) - Number(item.returned || 0)) + ' held'; }).join('<br>') || 'No inventory issued';
+                    var cls = statusClass(job.status);
+                    return '<div class="v3-job kg-job kg-' + cls + '"><div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><div class="v3-job-title">' + escapeHtml(job.karigarName) + ' — ' + escapeHtml(job.work) + '</div><span class="kg-badge ' + cls + '">' + labelStatus(job.status) + '</span></div><div class="v3-job-meta">' + escapeHtml(job.id) + ' · ' + (job.createdAt ? new Date(job.createdAt).toLocaleDateString() : '') + (job.dueDate ? ' · Due ' + escapeHtml(v3Date(job.dueDate)) : '') + '<br><span class="kg-money bill">Bill: ' + currency(job.laborCharge) + '</span> <span class="kg-money payment">Paid: ' + currency(paymentTotal(job)) + '</span> <span class="kg-money due">Due: ' + currency(remainingBill) + '</span><br>Inventory: ' + inventory + (job.notes ? '<br>Notes: ' + escapeHtml(job.notes) : '') + '</div><div class="v3-job-actions"><button class="ghost kg-action" onclick="openKarigarLedgerV3(\'' + job.karigarId + '\')">Ledger</button><button class="ghost kg-action" onclick="editKarigarJobV3(\'' + job.id + '\')">Edit</button><button class="ghost kg-action" onclick="addWorkBillV3(\'' + job.id + '\')">+ Work Bill</button><button class="kg-action payment" onclick="addJobPaymentV3(\'' + job.id + '\')">Payment</button><button class="ghost kg-action" onclick="receiveKarigarReturnsV3(\'' + job.id + '\')">Receive return</button>' + (job.status !== 'running' && job.status !== 'completed' ? '<button class="ghost kg-action" onclick="setKarigarJobStatusV3(\'' + job.id + '\',\'running\')">Running</button>' : '') + (job.status !== 'completed' ? '<button class="ghost kg-action" onclick="setKarigarJobStatusV3(\'' + job.id + '\',\'completed\')">Complete</button>' : '') + '<button class="danger kg-action" onclick="deleteKarigarJobV3(\'' + job.id + '\')">Delete</button></div></div>';
+                }).join('') : '<div class="note">No job work recorded.</div>';
+            }
+            function renderMonthlyV3() {
+                var target = $('karigarV2Monthly'); if (!target) return;
+                var month = $('karigarV2Month').value || new Date().toISOString().slice(0, 7);
+                var rows = v3Data.karigars.filter(isActive).map(function(person) { var data = financial(person.id); var jobs = data.jobs.filter(function(job) { return String(job.createdAt || '').slice(0, 7) === month; }); var bills = jobs.reduce(function(sum, job) { return sum + Number(job.laborCharge || 0); }, 0) + data.transactions.filter(function(entry) { return String(entry.date || '').slice(0, 7) === month && (entry.type === 'purchase' || entry.type === 'work_bill'); }).reduce(function(sum, entry) { return sum + Number(entry.amount || 0); }, 0); var paid = jobs.reduce(function(sum, job) { return sum + paymentTotal(job); }, 0) + data.transactions.filter(function(entry) { return String(entry.date || '').slice(0, 7) === month && entry.type === 'payment'; }).reduce(function(sum, entry) { return sum + Number(entry.amount || 0); }, 0); return { name: person.name, jobs: jobs.length, bills: bills, paid: paid, due: Math.max(0, bills - paid) }; }).filter(function(row) { return row.jobs || row.bills || row.paid; });
+                target.innerHTML = rows.length ? '<div class="table-scroll"><table><thead><tr><th>Karigar</th><th class="num">Jobs</th><th class="num">Bills</th><th class="num">Paid</th><th class="num">Due</th></tr></thead><tbody>' + rows.map(function(row) { return '<tr><td>' + escapeHtml(row.name) + '</td><td class="num">' + row.jobs + '</td><td class="num">' + currency(row.bills) + '</td><td class="num">' + currency(row.paid) + '</td><td class="num" style="color:#b91c1c">' + currency(row.due) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<div class="note">No activity for selected month.</div>';
+            }
+            function renderLedgerV3(id) {
+                var select = $('karigarLedgerPerson'); if (id && select) select.value = id; var karigarId = id || (select ? select.value : ''); var target = $('karigarFullLedger'); if (!target) return; var person = findPerson(karigarId);
+                if (!person) { target.innerHTML = '<div class="note">Select a karigar to view full ledger.</div>'; return; }
+                var data = financial(person.id), events = [];
+                data.jobs.forEach(function(job) { ensurePaymentIds(job); events.push({ key: 'job:' + job.id, date: job.createdAt, type: 'Job bill', notes: job.id + ' · ' + job.work, debit: Number(job.laborCharge || 0), credit: 0, rowClass: 'kg-row-workbill', jobId: job.id }); (job.payments || []).forEach(function(payment) { events.push({ key: 'jobpayment:' + job.id + ':' + payment._id, date: payment.date, type: 'Payment', notes: job.id + ' · ' + (payment.notes || ''), debit: 0, credit: Number(payment.amount || 0), rowClass: 'kg-row-payment', jobId: job.id, paymentId: payment._id }); }); });
+                data.transactions.forEach(function(entry) { events.push({ key: 'transaction:' + entry.id, date: entry.date, type: entry.type === 'purchase' ? 'Purchase bill' : entry.type === 'work_bill' ? 'Work bill' : 'Payment', notes: entry.notes || '', debit: entry.type === 'purchase' || entry.type === 'work_bill' ? Number(entry.amount || 0) : 0, credit: entry.type === 'payment' ? Number(entry.amount || 0) : 0, rowClass: entry.type === 'payment' ? 'kg-row-payment' : 'kg-row-workbill', transactionId: entry.id }); });
+                events.sort(function(a, b) { return new Date(a.date || 0) - new Date(b.date || 0); }); var balance = 0; events.forEach(function(event) { balance += event.debit - event.credit; event.balance = balance; }); var inventory = custody(person.id);
+                target.innerHTML = '<div class="v3-summary kg-ledger-summary"><div class="ls-item"><b>' + currency(data.jobBills + data.workBills) + '</b><span>Work bills</span></div><div class="ls-item"><b>' + currency(data.purchaseBills) + '</b><span>Purchase bills</span></div><div class="ls-item"><b>' + currency(data.paid) + '</b><span>Total paid</span></div><div class="ls-item"><b>' + currency(data.payable) + '</b><span>Payable now</span></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="kg-action payment" onclick="addKarigarDirectPaymentV3(\'' + person.id + '\')">+ Payment Add</button><button class="kg-action due" onclick="addKarigarPurchaseV3(\'' + person.id + '\')">+ Purchase Bill</button><button class="ghost kg-action" onclick="addGeneralWorkBillV3(\'' + person.id + '\')">+ Work Bill</button><button class="ghost kg-action" onclick="shareKarigarLedgerPDFV3(\'' + person.id + '\')">📄 Share PDF</button></div><div class="v3-grid" style="margin-top:8px"><div><div class="v3-kicker">Items with karigar</div>' + (inventory.length ? '<div class="table-scroll"><table><thead><tr><th>Item</th><th class="num">Qty held</th><th>Jobs</th></tr></thead><tbody>' + inventory.map(function(item) { return '<tr><td>' + escapeHtml(item.name) + '</td><td class="num">' + item.quantity + '</td><td>' + item.jobs.map(escapeHtml).join(', ') + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<div class="note">No inventory held.</div>') + '</div><div><div class="v3-kicker">Work status</div><div class="note">Running: <b>' + data.jobs.filter(function(job) { return job.status === 'running' || job.status === 'assigned'; }).length + '</b><br>Completed: <b>' + data.jobs.filter(function(job) { return job.status === 'completed'; }).length + '</b><br>Payment count: <b>' + events.filter(function(event) { return event.credit > 0; }).length + '</b></div></div></div><div class="v3-kicker" style="margin-top:16px">Complete money ledger</div><div class="table-scroll"><table><thead><tr><th>Date</th><th>Type</th><th>Details</th><th class="num">Bill / Due</th><th class="num">Paid</th><th class="num">Balance</th><th>Actions</th></tr></thead><tbody>' + (events.length ? events.map(function(event) { var actions = event.jobId && !event.paymentId ? '<button class="ghost" onclick="editKarigarJobV3(\'' + event.jobId + '\')">Edit job</button>' : event.transactionId ? '<button class="ghost" onclick="editKarigarTransactionV3(\'' + event.transactionId + '\')">Edit</button><button class="danger" onclick="deleteKarigarTransactionV3(\'' + event.transactionId + '\')">Del</button>' : '<button class="ghost" onclick="editJobPaymentV3(\'' + event.jobId + '\',\'' + event.paymentId + '\')">Edit</button><button class="danger" onclick="deleteJobPaymentV3(\'' + event.jobId + '\',\'' + event.paymentId + '\')">Del</button>'; return '<tr class="' + event.rowClass + (event.balance > 0 ? ' kg-row-due' : '') + '"><td>' + (event.date ? new Date(event.date).toLocaleDateString() : '') + '</td><td>' + escapeHtml(event.type) + '</td><td>' + escapeHtml(event.notes) + '</td><td class="num">' + (event.debit ? currency(event.debit) : '') + '</td><td class="num">' + (event.credit ? currency(event.credit) : '') + '</td><td class="num">' + currency(event.balance) + '</td><td class="kg-row-actions">' + actions + '</td></tr>'; }).join('') : '<tr><td colspan="7" class="note">No ledger entry yet.</td></tr>') + '</tbody></table></div>';
+            }
+            function renderRegisterV3() {
+                var target = $('karigarRegisterList'); if (!target) return;
+                var people = v3Data.karigars.filter(isActive);
+                target.innerHTML = people.length ? people.map(function(person) { var data = financial(person.id); return '<div class="v3-queue-item"><div><b style="cursor:pointer;text-decoration:underline;" onclick="openKarigarLedgerV3(\'' + person.id + '\')" title="Click to view full ledger details">' + escapeHtml(person.name) + '</b><div class="muted" style="font-size:11px;">' + escapeHtml(person.phone || 'No phone') + (person.specialty ? ' · ' + escapeHtml(person.specialty) : '') + '<br><span class="kg-money due">Payable: ' + currency(data.payable) + '</span></div></div><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="ghost small" onclick="openKarigarLedgerV3(\'' + person.id + '\')">Ledger</button><button class="ghost small" onclick="editKarigar(\'' + person.id + '\')">Edit</button><button class="ghost small" onclick="deleteKarigar(\'' + person.id + '\')">Delete</button></div></div>'; }).join('') : '<div class="note">No karigar registered yet.</div>';
+            }
+            window.openKarigarListModal = function() {
+                renderRegisterV3();
+                $('karigarListModal').style.display = 'flex';
+            };
+            window.renderKarigarV3 = function() {
+                populateSelects(); renderRegisterV3(); renderJobsV3(); renderMonthlyV3(); renderLedgerV3(); var running = v3Data.karigarJobs.filter(function(job) { return job.status !== 'completed'; }).length; var payable = v3Data.karigars.filter(isActive).reduce(function(sum, person) { return sum + financial(person.id).payable; }, 0); var held = v3Data.karigars.filter(isActive).reduce(function(sum, person) { return sum + custody(person.id).reduce(function(total, item) { return total + item.quantity; }, 0); }, 0); $('karigarV2Summary').innerHTML = '<div style="background:#dbeafe"><b>' + running + '</b><span>Running jobs</span></div><div style="background:#fee2e2"><b>' + currency(payable) + '</b><span>Payable due</span></div><div style="background:#fef3c7"><b>' + held + '</b><span>Items held outside</span></div>'; };
+            window.shareKarigarLedgerPDFV3 = function(karigarId) {
+                var person = findPerson(karigarId);
+                if (!person) { showToast('Karigar not found', 'err'); return; }
+                if (typeof window.jspdf === 'undefined') { showToast('PDF library not loaded — check your internet connection and try again.', 'err'); return; }
+                var data = financial(person.id),
+                    events = [];
+                data.jobs.forEach(function(job) { events.push({ date: job.createdAt, type: 'Job bill', notes: job
+                        .id + ' · ' + job.work, debit: Number(job.laborCharge || 0), credit: 0 }); (job.payments ||
+                    []).forEach(function(payment) { events.push({ date: payment.date, type: 'Payment', notes: job
+                        .id + ' · ' + (payment.notes || ''), debit: 0, credit: Number(payment.amount || 0) }); }); });
+                data.transactions.forEach(function(entry) { events.push({ date: entry.date, type: entry.type ===
+                    'purchase' ? 'Purchase bill' : entry.type === 'work_bill' ? 'Work bill' : 'Payment', notes:
+                    entry.notes || '', debit: entry.type === 'purchase' || entry.type === 'work_bill' ? Number(
+                        entry.amount || 0) : 0, credit: entry.type === 'payment' ? Number(entry.amount || 0) : 0 }); });
+                events.sort(function(a, b) { return new Date(a.date || 0) - new Date(b.date || 0); });
+                var balance = 0;
+                events.forEach(function(e) { balance += e.debit - e.credit;
+                    e.balance = balance; });
+
+                var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+                var pageW = doc.internal.pageSize.getWidth(),
+                    pageH = doc.internal.pageSize.getHeight();
+                var margin = 40,
+                    ACCENT = [30, 58, 138];
+                doc.setFillColor(250, 249, 246);
+                doc.rect(0, 0, pageW, pageH, 'F');
+                doc.setFillColor(ACCENT[0], ACCENT[1], ACCENT[2]);
+                doc.rect(0, 0, pageW, 6, 'F');
+                var y = margin;
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(18);
+                doc.setTextColor(20);
+                doc.text((company && company.name ? company.name : 'Karigar Ledger'), margin, y);
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(9);
+                doc.setTextColor(150);
+                doc.text('Generated ' + new Date().toLocaleDateString(), pageW - margin, y, { align: 'right' });
+                y += 20;
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(14);
+                doc.setTextColor(20);
+                doc.text('Karigar: ' + person.name, margin, y);
+                y += 16;
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(9.5);
+                doc.setTextColor(110);
+                doc.text([person.phone, person.specialty].filter(Boolean).join('  ·  '), margin, y);
+                y += 18;
+                doc.setDrawColor(ACCENT[0], ACCENT[1], ACCENT[2]);
+                doc.setLineWidth(1.2);
+                doc.line(margin, y, pageW - margin, y);
+                y += 20;
+
+                var summary = [
+                    ['Work Bills', data.jobBills + data.workBills],
+                    ['Purchase Bills', data.purchaseBills],
+                    ['Total Paid', data.paid],
+                    ['Payable Now', data.payable],
+                ];
+                var cw = (pageW - margin * 2) / 4;
+                summary.forEach(function(s, i) {
+                    var x = margin + i * cw;
+                    doc.setFillColor(255, 255, 255);
+                    doc.roundedRect(x, y, cw - 8, 44, 6, 6, 'F');
+                    doc.setDrawColor(222, 222, 226);
+                    doc.roundedRect(x, y, cw - 8, 44, 6, 6);
+                    doc.setFont(undefined, 'bold');
+                    doc.setFontSize(12);
+                    doc.setTextColor(ACCENT[0], ACCENT[1], ACCENT[2]);
+                    doc.text('Rs. ' + Number(s[1]).toFixed(2), x + (cw - 8) / 2, y + 18, { align: 'center' });
+                    doc.setFont(undefined, 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(120);
+                    doc.text(s[0], x + (cw - 8) / 2, y + 32, { align: 'center' });
+                });
+                y += 60;
+                doc.setTextColor(0);
+
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(11);
+                doc.text('Complete Money Ledger', margin, y);
+                y += 14;
+                var cols = [
+                    { w: 0.16, label: 'Date' },
+                    { w: 0.16, label: 'Type' },
+                    { w: 0.34, label: 'Details' },
+                    { w: 0.12, label: 'Bill/Due' },
+                    { w: 0.11, label: 'Paid' },
+                    { w: 0.11, label: 'Balance' },
+                ];
+                var tableW = pageW - margin * 2;
+                doc.setFillColor(240, 240, 243);
+                doc.rect(margin, y, tableW, 18, 'F');
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(8.5);
+                doc.setTextColor(90);
+                var cx = margin;
+                cols.forEach(function(c) { doc.text(c.label, cx + 4, y + 12);
+                    cx += c.w * tableW; });
+                y += 18;
+                doc.setFont(undefined, 'normal');
+                doc.setTextColor(30);
+                events.forEach(function(e, i) {
+                    if (y > pageH - margin - 20) { doc.addPage();
+                        doc.setFillColor(250, 249, 246);
+                        doc.rect(0, 0, pageW, pageH, 'F');
+                        y = margin; }
+                    if (i % 2 === 0) { doc.setFillColor(248, 248, 250);
+                        doc.rect(margin, y, tableW, 16, 'F'); }
+                    cx = margin;
+                    var rowVals = [
+                        e.date ? new Date(e.date).toLocaleDateString() : '',
+                        e.type,
+                        e.notes.length > 40 ? e.notes.slice(0, 37) + '...' : e.notes,
+                        e.debit ? 'Rs. ' + e.debit.toFixed(2) : '',
+                        e.credit ? 'Rs. ' + e.credit.toFixed(2) : '',
+                        'Rs. ' + e.balance.toFixed(2),
+                    ];
+                    doc.setFontSize(8);
+                    rowVals.forEach(function(val, ci) { doc.text(String(val), cx + 4, y + 11);
+                        cx += cols[ci].w * tableW; });
+                    y += 16;
+                });
+
+                var blob = doc.output('blob');
+                var file = new File([blob], 'karigar-ledger-' + person.name.replace(/\s+/g, '-') + '.pdf', {
+                    type: 'application/pdf'
+                });
+                if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+                    navigator.share({ title: 'Karigar Ledger — ' + person.name, files: [file] }).catch(function() {});
+                } else {
+                    doc.save('karigar-ledger-' + person.name.replace(/\s+/g, '-') + '.pdf');
+                }
+            };
+            window.openKarigarLedgerV3 = function(id) { renderLedgerV3(id); document.getElementById('karigarFullLedger').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+            window.renderKarigarLedgerV2 = function() { renderLedgerV3(); };
+            window.setKarigarJobStatusV3 = function(id, status) { var job = v3Data.karigarJobs.find(function(entry) { return entry.id === id; }); if (!job) return; job.status = status; if (status === 'completed') job.completedAt = new Date().toISOString(); saveAndRender(); showToast(status === 'completed' ? 'Job completed. Pending items remain with karigar until returned.' : 'Job set to running', 'ok'); };
+            window.editKarigarJobV3 = function(id) {
+                var job = v3Data.karigarJobs.find(function(entry) { return entry.id === id; });
+                if (!job) return;
+                _kjeJobId = id;
+                _kjeWorkingItems = JSON.parse(JSON.stringify(job.items || []));
+                $('kjeJobId').textContent = job.id;
+                $('kjeKarigarName').textContent = 'Karigar: ' + job.karigarName;
+                $('kjeWork').value = job.work || '';
+                $('kjeDueDate').value = job.dueDate || '';
+                $('kjeLaborCharge').value = Number(job.laborCharge || 0).toFixed(2);
+                $('kjeNotes').value = job.notes || '';
+                var itemSelect = $('kjeItemSelect');
+                itemSelect.innerHTML = items.map(function(it, idx) { return '<option value="' + idx + '">' +
+                    escapeHtml(it.name) + (it.size ? ' (' + escapeHtml(it.size) + ')' : '') + ' — stock: ' + (it
+                        .stock || 0) + '</option>'; }).join('');
+                renderKjeItemsList();
+                $('karigarJobEditModal').style.display = 'flex';
+            };
+            var _kjeJobId = null;
+            var _kjeWorkingItems = [];
+            function renderKjeItemsList() {
+                var el = $('kjeItemsList');
+                if (_kjeWorkingItems.length === 0) { el.innerHTML = '<div class="note" style="font-size:11px;">No items issued for this job.</div>'; return; }
+                el.innerHTML = _kjeWorkingItems.map(function(line, idx) {
+                    var held = Number(line.qty || 0) - Number(line.returned || 0);
+                    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-soft);font-size:12.5px;">' +
+                        '<span style="flex:1;">' + escapeHtml(line.name) + (line.returned ? ' <span class="muted" style="font-size:10px;">(' + line.returned + ' returned)</span>' : '') + '</span>' +
+                        '<input type="number" min="' + Number(line.returned || 0) + '" step="0.001" value="' + line.qty + '" style="width:75px;margin:0;padding:5px 7px;font-size:12px;" onchange="kjeUpdateQty(' + idx + ', this.value)">' +
+                        '<button class="small danger" onclick="kjeRemoveItem(' + idx + ')" ' + (Number(line.returned || 0) > 0 ? 'disabled title="Already partially returned — cannot remove"' : '') + '>✕</button>' +
+                        '</div>';
+                }).join('');
+            }
+            window.kjeUpdateQty = function(idx, value) {
+                var line = _kjeWorkingItems[idx];
+                if (!line) return;
+                var qty = Math.max(Number(line.returned || 0), parseFloat(value) || 0);
+                line.qty = qty;
+                renderKjeItemsList();
+            };
+            window.kjeRemoveItem = function(idx) {
+                if (Number(_kjeWorkingItems[idx].returned || 0) > 0) { showToast('Cannot remove — some quantity already returned', 'err'); return; }
+                _kjeWorkingItems.splice(idx, 1);
+                renderKjeItemsList();
+            };
+            window.kjeAddItem = function() {
+                var itemIdx = parseInt($('kjeItemSelect').value, 10);
+                var qty = Math.max(0, parseFloat($('kjeItemQty').value) || 0);
+                var item = items[itemIdx];
+                if (!item || !qty) { showToast('Select an item and quantity', 'err'); return; }
+                var existing = _kjeWorkingItems.find(function(l) { return l.itemIndex === itemIdx; });
+                if (existing) { existing.qty = Number(existing.qty || 0) + qty; } else {
+                    _kjeWorkingItems.push({ itemIndex: itemIdx, name: item.name + (item.size ? ' (' + item.size +
+                        ')' : ''), qty: qty, returned: 0 });
+                }
+                $('kjeItemQty').value = '1';
+                renderKjeItemsList();
+            };
+            window.saveKarigarJobEditV3 = function() {
+                var job = v3Data.karigarJobs.find(function(entry) { return entry.id === _kjeJobId; });
+                if (!job) return;
+                var work = $('kjeWork').value.trim();
+                if (!work) { showToast('Work details required', 'err'); return; }
+                // Reconcile stock: for items removed or reduced, return the difference to stock;
+                // for items added or increased, deduct the difference from stock.
+                var oldItems = job.items || [];
+                var oldByIdx = {};
+                oldItems.forEach(function(l) { oldByIdx[l.itemIndex] = Number(l.qty || 0); });
+                var newByIdx = {};
+                _kjeWorkingItems.forEach(function(l) { newByIdx[l.itemIndex] = Number(l.qty || 0); });
+                var allIdx = new Set(Object.keys(oldByIdx).concat(Object.keys(newByIdx)).map(Number));
+                allIdx.forEach(function(idx) {
+                    var oldQty = oldByIdx[idx] || 0,
+                        newQty = newByIdx[idx] || 0;
+                    var delta = newQty - oldQty; // positive = issuing more (deduct from stock), negative = returning to stock
+                    if (delta !== 0 && items[idx]) {
+                        items[idx].stock = Math.max(0, Number(items[idx].stock || 0) - delta);
+                    }
+                });
+                job.work = work;
+                job.dueDate = $('kjeDueDate').value.trim();
+                job.laborCharge = Math.max(0, parseFloat($('kjeLaborCharge').value) || 0);
+                job.notes = $('kjeNotes').value.trim();
+                job.items = _kjeWorkingItems;
+                closeModal('karigarJobEditModal');
+                saveAndRender();
+                renderStockTable();
+                renderDashboard();
+                showToast('Job updated', 'ok');
+            };
+            window.editKarigar = function(id) { var person = findPerson(id); if (!person) return; showInputPrompt('Karigar name', person.name).then(function(name) { if (name === null || !name.trim()) return; showInputPrompt('Phone', person.phone || '').then(function(phone) { if (phone === null) return; showInputPrompt('Specialty', person.specialty || '').then(function(specialty) { if (specialty === null) return; person.name = name.trim(); person.phone = phone.trim(); person.specialty = specialty.trim(); v3Data.karigarJobs.forEach(function(job) { if (job.karigarId === person.id) job.karigarName = person.name; }); saveAndRender(); showToast('Karigar updated', 'ok'); }); }); }); };
+            window.deleteKarigar = function(id) { var person = findPerson(id); if (!person) return; var hasHistory = v3Data.karigarJobs.some(function(job) { return job.karigarId === id; }) || transactionsFor(id).length; if (!confirm(hasHistory ? 'This karigar has history. Delete will hide the register but retain all ledger history. Continue?' : 'Delete this karigar?')) return; if (hasHistory) person.deleted = true; else v3Data.karigars = v3Data.karigars.filter(function(entry) { return entry.id !== id; }); saveAndRender(); showToast('Karigar deleted', 'ok'); };
+            window.deleteKarigarJobV3 = function(id) { var job = v3Data.karigarJobs.find(function(entry) { return entry.id === id; }); if (!job || !confirm('Delete this job? All items still held by the karigar will be returned to inventory.')) return; (job.items || []).forEach(function(item) { var held = Math.max(0, Number(item.qty || 0) - Number(item.returned || 0)); if (items[item.itemIndex]) items[item.itemIndex].stock = Number(items[item.itemIndex].stock || 0) + held; }); v3Data.karigarJobs = v3Data.karigarJobs.filter(function(entry) { return entry.id !== id; }); saveAndRender(); renderStockTable(); renderDashboard(); showToast('Job deleted and remaining inventory restored', 'ok'); };
+            window.addJobPaymentV3 = function(id) { var job = v3Data.karigarJobs.find(function(entry) { return entry.id === id; }); if (!job) return; showInputPrompt('Payment amount', Math.max(0, Number(job.laborCharge || 0) - paymentTotal(job)).toFixed(2)).then(function(value) { if (value === null) return; var amount = Math.max(0, parseFloat(value) || 0); if (!amount) return; showInputPrompt('Payment note', 'Job payment').then(function(notes) { if (notes === null) return; job.payments.push({ _id: job.id + '-P-' + Date.now(), amount: amount, notes: notes, date: new Date().toISOString() }); saveAndRender(); }); }); };
+            window.receiveKarigarReturnsV3 = function(id) { var job = v3Data.karigarJobs.find(function(entry) { return entry.id === id; }); if (!job) return; var pending = (job.items || []).filter(function(item) { return Number(item.qty || 0) > Number(item.returned || 0); }); if (!pending.length) { showToast('No pending item return', 'info'); return; } function receive(index) { if (index >= pending.length) { saveAndRender(); renderStockTable(); renderDashboard(); showToast('Returned item received', 'ok'); return; } var item = pending[index], held = Number(item.qty || 0) - Number(item.returned || 0); showInputPrompt('Return quantity for ' + item.name + ' (held: ' + held + ')', held).then(function(value) { if (value === null) return; var quantity = Math.max(0, Math.min(held, parseFloat(value) || 0)); item.returned = Number(item.returned || 0) + quantity; if (items[item.itemIndex]) items[item.itemIndex].stock = Number(items[item.itemIndex].stock || 0) + quantity; receive(index + 1); }); } receive(0); };
+            function addTransaction(id, type, amountLabel, noteDefault) { var person = findPerson(id); if (!person) return; showInputPrompt(amountLabel + ' — ' + person.name, '0').then(function(value) { if (value === null) return; var amount = Math.max(0, parseFloat(value) || 0); if (!amount) return; showInputPrompt('Details / note', noteDefault).then(function(notes) { if (notes === null) return; v3Data.karigarTransactions.push({ id: 'KT-' + Date.now(), karigarId: id, type: type, amount: amount, notes: notes, date: new Date().toISOString() }); saveAndRender(); }); }); }
+            window.addKarigarDirectPaymentV3 = function(id) { addTransaction(id, 'payment', 'Payment', 'Payment'); };
+            window.addKarigarPurchaseV3 = function(id) { addTransaction(id, 'purchase', 'Purchase bill', 'Material purchase'); };
+            window.addGeneralWorkBillV3 = function(id) { addTransaction(id, 'work_bill', 'Work bill', 'Additional work bill'); };
+            window.addWorkBillV3 = function(jobId) { var job = v3Data.karigarJobs.find(function(entry) { return entry.id === jobId; }); if (!job) return; showInputPrompt('Additional work bill for ' + job.karigarName, '0').then(function(value) { if (value === null) return; var amount = Math.max(0, parseFloat(value) || 0); if (!amount) return; showInputPrompt('Work bill note', job.id + ' · additional work').then(function(notes) { if (notes === null) return; v3Data.karigarTransactions.push({ id: 'KT-' + Date.now(), karigarId: job.karigarId, jobId: job.id, type: 'work_bill', amount: amount, notes: notes, date: new Date().toISOString() }); saveAndRender(); showToast('Work bill added', 'ok'); }); }); };
+            window.editKarigarTransactionV3 = function(id) { var transaction = (v3Data.karigarTransactions || []).find(function(entry) { return String(entry.id) === String(id); }); if (!transaction) return; showInputPrompt('Amount', Number(transaction.amount || 0).toFixed(2)).then(function(value) { if (value === null) return; var amount = Math.max(0, parseFloat(value) || 0); if (!amount) return; showInputPrompt('Details / note', transaction.notes || '').then(function(notes) { if (notes === null) return; transaction.amount = amount; transaction.notes = notes; saveAndRender(); }); }); };
+            window.deleteKarigarTransactionV3 = function(id) { if (!confirm('Delete this ledger transaction?')) return; v3Data.karigarTransactions = (v3Data.karigarTransactions || []).filter(function(entry) { return String(entry.id) !== String(id); }); saveAndRender(); };
+            window.editJobPaymentV3 = function(jobId, paymentId) { var job = v3Data.karigarJobs.find(function(entry) { return entry.id === jobId; }); if (!job) return; ensurePaymentIds(job); var payment = (job.payments || []).find(function(entry) { return entry._id === paymentId; }); if (!payment) return; showInputPrompt('Payment amount', Number(payment.amount || 0).toFixed(2)).then(function(value) { if (value === null) return; var amount = Math.max(0, parseFloat(value) || 0); if (!amount) return; showInputPrompt('Payment note', payment.notes || '').then(function(notes) { if (notes === null) return; payment.amount = amount; payment.notes = notes; saveAndRender(); }); }); };
+            window.deleteJobPaymentV3 = function(jobId, paymentId) { var job = v3Data.karigarJobs.find(function(entry) { return entry.id === jobId; }); if (!job || !confirm('Delete this payment?')) return; ensurePaymentIds(job); job.payments = (job.payments || []).filter(function(payment) { return payment._id !== paymentId; }); saveAndRender(); };
+            var oldCreateJob = window.createKarigarJobV2;
+            window.createKarigarJobV2 = function() { oldCreateJob(); setTimeout(window.renderKarigarV3, 0); };
+            var oldSaveKarigar = window.saveKarigarV2;
+            window.saveKarigarV2 = function() { oldSaveKarigar(); setTimeout(window.renderKarigarV3, 0); };
+            window.openKarigarStudio = function() { document.querySelectorAll('.tab').forEach(function(tab) { tab.classList.toggle('active', tab.dataset.tab === 'studio'); }); document.querySelectorAll('.mobile-drawer-link').forEach(function(link) { link.classList.toggle('active', link.dataset.tab === 'studio'); }); document.querySelectorAll('section.card').forEach(function(section) { section.style.display = 'none'; }); $('studio').style.display = 'block'; window.renderKarigarV3(); };
+            window.openV3Studio = window.openKarigarStudio;
+            Array.from(document.querySelectorAll('.tab[data-tab="studio"], .mobile-drawer-link[data-tab="studio"]')).forEach(function(node) { node.onclick = function() { openKarigarStudio(); if (node.classList.contains('mobile-drawer-link')) closeMobileDrawer(); }; });
+            window.renderKarigarV3();
         })();
     </script>
 </body>
