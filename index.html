@@ -3312,11 +3312,11 @@
             </div>
             <div class="mobile-drawer-links">
                 <div class="mobile-drawer-link active" data-tab="dashboard" onclick="mobileDrawerNav('dashboard')"><span class="tab-icon">📊</span> Dashboard</div>
-                <div class="mobile-drawer-link" data-tab="products" onclick="mobileDrawerNav('products')"><span class="tab-icon">💍</span> Gallery</div>
+                <div class="mobile-drawer-link" data-tab="products" onclick="mobileDrawerNav('products')"><span class="tab-icon">💍</span> Products</div>
                 <div class="mobile-drawer-link" data-tab="builder" onclick="mobileDrawerNav('builder')"><span class="tab-icon">🛠</span> Builder</div>
-                <div class="mobile-drawer-link" data-tab="itemdb" onclick="mobileDrawerNav('itemdb')"><span class="tab-icon">📦</span> Items DB</div>
-                <div class="mobile-drawer-link" data-tab="itemslist" onclick="mobileDrawerNav('itemslist')"><span class="tab-icon">📋</span> All Items</div>
-                <div class="mobile-drawer-link" data-tab="inventory" onclick="mobileDrawerNav('inventory')"><span class="tab-icon">🏭</span> Inventory</div>
+                <div class="mobile-drawer-link" data-tab="itemdb" onclick="mobileDrawerNav('itemdb')"><span class="tab-icon">📦</span> Add Items</div>
+                <div class="mobile-drawer-link" data-tab="itemslist" onclick="mobileDrawerNav('itemslist')"><span class="tab-icon">📋</span> Inventory</div>
+                <div class="mobile-drawer-link" data-tab="inventory" onclick="mobileDrawerNav('inventory')"><span class="tab-icon">🏭</span> Supplier</div>
                 <div class="mobile-drawer-link" data-tab="billing" onclick="mobileDrawerNav('billing')"><span class="tab-icon">💳</span> Billing</div>
                 <div class="mobile-drawer-link" data-tab="ledger" onclick="mobileDrawerNav('ledger')"><span class="tab-icon">📒</span> Ledger</div>
                 <div class="mobile-drawer-link" data-tab="categories" onclick="mobileDrawerNav('categories')"><span class="tab-icon">🏷️</span> Categories</div>
@@ -3329,11 +3329,11 @@
         </nav>
         <div class="tabs">
             <div class="tab active" data-tab="dashboard"><span class="tab-icon">📊</span> Dashboard</div>
-            <div class="tab" data-tab="products"><span class="tab-icon">💍</span> Gallery</div>
+            <div class="tab" data-tab="products"><span class="tab-icon">💍</span> Products</div>
             <div class="tab" data-tab="builder"><span class="tab-icon">🛠</span> Builder</div>
-            <div class="tab" data-tab="itemdb"><span class="tab-icon">📦</span> Items DB</div>
-            <div class="tab" data-tab="itemslist"><span class="tab-icon">📋</span> All Items</div>
-            <div class="tab" data-tab="inventory"><span class="tab-icon">🏭</span> Inventory</div>
+            <div class="tab" data-tab="itemdb"><span class="tab-icon">📦</span> Add Items</div>
+            <div class="tab" data-tab="itemslist"><span class="tab-icon">📋</span> Inventory</div>
+            <div class="tab" data-tab="inventory"><span class="tab-icon">🏭</span> Supplier</div>
             <div class="tab" data-tab="billing"><span class="tab-icon">💳</span> Billing</div>
             <div class="tab" data-tab="ledger"><span class="tab-icon">📒</span> Ledger</div>
             <div class="tab" data-tab="categories"><span class="tab-icon">🏷️</span> Categories</div>
@@ -3408,7 +3408,7 @@
                 <!-- PRODUCTS GALLERY -->
                 <section id="products" class="card" style="display:none">
                     <div class="section-head">
-                        <div><div class="section-title">Product Gallery</div><div class="note">Click any piece to view details.</div></div>
+                        <div><div class="section-title">Products</div><div class="note">Click any piece to view details.</div></div>
                         <button onclick="startNewProduct()">+ New Product</button>
                     </div>
                     <div id="recentWrap"><div class="note" style="margin-top:14px">Recently opened</div><div class="recent-strip" id="recentStrip"></div></div>
@@ -3615,7 +3615,7 @@
                 <!-- ITEM DB -->
                 <section id="itemdb" class="card" style="display:none">
                     <div class="section-head">
-                        <div><div class="section-title">📦 Item Database</div><div class="note">Add, edit or delete raw materials.</div></div>
+                        <div><div class="section-title">📦 Add Items</div><div class="note">Add, edit or delete raw materials.</div></div>
                         <div class="itemdb-header-actions">
                             <input id="searchItem" type="text" placeholder="🔍 Search items…" oninput="renderItemTable()" style="min-width:160px;">
                             <select id="filterCategory" onchange="renderItemTable()" style="min-width:140px;"><option value="">All categories</option></select>
@@ -3681,7 +3681,7 @@
                 <!-- ITEMS LIST -->
                 <section id="itemslist" class="card" style="display:none">
                     <div class="section-head">
-                        <div><div class="section-title">📋 All Items</div><div class="note">Search, filter and manage your inventory items.</div></div>
+                        <div><div class="section-title">📋 Inventory</div><div class="note">Search, filter and manage your inventory items.</div></div>
                         <div class="search">
                             <input id="searchItemsList" type="text" placeholder="Search items…" oninput="renderItemsList()" style="margin-top:0;min-width:200px;">
                             <button class="ghost" onclick="toggleShow('itemsListFilterPanel')">⚙ Filters</button>
@@ -3698,7 +3698,7 @@
                 </section>
                 <!-- INVENTORY -->
                 <section id="inventory" class="card" style="display:none">
-                    <div class="section-title">🏭 Inventory & Suppliers</div>
+                    <div class="section-title">🏭 Supplier</div>
                     <div class="note">Track stock, suppliers, and purchases. <span class="ai-badge" style="font-size:9px;">✨ Smart</span></div>
                     <div style="margin-top:14px;background:var(--border-soft);border-radius:14px;padding:16px;">
                         <div class="section-title" style="font-size:15px;margin-bottom:6px;">📦 Add New Item</div>
@@ -3867,13 +3867,22 @@
                 <!-- CATEGORIES -->
                 <section id="categories" class="card" style="display:none">
                     <div class="section-head">
-                        <div><div class="section-title">🏷️ Category Manager</div><div class="note">Manage categories across items and products. Click a category to see its items.</div></div>
+                        <div><div class="section-title">🏷️ Item Categories</div><div class="note">Categories used for raw materials in Add Items. Click a category to see its items.</div></div>
                         <div style="display:flex;gap:8px;align-items:center;">
-                            <input id="newCategoryInput" placeholder="New category name" style="margin-top:0;min-width:150px;width:auto;">
+                            <input id="newCategoryInput" placeholder="New item category" style="margin-top:0;min-width:150px;width:auto;">
                             <button onclick="addGlobalCategoryFromSettings()" class="ghost small">＋ Add</button>
                         </div>
                     </div>
                     <div id="categoryManagerList" style="margin-top:10px;max-height:300px;overflow:auto;"></div>
+                    <hr>
+                    <div class="section-head">
+                        <div><div class="section-title">💍 Product Categories</div><div class="note">Categories used for product variations in Builder (e.g. Yellow Gold, Rose Gold, Studded).</div></div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input id="newProductCategoryInput" placeholder="New product category" style="margin-top:0;min-width:150px;width:auto;">
+                            <button onclick="addProductCategoryFromSettings()" class="ghost small">＋ Add</button>
+                        </div>
+                    </div>
+                    <div id="productCategoryManagerList" style="margin-top:10px;max-height:300px;overflow:auto;"></div>
                     <div id="categoryItemList" style="margin-top:12px;max-height:300px;overflow:auto;display:none;background:var(--border-soft);border-radius:12px;padding:14px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                             <span class="section-title" style="font-size:15px;margin:0;">Items in <span id="catItemListTitle"></span></span>
@@ -3926,11 +3935,11 @@
                         <div>
                             <select id="settingDefaultTab" style="width:auto;margin-top:5px;">
                                 <option value="dashboard">Dashboard</option>
-                                <option value="products">Gallery</option>
+                                <option value="products">Products</option>
                                 <option value="builder">Builder</option>
-                                <option value="itemdb">Items DB</option>
-                                <option value="itemslist">All Items</option>
-                                <option value="inventory">Inventory</option>
+                                <option value="itemdb">Add Items</option>
+                                <option value="itemslist">Inventory</option>
+                                <option value="inventory">Supplier</option>
                                 <option value="billing">Billing</option>
                                 <option value="ledger">Ledger</option>
                                 <option value="categories">Categories</option>
@@ -4088,6 +4097,9 @@
     <div id="ledgerEntryModal" class="modal-backdrop"><div class="modal-box dark" style="max-width:460px"><div class="section-title" id="ledgerEntryTitle">Record</div><div id="ledgerEntryForm"></div><div style="margin-top:14px;text-align:right;display:flex;gap:10px;justify-content:flex-end"><button onclick="saveLedgerEntry()">💾 Save</button><button onclick="closeModal('ledgerEntryModal')" class="ghost">Cancel</button></div></div></div>
     <div id="dashboardDetailModal" class="modal-backdrop"><div class="modal-box dark" style="max-width:720px;"><div class="section-title" id="ddTitle">Details</div><div id="ddContent" style="margin-top:12px;"></div><div style="margin-top:16px;text-align:right;display:flex;gap:10px;justify-content:flex-end;"><button onclick="exportDetailPDF()" class="pdf-export-btn">📄 Export PDF</button><button class="ghost" onclick="closeModal('dashboardDetailModal')">Close</button></div></div></div>
     <!-- AI CHAT MODAL -->
+    <div id="fullscreenImgModal" class="modal-backdrop" onclick="closeModal('fullscreenImgModal')" style="background:rgba(0,0,0,0.9);z-index:500;">
+        <img id="fullscreenImgTag" src="" style="max-width:95vw;max-height:95vh;object-fit:contain;margin:auto;">
+    </div>
     <div id="itemDetailModal" class="modal-backdrop">
         <div class="modal-box" style="max-width:560px;padding:22px;max-height:85vh;overflow-y:auto;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
@@ -4171,6 +4183,7 @@
             KEY_SUP_LEDGER = "jp_sup_ledger_v1",
             KEY_SETTINGS = "jp_settings_v1",
             KEY_CATEGORIES = "jp_categories_v1",
+            KEY_PRODUCT_CATEGORIES = "jp_product_categories_v1",
             KEY_PLUGINS = "jp_plugins_v1",
             KEY_DATA_FOLDER = "jp_data_folder_v1",
             KEY_AI_SEARCH = "jp_ai_search_v1";
@@ -4197,6 +4210,7 @@
         let supLedger = JSON.parse(localStorage.getItem(KEY_SUP_LEDGER) || "[]");
         let settings = JSON.parse(localStorage.getItem(KEY_SETTINGS) || "{}");
         let globalCategories = JSON.parse(localStorage.getItem(KEY_CATEGORIES) || "[]");
+        let productCategories = JSON.parse(localStorage.getItem(KEY_PRODUCT_CATEGORIES) || "[]");
         let plugins = JSON.parse(localStorage.getItem(KEY_PLUGINS) || "[]");
         let dataFolderHandle = null;
         let dataFolderPath = localStorage.getItem(KEY_DATA_FOLDER) || '';
@@ -4246,6 +4260,7 @@
             localStorage.setItem(KEY_CUST_LEDGER, JSON.stringify(custLedger));
             localStorage.setItem(KEY_SUP_LEDGER, JSON.stringify(supLedger));
             localStorage.setItem(KEY_CATEGORIES, JSON.stringify(globalCategories));
+            localStorage.setItem(KEY_PRODUCT_CATEGORIES, JSON.stringify(productCategories));
             localStorage.setItem(KEY_PLUGINS, JSON.stringify(plugins));
             localStorage.setItem(KEY_AI_SEARCH, String(aiSearchEnabled));
             updateStats();
@@ -4575,10 +4590,14 @@
         // ===== CATEGORY MANAGEMENT =====
         function getAllCategories() {
             var fromItems = items.map(function(i) { return i.category; }).filter(Boolean);
+            var all = new Set([].concat(globalCategories, fromItems));
+            return Array.from(all).sort(function(a, b) { return a.localeCompare(b); });
+        }
+        function getAllProductCategories() {
             var fromProducts = [];
             products.forEach(function(p) { (p.variations || []).forEach(function(v) { if (v.category) fromProducts.push(v
                         .category); }); });
-            var all = new Set([].concat(globalCategories, fromItems, fromProducts));
+            var all = new Set([].concat(productCategories, fromProducts));
             return Array.from(all).sort(function(a, b) { return a.localeCompare(b); });
         }
 
@@ -4613,18 +4632,24 @@
             }
         }
 
-        function addGlobalCategory(promptTitle) {
+        function addGlobalCategory(promptTitle, target) {
+            target = target || 'item';
             return showInputPrompt(promptTitle || 'New category name (e.g. White, Rose Gold, Studded):').then(function(raw) {
                 var name = (raw || '').trim();
                 if (!name) return null;
-                var exists = getAllCategories().some(function(c) { return c.toLowerCase() === name.toLowerCase(); });
-                if (!exists) { globalCategories.push(name);
+                var list = target === 'product' ? productCategories : globalCategories;
+                var allNames = target === 'product' ? getAllProductCategories() : getAllCategories();
+                var exists = allNames.some(function(c) { return c.toLowerCase() === name.toLowerCase(); });
+                if (!exists) { list.push(name);
                     saveAll(true); }
-                renderCategories();
-                populateProductCategoryFilter();
-                populateVarCategorySelect();
+                if (target === 'product') {
+                    populateVarCategorySelect();
+                } else {
+                    renderCategories();
+                    populateProductCategoryFilter();
+                    populateCategorySelects();
+                }
                 renderCategoryManager();
-                populateCategorySelects();
                 showToast(exists ? 'Category "' + name + '" already exists — selected' : 'Category "' + name + '" added', 'ok');
                 return name;
             });
@@ -4660,6 +4685,10 @@
             renderCategoryManager();
             populateCategorySelects();
             closeCategoryItemList();
+            renderItemTable();
+            renderItemsList();
+            renderProductGrid();
+            renderStockTable();
             showToast('Category deleted', 'ok');
         }
 
@@ -4730,12 +4759,79 @@
 
         function renderCategoryManager() {
             var container = $('categoryManagerList');
+            if (container) {
+                var cats = getAllCategories();
+                if (cats.length === 0) { container.innerHTML = '<div class="note">No item categories yet.</div>'; } else {
+                    container.innerHTML = '<div class="cat-mgr-grid">' + cats.map(function(c) {
+                        return '<div class="cat-card"> <span class="cat-name" onclick="viewCategoryItems(\'' +
+                            escapeHtml(c) + '\')" title="Click to view items">' + escapeHtml(c) +
+                            '</span> <div class="cat-actions"> <button class="small ghost" onclick="editCategoryName(\'' +
+                            escapeHtml(c) + '\')" title="Edit">✎</button> <button class="small danger" onclick="deleteCategory(\'' +
+                            escapeHtml(c) + '\')" title="Delete">✕</button> </div> </div>';
+                    }).join('') + '</div>';
+                }
+            }
+            renderProductCategoryManager();
+        }
+
+        function renderProductCategoryManager() {
+            var container = $('productCategoryManagerList');
             if (!container) return;
-            var cats = getAllCategories();
-            if (cats.length === 0) { container.innerHTML = '<div class="note">No categories yet.</div>'; return; }
+            var cats = getAllProductCategories();
+            if (cats.length === 0) { container.innerHTML = '<div class="note">No product categories yet.</div>'; return; }
             container.innerHTML = '<div class="cat-mgr-grid">' + cats.map(function(c) {
-                return '<div class="cat-card"> <span class="cat-name" onclick="viewCategoryItems(\'' + escapeHtml(c) + '\')" title="Click to view items">' + escapeHtml(c) + '</span> <div class="cat-actions"> <button class="small ghost" onclick="editCategoryName(\'' + escapeHtml(c) + '\')" title="Edit">✎</button> <button class="small danger" onclick="deleteCategory(\'' + escapeHtml(c) + '\')" title="Delete">✕</button> </div> </div>';
+                return '<div class="cat-card"> <span class="cat-name">' + escapeHtml(c) +
+                    '</span> <div class="cat-actions"> <button class="small ghost" onclick="editProductCategoryName(\'' +
+                    escapeHtml(c) + '\')" title="Edit">✎</button> <button class="small danger" onclick="deleteProductCategory(\'' +
+                    escapeHtml(c) + '\')" title="Delete">✕</button> </div> </div>';
             }).join('') + '</div>';
+        }
+
+        function addProductCategoryFromSettings() {
+            var input = $('newProductCategoryInput');
+            var name = input.value.trim();
+            if (!name) return;
+            var exists = getAllProductCategories().some(function(c) { return c.toLowerCase() === name.toLowerCase(); });
+            if (!exists) { productCategories.push(name);
+                saveAll(true); }
+            input.value = '';
+            populateVarCategorySelect();
+            renderCategoryManager();
+            showToast(exists ? 'Category "' + name + '" already exists' : 'Product category "' + name + '" added', 'ok');
+        }
+
+        function editProductCategoryName(oldName) {
+            showInputPrompt('Edit product category name:', oldName).then(function(newName) {
+                if (!newName || newName.trim() === oldName) return;
+                var trimmed = newName.trim();
+                if (getAllProductCategories().some(function(c) { return c.toLowerCase() === trimmed.toLowerCase() && c !== oldName; })) {
+                    showToast('Category "' + trimmed + '" already exists', 'err');
+                    return;
+                }
+                var idx = productCategories.indexOf(oldName);
+                if (idx >= 0) productCategories[idx] = trimmed;
+                products.forEach(function(p) {
+                    (p.variations || []).forEach(function(v) { if (v.category === oldName) v.category = trimmed; });
+                });
+                saveAll(true);
+                populateVarCategorySelect();
+                renderCategoryManager();
+                renderProductGrid();
+                showToast('Product category renamed to "' + trimmed + '"', 'ok');
+            });
+        }
+
+        function deleteProductCategory(name) {
+            if (!confirm('Delete product category "' + name + '"? It will be removed from all products using it.')) return;
+            productCategories = productCategories.filter(function(c) { return c !== name; });
+            products.forEach(function(p) {
+                (p.variations || []).forEach(function(v) { if (v.category === name) v.category = ''; });
+            });
+            saveAll(true);
+            populateVarCategorySelect();
+            renderCategoryManager();
+            renderProductGrid();
+            showToast('Product category deleted', 'ok');
         }
 
         function quickAddCategoryFromItemDb() {
@@ -4746,7 +4842,7 @@
         }
 
         function quickAddCategoryFromBuilder() {
-            addGlobalCategory().then(function(name) {
+            addGlobalCategory(undefined, 'product').then(function(name) {
                 if (name && $('varCategory')) { populateVarCategorySelect();
                     $('varCategory').value = name; }
             });
@@ -4756,7 +4852,7 @@
             var sel = $('varCategory');
             if (!sel) return;
             var prev = sel.value,
-                cats = getAllCategories();
+                cats = getAllProductCategories();
             sel.innerHTML = '<option value="">Select category…</option>' + cats.map(function(c) {
                 return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>';
             }).join('') + '<option value="__new__">＋ New category…</option>';
@@ -4799,6 +4895,11 @@
         function productThumb(p) { if (p.images && p.images.length) return p.images[Math.min(p.primaryIndex || 0, p.images
                     .length - 1)]; return null; }
 
+        function openFullscreenImage(src) {
+            if (!src) return;
+            $('fullscreenImgTag').src = src;
+            $('fullscreenImgModal').style.display = 'flex';
+        }
         function closeModal(id) { if ($(id)) $(id).style.display = 'none'; }
         function toggleShow(id) {
             var el = $(id);
@@ -5739,7 +5840,7 @@
             var sel = this;
             if (sel.value === '__new__') {
                 sel.value = ''; // reset while the in-page prompt is open
-                addGlobalCategory('New category name for this product:').then(function(name) {
+                addGlobalCategory('New category name for this product:', 'product').then(function(name) {
                     sel.value = name || '';
                     checkVarDuplicate();
                 });
@@ -6812,6 +6913,7 @@
                 pushUndo({ type: 'delete_product', idx: idx, product: product });
                 saveAll(true);
                 renderProductGrid();
+                renderRecentStrip();
                 populateExportSelect();
                 showToast('Deleted (Ctrl+Z to undo)', 'ok');
             }
@@ -6863,7 +6965,8 @@
             if (imgs) {
                 gallery.innerHTML =
                     (imgs.length > 1 ? '<button class="qv-nav prev" onclick="qvNav(-1)">‹</button>' : '') +
-                    '<img src="' + imgs[qvIndex] + '">' + (imgs.length > 1 ?
+                    '<img src="' + imgs[qvIndex] + '" onclick="openFullscreenImage(\'' + imgs[qvIndex]
+                        .replace(/'/g, "\\'") + '\')" style="cursor:zoom-in;">' + (imgs.length > 1 ?
                     '<button class="qv-nav next" onclick="qvNav(1)">›</button>' : '');
             } else { gallery.innerHTML = '<div class="qv-image-empty">💍</div>'; }
             var dots = $('qvDots');
@@ -7284,9 +7387,11 @@
         function populateCustomerSelect() {
             var sel = $('customerSelect');
             if (!sel) return;
+            var prevValue = sel.value;
             sel.innerHTML = '<option value="">Walk-in / Select</option><option value="__new__">+ New customer…</option>';
             customers.forEach(function(c) { sel.appendChild(Object.assign(document.createElement('option'), { value: c
                         .id, textContent: c.name + ' (' + (c.phone || '—') + ')' })); });
+            if (prevValue && customers.some(function(c) { return c.id === prevValue; })) sel.value = prevValue;
         }
 
         function onCustomerSelectChange() {
@@ -7483,7 +7588,9 @@
                     qty: qty, price: price, total: price * qty, profit: qty * varProfit });
             }
             renderBillQueue();
-            document.querySelector('.tab[data-tab="billing"]').click();
+            if (!document.querySelector('.tab[data-tab="billing"]').classList.contains('active')) {
+                document.querySelector('.tab[data-tab="billing"]').click();
+            }
         }
 
         function removeBillLine(i) { billQueue.splice(i, 1);
@@ -8789,45 +8896,31 @@
                     break;
                 }
                 case 'totalcost': {
-                    title.textContent = '💎 Total Stock Cost — Product-wise Value';
-                    var stockMap = {};
-                    products.forEach(function(p) {
-                        (p.variations || []).forEach(function(v) {
-                            var stats = computeVariationStats(v);
-                            var stock = Number(v.stock || 0);
-                            if (stock > 0) {
-                                var key = p.name + ' (' + v.name + ')';
-                                stockMap[key] = {
-                                    name: p.name,
-                                    var: v.name,
-                                    stock: stock,
-                                    costPerUnit: stats.totalCost / (v.items.reduce(
-                                        function(s, it) { return s + it.qty; }, 0) ||
-                                        1),
-                                    value: stats.totalSell * stock
-                                };
-                            }
-                        });
-                    });
-                    var entries = Object.values(stockMap).sort(function(a, b) { return b.value - a
-                            .value; });
+                    title.textContent = '📦 Inventory Cost — Item-wise Stock Value';
+                    var entries = items.filter(function(it) { return Number(it.stock || 0) > 0; }).map(
+                        function(it) {
+                            var costPerUnit = Number(it.purchase_price || 0) + Number(it.making || 0);
+                            return { category: it.category, name: it.name, size: it.size, stock: Number(it
+                                .stock || 0), costPerUnit: costPerUnit, value: costPerUnit * Number(it.stock ||
+                                0) };
+                        }).sort(function(a, b) { return b.value - a.value; });
                     if (entries.length === 0) html = '<div class="note">No stock items.</div>';
                     else {
                         var totalVal = entries.reduce(function(s, e) { return s + e.value; }, 0);
                         html =
-                            '<div style="font-weight:700;margin-bottom:8px;">Total Stock Value: ₹' +
+                            '<div style="font-weight:700;margin-bottom:8px;">Total Inventory Cost: ₹' +
                             totalVal.toFixed(2) +
-                            '</div><div style="max-height:400px;overflow:auto;"><table style="font-size:12px;"><thead><tr><th>Product</th><th>Variation</th><th class="num">Stock</th><th class="num">Value</th></tr></thead><tbody>';
+                            '</div><div style="max-height:400px;overflow:auto;"><table style="font-size:12px;"><thead><tr><th>Category</th><th>Item</th><th class="num">Stock</th><th class="num">Cost/unit</th><th class="num">Value</th></tr></thead><tbody>';
                         entries.forEach(function(e) {
                             html +=
-                                '<tr><td>' + escapeHtml(e.name) + '</td><td>' +
-                                escapeHtml(e.var) + '</td><td class="num">' + e
-                                .stock + '</td><td class="num">₹' + e.value
-                                .toFixed(2) + '</td></tr>';
+                                '<tr><td>' + escapeHtml(e.category) + '</td><td>' + escapeHtml(e.name) +
+                                (e.size ? ' (' + escapeHtml(e.size) + ')' : '') + '</td><td class="num">' + e
+                                .stock + '</td><td class="num">₹' + e.costPerUnit.toFixed(2) +
+                                '</td><td class="num">₹' + e.value.toFixed(2) + '</td></tr>';
                         });
                         html += '</tbody></table></div>';
                     }
-                    currentDetailData = { type: type, data: Object.values(stockMap) };
+                    currentDetailData = { type: type, data: entries };
                     break;
                 }
                 case 'due': {
@@ -9011,8 +9104,8 @@
         function renderDashboard() {
             $('dTotalProducts').textContent = products.length;
 
-            // Catalog Value: current selling price of everything in the catalog (point-in-time, not period-filtered)
-            var totalVal = products.reduce(function(s, p) { return s + Number(p.finalSell || 0); }, 0);
+            // Catalog Value: what your current stock would sell for — sell price × stock, per product
+            var totalVal = products.reduce(function(s, p) { return s + computeStockValue(p); }, 0);
             $('dTotalValue').textContent = '₹' + formatCompact(totalVal);
 
             var periodSales = getSalesInPeriod();
