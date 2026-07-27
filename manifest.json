@@ -1,6 +1,6 @@
 {
-  "name": "Jewellery Product Builder Pro",
-  "short_name": "Jewellery Pro",
+  "name": "Jewellery Product Builder Pro 3.0",
+  "short_name": "Jewellery Pro 3",
   "description": "Offline-first jewellery business management app — inventory, billing, ledgers, and more.",
   "start_url": "./index.html",
   "scope": "./",
