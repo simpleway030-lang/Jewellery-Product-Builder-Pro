@@ -15,8 +15,228 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- V3_DEFERRED_SCRIPT
+        // ===== VERSION 3.0: JEWELLERY OPERATIONS STUDIO =====
+        var V3_STORAGE_KEY = 'jp_v3_operations_v1';
+        var v3Data = (function() {
+            try {
+                var saved = JSON.parse(localStorage.getItem(V3_STORAGE_KEY) || '{}');
+                return {
+                    rates: Object.assign({ gold24: 0, gold22: 0, gold18: 0, silver: 0, updatedAt: '' }, saved.rates || {}),
+                    jobs: Array.isArray(saved.jobs) ? saved.jobs : []
+                };
+            } catch (error) {
+                return { rates: { gold24: 0, gold22: 0, gold18: 0, silver: 0, updatedAt: '' }, jobs: [] };
+            }
+        })();
+
+        function readV3ProductProfile() {
+            function value(id) { return $(id) ? $(id).value.trim() : ''; }
+            return { metal: value('prodMetal'), purity: value('prodPurity'), grossWeight: value('prodGrossWeight'),
+                netWeight: value('prodNetWeight'), stone: value('prodStone'), certificate: value('prodCertificate'),
+                engraving: value('prodEngraving') };
+        }
+
+        function writeV3ProductProfile(profile) {
+            profile = profile || {};
+            var fields = { prodMetal: profile.metal, prodPurity: profile.purity, prodGrossWeight: profile.grossWeight,
+                prodNetWeight: profile.netWeight, prodStone: profile.stone, prodCertificate: profile.certificate,
+                prodEngraving: profile.engraving };
+            Object.keys(fields).forEach(function(id) { if ($(id)) $(id).value = fields[id] || ''; });
+        }
+
+        function saveV3Data() {
+            localStorage.setItem(V3_STORAGE_KEY, JSON.stringify(v3Data));
+        }
+
+        function v3Money(value) { return 'INR ' + Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+        function v3Today() { return new Date().toISOString().slice(0, 10); }
+
+        function v3Date(value) {
+            if (!value) return 'No promised date';
+            return new Date(value + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        function getV3Estimate() {
+            var gross = Math.max(0, parseFloat($('v3CalcGross').value) || 0);
+            var stone = Math.max(0, parseFloat($('v3CalcStone').value) || 0);
+            var net = Math.max(0, gross - stone);
+            var rateKey = $('v3CalcMetal').value;
+            var rate = Number(v3Data.rates[rateKey] || 0);
+            var material = net * rate;
+            var makingInput = Math.max(0, parseFloat($('v3Making').value) || 0);
+            var makingType = $('v3MakingType').value;
+            var making = makingType === 'gram' ? net * makingInput : makingType === 'percent' ? material * makingInput / 100 : makingInput;
+            var hallmark = Math.max(0, parseFloat($('v3Hallmark').value) || 0);
+            var subtotal = material + making + hallmark;
+            var tax = subtotal * Math.max(0, parseFloat($('v3Tax').value) || 0) / 100;
+            return { gross: gross, stone: stone, net: net, rate: rate, material: material, making: making, hallmark: hallmark,
+                subtotal: subtotal, tax: tax, total: subtotal + tax };
+        }
+
+        function renderV3Calculator() {
+            if (!$('v3CalcTotal')) return;
+            var quote = getV3Estimate();
+            $('v3CalcTotal').textContent = v3Money(quote.total);
+            $('v3CalcBreakdown').textContent = 'Net ' + quote.net.toFixed(3) + 'g x ' + v3Money(quote.rate) +
+                ' + making ' + v3Money(quote.making) + ' + hallmark ' + v3Money(quote.hallmark) + ' + GST ' + v3Money(quote.tax);
+        }
+
+        function saveV3Rates() {
+            v3Data.rates.gold24 = Math.max(0, parseFloat($('v3Gold24').value) || 0);
+            v3Data.rates.gold22 = Math.max(0, parseFloat($('v3Gold22').value) || 0);
+            v3Data.rates.gold18 = Math.max(0, parseFloat($('v3Gold18').value) || 0);
+            v3Data.rates.silver = Math.max(0, parseFloat($('v3Silver').value) || 0);
+            v3Data.rates.updatedAt = new Date().toISOString();
+            saveV3Data();
+            renderV3Calculator();
+            renderV3RateStamp();
+        }
+
+        function renderV3RateStamp() {
+            if (!$('v3RateUpdated')) return;
+            $('v3RateUpdated').textContent = v3Data.rates.updatedAt ? 'Rates updated ' + new Date(v3Data.rates.updatedAt).toLocaleString('en-IN') : 'Rates have not been set yet';
+        }
+
+        function prefillV3JobFromRate() {
+            var quote = getV3Estimate();
+            $('v3JobEstimate').value = quote.total.toFixed(2);
+            if (!$('v3JobItem').value.trim()) $('v3JobItem').value = $('v3CalcMetal').options[$('v3CalcMetal').selectedIndex].text + ' custom piece';
+            showToast('Rate estimate copied to the job card', 'ok');
+        }
+
+        function createV3Job() {
+            var customer = $('v3JobCustomer').value.trim();
+            var item = $('v3JobItem').value.trim();
+            if (!customer || !item) { showToast('Customer name and item/design are required', 'err'); return; }
+            var job = { id: 'JOB-' + Date.now().toString(36).toUpperCase(), customer: customer, phone: $('v3JobPhone').value.trim(),
+                item: item, dueDate: $('v3JobDue').value, estimate: Math.max(0, parseFloat($('v3JobEstimate').value) || 0),
+                advance: Math.max(0, parseFloat($('v3JobAdvance').value) || 0), notes: $('v3JobNotes').value.trim(),
+                status: 'received', createdAt: new Date().toISOString() };
+            v3Data.jobs.unshift(job);
+            ['v3JobCustomer', 'v3JobPhone', 'v3JobItem', 'v3JobDue', 'v3JobEstimate', 'v3JobAdvance', 'v3JobNotes'].forEach(function(id) { $(id).value = ''; });
+            saveV3Data();
+            renderV3Studio();
+            showToast('Job card ' + job.id + ' created', 'ok');
+        }
+
+        function updateV3JobStatus(id, status) {
+            var job = v3Data.jobs.find(function(entry) { return entry.id === id; });
+            if (!job) return;
+            job.status = status;
+            job.updatedAt = new Date().toISOString();
+            saveV3Data();
+            renderV3Studio();
+        }
+
+        function deleteV3Job(id) {
+            if (!confirm('Delete this job card?')) return;
+            v3Data.jobs = v3Data.jobs.filter(function(job) { return job.id !== id; });
+            saveV3Data();
+            renderV3Studio();
+            showToast('Job card deleted', 'ok');
+        }
+
+        function printV3Job(id) {
+            var job = v3Data.jobs.find(function(entry) { return entry.id === id; });
+            if (!job) return;
+            var safe = function(value) { return escapeHtml(value || '').replace(/\n/g, '<br>'); };
+            var due = Math.max(0, Number(job.estimate || 0) - Number(job.advance || 0));
+            var win = window.open('', '_blank', 'width=720,height=820');
+            if (!win) { showToast('Please allow pop-ups to print job cards', 'err'); return; }
+            win.document.write('<!doctype html><html><head><title>' + safe(job.id) + '</title><style>body{font-family:Arial,sans-serif;max-width:680px;margin:36px auto;color:#172033}.ticket{border:2px solid #172033;padding:28px;border-radius:12px}.row{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #ddd;padding:10px 0}.label{color:#657084;font-size:11px;text-transform:uppercase;font-weight:bold}.value{font-size:15px;font-weight:600}.total{font-size:22px;color:#0b65c2;font-weight:bold}@media print{body{margin:18px}}</style></head><body><div class="ticket"><h1>Repair / Custom Job Card</h1><p class="label">' + safe(job.id) + ' · ' + safe(job.status) + '</p><div class="row"><div><div class="label">Customer</div><div class="value">' + safe(job.customer) + '</div></div><div><div class="label">Phone</div><div class="value">' + safe(job.phone || '—') + '</div></div></div><div class="row"><div><div class="label">Item / design</div><div class="value">' + safe(job.item) + '</div></div><div><div class="label">Promised date</div><div class="value">' + safe(v3Date(job.dueDate)) + '</div></div></div><div class="row"><div><div class="label">Work notes</div><div class="value">' + safe(job.notes || '—') + '</div></div></div><div class="row"><div><div class="label">Estimate</div><div class="value">' + v3Money(job.estimate) + '</div></div><div><div class="label">Advance</div><div class="value">' + v3Money(job.advance) + '</div></div><div><div class="label">Balance</div><div class="total">' + v3Money(due) + '</div></div></div><p style="margin-top:35px">Customer signature: ____________________</p></div><script>window.onload=function(){window.print()}<\/script></body></html>');
+            win.document.close();
+        }
+
+        function renderV3Jobs() {
+            var board = $('v3JobsBoard');
+            if (!board) return;
+            var lanes = [{ id: 'received', label: 'Received' }, { id: 'bench', label: 'At Bench' }, { id: 'ready', label: 'Ready for Pickup' }, { id: 'delivered', label: 'Delivered' }];
+            board.innerHTML = lanes.map(function(lane) {
+                var entries = v3Data.jobs.filter(function(job) { return job.status === lane.id; });
+                var cards = entries.map(function(job) {
+                    var balance = Math.max(0, Number(job.estimate || 0) - Number(job.advance || 0));
+                    var next = lane.id === 'received' ? 'bench' : lane.id === 'bench' ? 'ready' : lane.id === 'ready' ? 'delivered' : '';
+                    return '<div class="v3-job"><div class="v3-job-title">' + escapeHtml(job.item) + '</div><div class="v3-job-meta">' + escapeHtml(job.customer) + (job.phone ? ' · ' + escapeHtml(job.phone) : '') + '<br>' + escapeHtml(job.id) + '<br>Due: ' + escapeHtml(v3Date(job.dueDate)) + '<br>Balance: ' + v3Money(balance) + '</div><div class="v3-job-actions">' + (next ? '<button onclick="updateV3JobStatus(\'' + job.id + '\',\'' + next + '\')">Move forward</button>' : '') + '<button class="ghost" onclick="printV3Job(\'' + job.id + '\')">Print</button><button class="ghost" onclick="deleteV3Job(\'' + job.id + '\')">Delete</button></div></div>';
+                }).join('');
+                return '<div class="v3-lane"><div class="v3-lane-head"><span>' + lane.label + '</span><span>' + entries.length + '</span></div>' + (cards || '<div class="note" style="font-size:11px;">No jobs</div>') + '</div>';
+            }).join('');
+        }
+
+        function renderV3Summary() {
+            var active = v3Data.jobs.filter(function(job) { return job.status !== 'delivered'; });
+            var ready = v3Data.jobs.filter(function(job) { return job.status === 'ready'; });
+            var balance = active.reduce(function(sum, job) { return sum + Math.max(0, Number(job.estimate || 0) - Number(job.advance || 0)); }, 0);
+            if ($('v3Summary')) $('v3Summary').innerHTML = '<div><b>' + active.length + '</b><span>Open jobs</span></div><div><b>' + ready.length + '</b><span>Ready pickup</span></div><div><b>' + v3Money(balance) + '</b><span>Open balance</span></div>';
+        }
+
+        function renderV3ActionQueue() {
+            var queue = $('v3ActionQueue');
+            if (!queue) return;
+            var today = v3Today();
+            var actions = v3Data.jobs.filter(function(job) { return job.status === 'ready' || (job.status !== 'delivered' && job.dueDate && job.dueDate < today); }).sort(function(a, b) { return (a.dueDate || '9999').localeCompare(b.dueDate || '9999'); });
+            queue.innerHTML = actions.length ? actions.map(function(job) {
+                var overdue = job.status !== 'ready' && job.dueDate < today;
+                return '<div class="v3-queue-item"><div><b>' + escapeHtml(job.customer) + '</b><div class="muted" style="font-size:11px;">' + escapeHtml(job.item) + ' · ' + escapeHtml(v3Date(job.dueDate)) + '</div></div><span class="badge ' + (overdue ? 'badge-danger' : 'badge-success') + '">' + (overdue ? 'Overdue' : 'Ready') + '</span></div>';
+            }).join('') : '<div class="note" style="padding:18px 0;">No pickups or overdue jobs. You are all caught up.</div>';
+        }
+
+        function renderV3Studio() {
+            if (!$('studio')) return;
+            var rateInputs = { v3Gold24: 'gold24', v3Gold22: 'gold22', v3Gold18: 'gold18', v3Silver: 'silver' };
+            Object.keys(rateInputs).forEach(function(id) { if ($(id) && document.activeElement !== $(id)) $(id).value = v3Data.rates[rateInputs[id]] || ''; });
+            renderV3Calculator();
+            renderV3RateStamp();
+            renderV3Summary();
+            renderV3Jobs();
+            renderV3ActionQueue();
+        }
+
+        function openV3Studio() {
+            document.querySelectorAll('.tab').forEach(function(tab) { tab.classList.toggle('active', tab.dataset.tab === 'studio'); });
+            document.querySelectorAll('.mobile-drawer-link').forEach(function(link) { link.classList.toggle('active', link.dataset.tab === 'studio'); });
+            document.querySelectorAll('section.card').forEach(function(section) { section.style.display = 'none'; });
+            $('studio').style.display = 'block';
+            if (history.state && history.state.tab !== 'studio') history.pushState({ tab: 'studio' }, '', location.pathname + location.search + '#studio');
+            renderV3Studio();
+        }
+
+        function setupV3Navigation() {
+            var tabs = document.querySelector('.tabs');
+            if (tabs && !document.querySelector('.tab[data-tab="studio"]')) {
+                var tab = document.createElement('div');
+                tab.className = 'tab'; tab.dataset.tab = 'studio'; tab.innerHTML = '<span class="tab-icon">&#10024;</span> V3 Studio';
+                tab.onclick = openV3Studio;
+                tabs.appendChild(tab);
+            }
+            var drawerLinks = document.querySelector('.mobile-drawer-links');
+            if (drawerLinks && !document.querySelector('.mobile-drawer-link[data-tab="studio"]')) {
+                var link = document.createElement('div');
+                link.className = 'mobile-drawer-link'; link.dataset.tab = 'studio'; link.innerHTML = '<span class="tab-icon">&#10024;</span> V3 Studio';
+                link.onclick = function() { openV3Studio(); closeMobileDrawer(); };
+                drawerLinks.appendChild(link);
+            }
+            var heading = document.querySelector('header h1');
+            if (heading) heading.textContent = 'Jewellery Product Builder Pro 3.0';
+            document.title = 'Jewellery Product Builder Pro 3.0';
+            var footer = document.querySelector('footer');
+            if (footer) footer.textContent = 'Jewellery Product Builder Pro 3.0 · product passports · rate costing · repair workflow · runs offline';
+            var baseQuickView = renderQuickView;
+            renderQuickView = function() {
+                baseQuickView();
+                var profile = qvProduct && qvProduct.profile;
+                if (!profile || !Object.keys(profile).some(function(key) { return profile[key]; })) return;
+                var target = $('qvMeta');
+                if (!target) return;
+                var details = [profile.metal, profile.purity, profile.netWeight ? profile.netWeight + 'g' : profile.grossWeight ? profile.grossWeight + 'g gross' : '', profile.stone, profile.certificate].filter(Boolean);
+                if (details.length) target.textContent += ' · ' + details.join(' · ');
+            };
+        }
+
+        setupV3Navigation();
+    V3_DEFERRED_SCRIPT -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js">
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
@@ -3283,6 +3503,37 @@
                 grid-template-columns: 1fr 1fr;
             }
         }
+        /* ===== VERSION 3.0: JEWELLERY OPERATIONS STUDIO ===== */
+        .v3-grid { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr); gap:16px; margin-top:16px; }
+        .v3-panel { background:var(--border-soft); border:1px solid var(--border); border-radius:16px; padding:16px; }
+        .v3-panel h3 { margin:0 0 5px; font-size:15px; }
+        .v3-kicker { color:var(--accent); font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+        .v3-rate-grid, .v3-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:12px; }
+        .v3-rate-grid label, .v3-form-grid label { display:block; font-size:11px; color:var(--muted); font-weight:700; margin-bottom:4px; }
+        .v3-rate-grid input, .v3-form-grid input, .v3-form-grid select, .v3-form-grid textarea { width:100%; margin:0; }
+        .v3-form-grid textarea { min-height:72px; resize:vertical; }
+        .v3-total { margin-top:14px; padding:14px; border-radius:13px; background:linear-gradient(135deg,rgba(var(--accent-rgb),.14),rgba(var(--accent-rgb),.04)); }
+        .v3-total strong { display:block; font-size:24px; color:var(--accent); margin-top:3px; }
+        .v3-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0; }
+        .v3-summary div { padding:10px; border-radius:12px; background:var(--border-soft); text-align:center; }
+        .v3-summary b { display:block; font-size:18px; }
+        .v3-summary span { color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
+        .v3-jobs { display:grid; grid-template-columns:repeat(4,minmax(170px,1fr)); gap:10px; overflow-x:auto; padding-bottom:5px; }
+        .v3-lane { min-height:170px; padding:10px; border-radius:14px; background:var(--border-soft); border:1px solid var(--border); }
+        .v3-lane-head { display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:800; margin-bottom:8px; }
+        .v3-job { background:var(--card-solid); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:11px; padding:10px; margin:7px 0; box-shadow:var(--shadow-sm); }
+        .v3-job-title { font-weight:800; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .v3-job-meta { color:var(--muted); font-size:11px; margin-top:4px; line-height:1.4; }
+        .v3-job-actions { display:flex; gap:5px; margin-top:8px; flex-wrap:wrap; }
+        .v3-job-actions button { font-size:10px; padding:5px 7px; }
+        .v3-queue-item { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); font-size:12px; }
+        .v3-queue-item:last-child { border-bottom:0; }
+        .v3-profile { margin-top:14px; padding-top:13px; border-top:1px solid var(--border); }
+        .v3-profile-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+        .v3-profile-grid label { font-size:11px; margin:0; color:var(--muted); }
+        .v3-profile-grid input, .v3-profile-grid select { margin-top:3px; padding:8px 9px; font-size:12px; }
+        @media(max-width:800px) { .v3-grid { grid-template-columns:1fr; } .v3-jobs { grid-template-columns:repeat(4,220px); } }
+        @media(max-width:480px) { .v3-rate-grid, .v3-form-grid, .v3-profile-grid { grid-template-columns:1fr; } .v3-summary { grid-template-columns:1fr 1fr 1fr; } }
     </style>
 </head>
 <body>
@@ -3494,6 +3745,19 @@
                                 <div class="dropzone" id="imgDropzone" onclick="document.getElementById('prodImage').click()">📷 Drop or click — first is cover</div>
                                 <input id="prodImage" type="file" accept="image/*" multiple style="display:none" onchange="handleImageFiles(event.target.files)">
                                 <div class="img-strip" id="imgStrip"></div>
+                                <div class="v3-profile">
+                                    <div class="v3-kicker">V3 Product Passport</div>
+                                    <div class="note" style="font-size:11px;margin:3px 0 8px;">Trace metal, stone, certificate and personalization details per piece.</div>
+                                    <div class="v3-profile-grid">
+                                        <label>Metal<select id="prodMetal" onchange="autosaveDraft()"><option value="">Not specified</option><option>Gold</option><option>Silver</option><option>Platinum</option><option>Rose Gold</option><option>Mixed Metal</option></select></label>
+                                        <label>Purity<select id="prodPurity" onchange="autosaveDraft()"><option value="">Not specified</option><option>24K / 999</option><option>22K / 916</option><option>18K / 750</option><option>14K / 585</option><option>925 Sterling</option></select></label>
+                                        <label>Gross weight (g)<input id="prodGrossWeight" type="number" step="0.001" min="0" oninput="autosaveDraft()"></label>
+                                        <label>Net weight (g)<input id="prodNetWeight" type="number" step="0.001" min="0" oninput="autosaveDraft()"></label>
+                                        <label>Stone / gemstone<input id="prodStone" placeholder="Diamond, ruby, CZ..." oninput="autosaveDraft()"></label>
+                                        <label>Certificate no.<input id="prodCertificate" placeholder="IGI / GIA / BIS..." oninput="autosaveDraft()"></label>
+                                        <label style="grid-column:1/-1;">Engraving / personalization<input id="prodEngraving" placeholder="Optional engraving or customization note" oninput="autosaveDraft()"></label>
+                                    </div>
+                                </div>
                             </div>
                             <div class="builder-section">
                                 <div class="section-title" style="font-size:15px;margin-bottom:8px;">🏷️ Variations (Categories)</div>
@@ -3611,6 +3875,21 @@
                             </div>
                         </div>
                     </div>
+                </section>
+                <!-- VERSION 3.0 OPERATIONS STUDIO -->
+                <section id="studio" class="card" style="display:none">
+                    <div class="section-head"><div><div class="section-title">V3 Jewellery Operations Studio</div><div class="note">Live metal costing, repair job cards and service follow-ups in one workspace.</div></div><div class="code-chip">Version 3.0</div></div>
+                    <div class="v3-summary" id="v3Summary"></div>
+                    <div class="v3-grid">
+                        <div class="v3-panel"><div class="v3-kicker">Rate Desk</div><h3>Metal rate calculator</h3><div class="note" style="font-size:12px;">Rates are stored locally in INR per gram. Update them at the start of each trading day.</div>
+                            <div class="v3-rate-grid"><label>24K gold<input id="v3Gold24" type="number" step="0.01" oninput="saveV3Rates()"></label><label>22K gold<input id="v3Gold22" type="number" step="0.01" oninput="saveV3Rates()"></label><label>18K gold<input id="v3Gold18" type="number" step="0.01" oninput="saveV3Rates()"></label><label>Silver<input id="v3Silver" type="number" step="0.01" oninput="saveV3Rates()"></label></div>
+                            <div class="v3-form-grid"><label>Metal / purity<select id="v3CalcMetal" onchange="renderV3Calculator()"><option value="gold24">24K gold</option><option value="gold22">22K gold</option><option value="gold18">18K gold</option><option value="silver">Silver</option></select></label><label>Gross weight (g)<input id="v3CalcGross" type="number" min="0" step="0.001" value="0" oninput="renderV3Calculator()"></label><label>Stone weight (g)<input id="v3CalcStone" type="number" min="0" step="0.001" value="0" oninput="renderV3Calculator()"></label><label>Making type<select id="v3MakingType" onchange="renderV3Calculator()"><option value="gram">Per gram</option><option value="percent">Percent</option><option value="fixed">Fixed amount</option></select></label><label>Making charge<input id="v3Making" type="number" min="0" step="0.01" value="0" oninput="renderV3Calculator()"></label><label>Hallmark / certificate<input id="v3Hallmark" type="number" min="0" step="0.01" value="0" oninput="renderV3Calculator()"></label><label>GST %<input id="v3Tax" type="number" min="0" step="0.01" value="3" oninput="renderV3Calculator()"></label></div>
+                            <div class="v3-total"><span class="muted" style="font-size:12px;">Customer estimate</span><strong id="v3CalcTotal">INR 0.00</strong><div id="v3CalcBreakdown" class="note" style="font-size:11px;margin-top:5px;"></div></div>
+                        </div>
+                        <div class="v3-panel"><div class="v3-kicker">Service Desk</div><h3>New repair or custom order</h3><div class="v3-form-grid"><label>Customer name<input id="v3JobCustomer" placeholder="Customer name"></label><label>Phone<input id="v3JobPhone" placeholder="Mobile number"></label><label>Item / design<input id="v3JobItem" placeholder="Ring, necklace, custom piece"></label><label>Promised date<input id="v3JobDue" type="date"></label><label>Estimate (INR)<input id="v3JobEstimate" type="number" min="0" step="0.01" placeholder="0"></label><label>Advance received (INR)<input id="v3JobAdvance" type="number" min="0" step="0.01" placeholder="0"></label><label style="grid-column:1/-1;">Work notes<textarea id="v3JobNotes" placeholder="Resize, polish, stone replacement, custom engraving..."></textarea></label></div><div style="display:flex;gap:8px;align-items:center;margin-top:12px;"><button onclick="createV3Job()">Create job card</button><button class="ghost" onclick="prefillV3JobFromRate()">Use rate estimate</button></div></div>
+                    </div>
+                    <div class="v3-panel" style="margin-top:16px;"><div style="display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap;"><div><div class="v3-kicker">Workflow</div><h3 style="margin-bottom:0;">Repair and custom-order board</h3></div><div class="note" id="v3RateUpdated" style="font-size:11px;"></div></div><div class="v3-jobs" id="v3JobsBoard"></div></div>
+                    <div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">Clienteling</div><h3>Today's action queue</h3><div id="v3ActionQueue"></div></div><div class="v3-panel"><div class="v3-kicker">Operational standard</div><h3>Built for jewellery retail</h3><div class="note" style="line-height:1.7;font-size:12px;">Every piece can carry its metal, purity, weight, stone, certificate and engraving details. Use job cards to track repairs and made-to-order work from intake to delivery, with estimates and advances visible at a glance.</div></div></div>
                 </section>
                 <!-- ITEM DB -->
                 <section id="itemdb" class="card" style="display:none">
@@ -6275,7 +6554,8 @@
                 other: $('otherCharges') ? $('otherCharges').value : 0,
                 discount: $('discountAmt') ? $('discountAmt').value : 0,
                 editingProductId: editingProductId,
-                selectedVarIdx: selectedVarIdx
+                selectedVarIdx: selectedVarIdx,
+                profile: readV3ProductProfile()
             };
             localStorage.setItem(KEY_DRAFT, JSON.stringify(draft));
         }
@@ -6298,6 +6578,7 @@
                     $('favToggleIcon').textContent = draftFavorite ? '★' : '☆';
                     $('otherCharges').value = d.other || 0;
                     $('discountAmt').value = d.discount || 0;
+                    if (typeof writeV3ProductProfile === 'function') writeV3ProductProfile(d.profile || {});
                     editingProductId = d.editingProductId || null;
                     renderProdImages();
                     renderVariations();
@@ -6339,6 +6620,7 @@
             $('favToggleIcon').textContent = '☆';
             $('otherCharges').value = '0';
             $('discountAmt').value = '0';
+            writeV3ProductProfile({});
             $('productDuplicateWarning').innerHTML = '';
             clearManualForm();
             renderProdImages();
@@ -6373,6 +6655,7 @@
                 id: Date.now(),
                 code: null,
                 name: name,
+                profile: readV3ProductProfile(),
                 images: prodImages.slice(),
                 primaryIndex: prodPrimaryIndex,
                 variations: JSON.parse(JSON.stringify(variations)),
@@ -6425,6 +6708,7 @@
             $('favToggleIcon').textContent = '☆';
             $('otherCharges').value = '0';
             $('discountAmt').value = '0';
+            writeV3ProductProfile({});
             $('productDuplicateWarning').innerHTML = '';
             clearManualForm();
             renderVariations();
@@ -6877,6 +7161,7 @@
             selectedVarIdx = 0;
             $('otherCharges').value = p.otherCharges || 0;
             $('discountAmt').value = p.discount || 0;
+            writeV3ProductProfile(p.profile || {});
             renderProdImages();
             renderVariations();
             renderVariationQueue();
@@ -10196,6 +10481,21 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     });
 }
   
+    </script>
+    <script>
+        (function() {
+            var nodes = document.head.childNodes;
+            for (var index = 0; index < nodes.length; index++) {
+                var node = nodes[index];
+                if (node.nodeType === 8 && node.data.indexOf('V3_DEFERRED_SCRIPT') >= 0) {
+                    var source = node.data.replace(/^\s*V3_DEFERRED_SCRIPT/, '').replace(/V3_DEFERRED_SCRIPT\s*$/, '');
+                    window.eval(source);
+                    node.remove();
+                    if (typeof restoreDraft === 'function') restoreDraft();
+                    break;
+                }
+            }
+        })();
     </script>
 </body>
 </html>
