@@ -243,6 +243,9 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
     <!-- Google APIs for Drive -->
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
@@ -3614,7 +3617,8 @@
                         <div class="dash-stat" onclick="openDashboardDetail('revenue')" title="Sum of the full invoice amount (grand total) of every sale in the selected period — this is total sales booked, whether or not it has been fully paid yet"><div class="val" id="dRevenue">₹0</div><div class="lbl">Revenue</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('totalcost')" title="The cost (purchase + making) of everything currently sitting in your stock, based on today's stock levels"><div class="val" id="dTotalCost">₹0</div><div class="lbl">Inventory Cost (Stock)</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('totalprofit')" title="Sum of profit across every sale in the selected period"><div class="val" id="dTotalProfit">₹0</div><div class="lbl">Total Profit</div></div>
-                        <div class="dash-stat" onclick="openDashboardDetail('due')"><div class="val" id="dDue">₹0</div><div class="lbl">Outstanding Due</div></div>
+                        <div class="dash-stat" onclick="openDashboardDetail('due')"><div class="val" id="dDue">₹0</div><div class="lbl">Outstanding Due (Customers)</div></div>
+                        <div class="dash-stat" onclick="openDashboardDetail('supplierdue')"><div class="val" id="dSupplierDue">₹0</div><div class="lbl">Supplier Due</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('lowstock')"><div class="val" id="dLowStock">0</div><div class="lbl">Low Stock</div></div>
                         <div class="dash-stat" onclick="openAIChat()"><div class="val" id="dAIRecommend">✨</div><div class="lbl">AI Suggestion</div></div>
                     </div>
@@ -4281,6 +4285,26 @@
                     </div>
                     <div id="gdriveFileInfo" style="margin-top:6px;font-size:11px;color:var(--muted-2);display:none;"></div>
                     <hr>
+                    <!-- ===== REAL-TIME CLOUD SYNC (multi-user) ===== -->
+                    <div class="section-title" style="font-size:15px;">⚡ Real-Time Cloud Sync (Multi-User) <span class="badge" style="font-size:10px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:8px;">BETA</span></div>
+                    <div class="note">Sign in once, then every device on the same Business Code sees new sales, stock changes, etc. within a second or two — no Sync Now button needed. This is separate from Google Drive backup above.</div>
+                    <div id="cloudStatus" style="margin-top:10px;font-size:13px;">🔴 Not signed in — app works fully offline as before.</div>
+                    <div id="cloudAuthForm" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+                        <input id="cloudEmail" type="email" placeholder="Email" style="margin-top:0;width:auto;min-width:160px;">
+                        <input id="cloudPassword" type="password" placeholder="Password (min 6 chars)" style="margin-top:0;width:auto;min-width:160px;">
+                        <button class="ghost small" onclick="cloudSignUp()">Create business account</button>
+                        <button class="ghost small" onclick="cloudLogin()">Sign in</button>
+                    </div>
+                    <div id="cloudJoinForm" style="display:none;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+                        <input id="cloudBusinessCodeInput" placeholder="Business Code (e.g. AB12CD)" style="margin-top:0;width:auto;min-width:180px;text-transform:uppercase;">
+                        <button class="ghost small" onclick="cloudJoinBusiness()">Join business</button>
+                    </div>
+                    <div class="note" style="margin-top:8px;font-size:11px;">
+                        <b>New business owner:</b> tap "Create business account" — you'll get a Business Code, share it with your staff.<br>
+                        <b>Staff / other devices:</b> sign in, then enter the Business Code your owner shared and tap "Join business".<br>
+                        Everyone who joins the same code sees and edits the same live data. There is currently no separate admin/staff permission level — anyone signed into the code has full access.
+                    </div>
+                    <hr>
                     <div class="section-title" style="font-size:15px;">Backup & Restore</div>
                     <div class="actions">
                         <button onclick="createBackup(true)" class="ghost">Backup Now</button>
@@ -4611,6 +4635,8 @@
                     console.warn('Drive sync failed:', err);
                 });
             }
+            // Trigger real-time cloud sync if signed in
+            if (typeof pushToCloudDebounced === 'function') pushToCloudDebounced();
         }
 
         function populateCategorySelects() {
@@ -5294,6 +5320,7 @@
             loadDefaultHomeTabSetting();
             loadStatColorsSetting();
             loadVarColorSetting();
+            initCloudSDK();
             pruneOldHistory();
             var savedFolder = localStorage.getItem(KEY_DATA_FOLDER);
             if (savedFolder) { dataFolderPath = savedFolder;
@@ -7393,6 +7420,20 @@
                             '<span class="variant-category-tag color-' + v.category.toLowerCase() +
                             '">' + escapeHtml(v.category) + '</span>' :
                             '';
+                        var itemsBlockHtml = (v.items || []).length > 0 ?
+                            ('<div class="var-items-table"><table style="margin-top:4px;font-size:11px;"><thead><tr><th>Item</th><th>Size</th><th>Qty</th><th class="num">Cost</th><th class="num">Sell</th><th class="num">Profit</th></tr></thead><tbody>' +
+                                v.items.map(function(it) { var c = Number(it.total_cost || 0),
+                                        s2 = Number(it.total_sell || 0),
+                                        p = s2 - c;
+                                    return '<tr><td>' + escapeHtml(it.name) + '</td><td>' + escapeHtml(it
+                                        .size || '') + '</td><td>' + it.qty +
+                                        '</td><td class="num">₹' + c.toFixed(2) +
+                                        '</td><td class="num">₹' + s2.toFixed(2) +
+                                        '</td><td class="num" style="color:' + (p >= 0 ?
+                                            'var(--success)' : 'var(--danger)') + '">₹' + p
+                                        .toFixed(2) + '</td></tr>';
+                                }).join('') + '</tbody></table></div>') :
+                            '<div class="note" style="font-size:11px">No items</div>';
                         return '<div class="var-card" style="border-left-color:' + (v.color ||
                             '#ccc') +
                             ';margin-top:6px"><div class="var-head"><div><span class="var-color" style="background:' +
@@ -7400,20 +7441,7 @@
                             '"></span><strong>' + escapeHtml(v.name) + '</strong>' + catTag + ' · ' + v
                             .items.length + ' items</div><span class="badge badge-success">Profit: ₹' +
                             s.profit.toFixed(2) +
-                            '</span></div>' + (v.items || []).length > 0 ?
-                            '<div class="var-items-table"><table style="margin-top:4px;font-size:11px;"><thead><tr><th>Item</th><th>Size</th><th>Qty</th><th class="num">Cost</th><th class="num">Sell</th><th class="num">Profit</th></tr></thead><tbody>' +
-                            v.items.map(function(it) { var c = Number(it.total_cost || 0),
-                                    s2 = Number(it.total_sell || 0),
-                                    p = s2 - c;
-                                return '<tr><td>' + escapeHtml(it.name) + '</td><td>' + escapeHtml(it
-                                    .size || '') + '</td><td>' + it.qty +
-                                    '</td><td class="num">₹' + c.toFixed(2) +
-                                    '</td><td class="num">₹' + s2.toFixed(2) +
-                                    '</td><td class="num" style="color:' + (p >= 0 ?
-                                        'var(--success)' : 'var(--danger)') + '">₹' + p
-                                    .toFixed(2) + '</td></tr>';
-                            }).join('') + '</tbody></table></div>' :
-                            '<div class="note" style="font-size:11px">No items</div>' +
+                            '</span></div>' + itemsBlockHtml +
                             statLinesHtml(s.totalCost, s.totalSell, s.profit) +
                             '<div class="qv-stock-edit" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:var(--border-soft);padding:6px 8px;border-radius:9px;flex-wrap:wrap;"><span style="font-size:12px;font-weight:600;">📦 Stock:</span><input type="number" min="0" id="qvStockInput' +
                             vi + '" value="' + Number(v.stock || 0) +
@@ -9347,6 +9375,33 @@
                     currentDetailData = { type: type, data: entries };
                     break;
                 }
+                case 'supplierdue': {
+                    title.textContent = '🏭 Supplier Due — Supplier-wise';
+                    var supMap = {};
+                    supLedger.forEach(function(e) {
+                        var bal = Number(e.debit || 0) - Number(e.credit || 0);
+                        if (!supMap[e.supplierId]) supMap[e.supplierId] = { name: e.supplierName || 'Unknown',
+                            due: 0 };
+                        supMap[e.supplierId].due += bal;
+                    });
+                    var entries = Object.values(supMap).filter(function(e) { return e.due > 0.01; }).sort(
+                        function(a, b) { return b.due - a.due; });
+                    if (entries.length === 0) html = '<div class="note">✅ No outstanding dues to suppliers.</div>';
+                    else {
+                        var totalSupDue = entries.reduce(function(s, e) { return s + e.due; }, 0);
+                        html = '<div style="font-weight:700;margin-bottom:8px;">Total Supplier Due: ₹' +
+                            totalSupDue.toFixed(2) +
+                            '</div><div style="max-height:400px;overflow:auto;"><table style="font-size:12px;"><thead><tr><th>Supplier</th><th class="num">Due</th></tr></thead><tbody>';
+                        entries.forEach(function(e) {
+                            html += '<tr><td><strong>' + escapeHtml(e.name) +
+                                '</strong></td><td class="num" style="color:var(--danger);">₹' + e.due.toFixed(2) +
+                                '</td></tr>';
+                        });
+                        html += '</tbody></table></div>';
+                    }
+                    currentDetailData = { type: type, data: entries };
+                    break;
+                }
                 case 'totalvalue': {
                     title.textContent = '💎 Catalog Value — Product-wise Stock Value';
                     var valMap = {};
@@ -9546,6 +9601,14 @@
             // Outstanding Due: aggregate ledger balance of every customer. This matches the customer-wise detail.
             var due = getAllCustomerDueBreakdown().reduce(function(sum, entry) { return sum + entry.due; }, 0);
             $('dDue').textContent = '₹' + formatCompact(due);
+
+            // Supplier Due: money owed TO suppliers — per-supplier balance (debit - credit), summed only where positive
+            var supBalances = {};
+            supLedger.forEach(function(e) { supBalances[e.supplierId] = (supBalances[e.supplierId] || 0) + Number(
+                e.debit || 0) - Number(e.credit || 0); });
+            var supplierDue = Object.keys(supBalances).reduce(function(s, k) { return s + Math.max(0, supBalances[
+                k]); }, 0);
+            if ($('dSupplierDue')) $('dSupplierDue').textContent = '₹' + formatCompact(supplierDue);
 
             var threshold = parseInt(localStorage.getItem(KEY_LOW_STOCK) || '5', 10);
             $('dLowStock').textContent = items.filter(function(it) { return (it.stock || 0) <= threshold; })
@@ -10112,6 +10175,202 @@
 
         // ===== STATS =====
         function updateStats() {}
+
+        // ==================== CLOUD SYNC (Firebase) — real-time, multi-user ====================
+        // This is an OPT-IN layer on top of the existing offline/localStorage system.
+        // Nothing here runs unless the person explicitly signs in via Settings → Cloud Sync.
+        // When signed in, every device signed into the same Business Code sees changes
+        // within a second or two — no manual "Sync Now" button needed.
+        var firebaseConfig = {
+            apiKey: "AIzaSyBGEKVAbVWO7ZpCcYn0VhW8y92UsETV_Ak",
+            authDomain: "jewellery-manager-d315b.firebaseapp.com",
+            projectId: "jewellery-manager-d315b",
+            storageBucket: "jewellery-manager-d315b.firebasestorage.app",
+            messagingSenderId: "39733822002",
+            appId: "1:39733822002:web:a46e11e61db4a50bb0322b"
+        };
+        var cloudApp = null,
+            cloudAuth = null,
+            cloudDb = null,
+            cloudUnsub = null;
+        var cloudBusinessCode = localStorage.getItem('jp_business_code') || null;
+        var _cloudApplyingRemote = false; // guard against feedback loop while applying a remote update
+        var _cloudPushTimer = null;
+
+        function cloudAvailable() {
+            return typeof firebase !== 'undefined';
+        }
+
+        function initCloudSDK() {
+            if (!cloudAvailable() || cloudApp) return;
+            try {
+                cloudApp = firebase.initializeApp(firebaseConfig);
+                cloudAuth = firebase.auth();
+                cloudDb = firebase.firestore();
+                cloudAuth.onAuthStateChanged(function(user) {
+                    updateCloudStatusUI(user);
+                    if (user && cloudBusinessCode) startCloudListener(cloudBusinessCode);
+                    if (!user && cloudUnsub) { cloudUnsub();
+                        cloudUnsub = null; }
+                });
+            } catch (e) {
+                console.warn('Cloud sync unavailable:', e);
+            }
+        }
+
+        function randomBusinessCode() {
+            return Math.random().toString(36).slice(2, 8).toUpperCase();
+        }
+
+        function cloudSignUp() {
+            if (!cloudAvailable()) { showToast('☁️ Cloud sync could not load — check your internet connection.', 'err'); return; }
+            var email = $('cloudEmail').value.trim(),
+                pass = $('cloudPassword').value;
+            if (!email || pass.length < 6) { showToast('Enter an email and a password of at least 6 characters', 'err'); return; }
+            cloudAuth.createUserWithEmailAndPassword(email, pass).then(function(cred) {
+                var code = randomBusinessCode();
+                return cloudDb.collection('businesses').doc(code).set({
+                    ownerUid: cred.user.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    data: buildCloudPayload()
+                }).then(function() {
+                    cloudBusinessCode = code;
+                    localStorage.setItem('jp_business_code', code);
+                    showToast('☁️ Cloud account created. Your Business Code is ' + code + ' — share this with staff so they can join.', 'ok');
+                    startCloudListener(code);
+                });
+            }).catch(function(err) { showToast('Sign up failed: ' + err.message, 'err'); });
+        }
+
+        function cloudLogin() {
+            if (!cloudAvailable()) { showToast('☁️ Cloud sync could not load — check your internet connection.', 'err'); return; }
+            var email = $('cloudEmail').value.trim(),
+                pass = $('cloudPassword').value;
+            if (!email || !pass) { showToast('Enter your email and password', 'err'); return; }
+            cloudAuth.signInWithEmailAndPassword(email, pass).then(function() {
+                showToast('☁️ Signed in', 'ok');
+                var savedCode = localStorage.getItem('jp_business_code');
+                if (savedCode) { cloudBusinessCode = savedCode;
+                    startCloudListener(savedCode); } else { showToast('Enter the Business Code your admin shared with you, then tap "Join".', 'info'); }
+            }).catch(function(err) { showToast('Login failed: ' + err.message, 'err'); });
+        }
+
+        function cloudJoinBusiness() {
+            var code = ($('cloudBusinessCodeInput').value || '').trim().toUpperCase();
+            if (!code) { showToast('Enter a Business Code', 'err'); return; }
+            if (!cloudAuth || !cloudAuth.currentUser) { showToast('Sign in first', 'err'); return; }
+            cloudDb.collection('businesses').doc(code).get().then(function(doc) {
+                if (!doc.exists) { showToast('No business found with that code', 'err'); return; }
+                cloudBusinessCode = code;
+                localStorage.setItem('jp_business_code', code);
+                startCloudListener(code);
+                showToast('☁️ Joined business ' + code + ' — syncing now', 'ok');
+            }).catch(function(err) { showToast('Could not join: ' + err.message, 'err'); });
+        }
+
+        function cloudLogout() {
+            if (cloudUnsub) { cloudUnsub();
+                cloudUnsub = null; }
+            if (cloudAuth) cloudAuth.signOut();
+            cloudBusinessCode = null;
+            localStorage.removeItem('jp_business_code');
+            updateCloudStatusUI(null);
+            showToast('☁️ Signed out of cloud sync — app continues to work offline', 'ok');
+        }
+
+        function startCloudListener(code) {
+            if (!cloudDb) return;
+            if (cloudUnsub) cloudUnsub();
+            cloudUnsub = cloudDb.collection('businesses').doc(code).onSnapshot(function(doc) {
+                if (!doc.exists) return;
+                var payload = doc.data() && doc.data().data;
+                if (!payload) return;
+                applyCloudPayload(payload);
+            }, function(err) { console.warn('Cloud listener error:', err); });
+            var codeEl = $('cloudCurrentCode');
+            if (codeEl) codeEl.textContent = code;
+        }
+
+        function buildCloudPayload() {
+            return {
+                items: items, products: products, company: company, customers: customers, suppliers: suppliers,
+                purchases: purchases, sales: sales, custLedger: custLedger, supLedger: supLedger, settings: settings,
+                globalCategories: globalCategories, productCategories: productCategories, plugins: plugins,
+                v3Data: (typeof v3Data !== 'undefined' ? v3Data : null), updatedAt: Date.now()
+            };
+        }
+
+        function applyCloudPayload(payload) {
+            // A remote device saved changes — adopt them locally and re-render everything.
+            // Last-write-wins: whichever device saved most recently is reflected everywhere.
+            if (payload.updatedAt && payload.updatedAt <= (window._lastCloudApplied || 0)) return; // already up to date
+            window._lastCloudApplied = payload.updatedAt || Date.now();
+            _cloudApplyingRemote = true;
+            try {
+                if (payload.items) items.splice.apply(items, [0, items.length].concat(payload.items));
+                if (payload.products) products.splice.apply(products, [0, products.length].concat(payload.products));
+                if (payload.company) Object.assign(company, payload.company);
+                if (payload.customers) customers.splice.apply(customers, [0, customers.length].concat(payload
+                    .customers));
+                if (payload.suppliers) suppliers.splice.apply(suppliers, [0, suppliers.length].concat(payload
+                    .suppliers));
+                if (payload.purchases) purchases.splice.apply(purchases, [0, purchases.length].concat(payload
+                    .purchases));
+                if (payload.sales) sales.splice.apply(sales, [0, sales.length].concat(payload.sales));
+                if (payload.custLedger) custLedger.splice.apply(custLedger, [0, custLedger.length].concat(payload
+                    .custLedger));
+                if (payload.supLedger) supLedger.splice.apply(supLedger, [0, supLedger.length].concat(payload
+                    .supLedger));
+                if (payload.globalCategories) globalCategories.splice.apply(globalCategories, [0, globalCategories
+                    .length
+                ].concat(payload.globalCategories));
+                if (payload.productCategories) productCategories.splice.apply(productCategories, [0,
+                    productCategories.length
+                ].concat(payload.productCategories));
+                if (payload.plugins) plugins.splice.apply(plugins, [0, plugins.length].concat(payload.plugins));
+                if (payload.v3Data && typeof v3Data !== 'undefined') { v3Data.karigars = payload.v3Data.karigars ||
+                    v3Data.karigars;
+                    v3Data.karigarJobs = payload.v3Data.karigarJobs || v3Data.karigarJobs; }
+                saveAll(true);
+                renderDashboard();
+                renderProductGrid();
+                renderItemsList();
+                renderItemTable();
+                renderStockTable();
+                if (typeof renderKarigarV3 === 'function') renderKarigarV3();
+                showToast('☁️ Synced from another device', 'info');
+            } catch (e) {
+                console.warn('Failed applying cloud payload:', e);
+            }
+            _cloudApplyingRemote = false;
+        }
+
+        function pushToCloudDebounced() {
+            if (!cloudAuth || !cloudAuth.currentUser || !cloudBusinessCode || _cloudApplyingRemote) return;
+            clearTimeout(_cloudPushTimer);
+            _cloudPushTimer = setTimeout(function() {
+                var payload = buildCloudPayload();
+                window._lastCloudApplied = payload.updatedAt;
+                cloudDb.collection('businesses').doc(cloudBusinessCode).set({ data: payload }, { merge: true })
+                    .catch(function(err) { console.warn('Cloud push failed:', err); });
+            }, 1200); // debounce so rapid edits don't spam writes
+        }
+
+        function updateCloudStatusUI(user) {
+            var statusEl = $('cloudStatus');
+            if (!statusEl) return;
+            if (user) {
+                statusEl.innerHTML = '✅ Signed in as <b>' + escapeHtml(user.email) +
+                    '</b>' + (cloudBusinessCode ? ' · Business Code: <b>' + cloudBusinessCode + '</b>' : ' · No business joined yet') +
+                    ' <button class="ghost small" onclick="cloudLogout()">Sign out</button>';
+                if ($('cloudAuthForm')) $('cloudAuthForm').style.display = 'none';
+                if ($('cloudJoinForm')) $('cloudJoinForm').style.display = cloudBusinessCode ? 'none' : 'flex';
+            } else {
+                statusEl.textContent = '🔴 Not signed in — app works fully offline as before.';
+                if ($('cloudAuthForm')) $('cloudAuthForm').style.display = 'flex';
+                if ($('cloudJoinForm')) $('cloudJoinForm').style.display = 'none';
+            }
+        }
 
         // ===== INIT =====
         initTheme();
