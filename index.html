@@ -4296,12 +4296,15 @@
                         <button class="ghost small" onclick="cloudLogin()">Sign in</button>
                     </div>
                     <div id="cloudJoinForm" style="display:none;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+                        <span id="cloudJoinLabel" class="muted" style="font-size:12px;">Join a business:</span>
                         <input id="cloudBusinessCodeInput" placeholder="Business Code (e.g. AB12CD)" style="margin-top:0;width:auto;min-width:180px;text-transform:uppercase;">
                         <button class="ghost small" onclick="cloudJoinBusiness()">Join business</button>
                     </div>
+                    <div id="businessSwitcherWrap"></div>
                     <div class="note" style="margin-top:8px;font-size:11px;">
                         <b>New business owner:</b> tap "Create business account" — you'll get a Business Code, share it with your staff.<br>
                         <b>Staff / other devices:</b> sign in, then enter the Business Code your owner shared and tap "Join business".<br>
+                        <b>Multiple businesses:</b> the same account can join several businesses — join each one's code, then use the "Switch active business" dropdown to move between them. Only the active business syncs live at any moment.<br>
                         Everyone who joins the same code sees and edits the same live data. There is currently no separate admin/staff permission level — anyone signed into the code has full access.
                     </div>
                     <hr>
@@ -4393,6 +4396,7 @@
                         <button class="ghost" onclick="switchTab('ledger');">📒 Ledger</button>
                         <button class="ghost" onclick="switchTab('settings');">⚙ Settings</button>
                         <button class="ghost" onclick="openAIChat();" style="background:rgba(var(--accent-rgb),0.08);color:var(--accent);">✨ Ask AI</button>
+                        <button class="ghost" onclick="window.open(location.href, '_blank', 'width=900,height=800')">🪟 Open in New Window</button>
                     </div>
                 </div>
             </aside>
@@ -4626,17 +4630,26 @@
             updateAISearchToggleUI();
             updateChatOnlineIndicator();
             // Trigger Drive sync if logged in
-            if (gdriveLoggedIn && navigator.onLine && gdriveFileId && !window._skipDriveSync) {
-                const data = {
-                    items, products, company, customers, suppliers, purchases,
-                    sales, custLedger, supLedger, settings, globalCategories, plugins
-                };
-                uploadToDrive(gdriveFileId, data).catch(function(err) {
-                    console.warn('Drive sync failed:', err);
-                });
+            try {
+                if (gdriveLoggedIn && navigator.onLine && gdriveFileId && !window._skipDriveSync) {
+                    const data = {
+                        items, products, company, customers, suppliers, purchases,
+                        sales, custLedger, supLedger, settings, globalCategories, plugins
+                    };
+                    uploadToDrive(gdriveFileId, data).catch(function(err) {
+                        console.warn('Drive sync failed:', err);
+                    });
+                }
+            } catch (e) {
+                console.warn('Drive sync trigger failed (non-fatal):', e);
             }
-            // Trigger real-time cloud sync if signed in
-            if (typeof pushToCloudDebounced === 'function') pushToCloudDebounced();
+            // Trigger real-time cloud sync if signed in — wrapped defensively so a cloud error
+            // (network, auth, quota, etc.) can never interrupt the rest of the save/clear flow.
+            try {
+                if (typeof pushToCloudDebounced === 'function') pushToCloudDebounced();
+            } catch (e) {
+                console.warn('Cloud sync trigger failed (non-fatal):', e);
+            }
         }
 
         function populateCategorySelects() {
@@ -10193,7 +10206,15 @@
             cloudAuth = null,
             cloudDb = null,
             cloudUnsub = null;
-        var cloudBusinessCode = localStorage.getItem('jp_business_code') || null;
+        var cloudBusinessCode = localStorage.getItem('jp_business_code') || null; // active business
+        function getJoinedBusinessCodes() {
+            try { return JSON.parse(localStorage.getItem('jp_business_codes') || '[]'); } catch (e) { return []; }
+        }
+        function addJoinedBusinessCode(code) {
+            var list = getJoinedBusinessCodes();
+            if (list.indexOf(code) === -1) { list.push(code);
+                localStorage.setItem('jp_business_codes', JSON.stringify(list)); }
+        }
         var _cloudApplyingRemote = false; // guard against feedback loop while applying a remote update
         var _cloudPushTimer = null;
 
@@ -10236,6 +10257,8 @@
                 }).then(function() {
                     cloudBusinessCode = code;
                     localStorage.setItem('jp_business_code', code);
+                    addJoinedBusinessCode(code);
+                    renderBusinessSwitcher();
                     showToast('☁️ Cloud account created. Your Business Code is ' + code + ' — share this with staff so they can join.', 'ok');
                     startCloudListener(code);
                 });
@@ -10263,6 +10286,8 @@
                 if (!doc.exists) { showToast('No business found with that code', 'err'); return; }
                 cloudBusinessCode = code;
                 localStorage.setItem('jp_business_code', code);
+                addJoinedBusinessCode(code);
+                renderBusinessSwitcher();
                 startCloudListener(code);
                 showToast('☁️ Joined business ' + code + ' — syncing now', 'ok');
             }).catch(function(err) { showToast('Could not join: ' + err.message, 'err'); });
@@ -10300,6 +10325,11 @@
             };
         }
 
+        function replaceArrayContents(arr, newItems) {
+            arr.length = 0;
+            if (Array.isArray(newItems)) { for (var i = 0; i < newItems.length; i++) arr.push(newItems[i]); }
+        }
+
         function applyCloudPayload(payload) {
             // A remote device saved changes — adopt them locally and re-render everything.
             // Last-write-wins: whichever device saved most recently is reflected everywhere.
@@ -10307,27 +10337,18 @@
             window._lastCloudApplied = payload.updatedAt || Date.now();
             _cloudApplyingRemote = true;
             try {
-                if (payload.items) items.splice.apply(items, [0, items.length].concat(payload.items));
-                if (payload.products) products.splice.apply(products, [0, products.length].concat(payload.products));
+                if (payload.items) replaceArrayContents(items, payload.items);
+                if (payload.products) replaceArrayContents(products, payload.products);
                 if (payload.company) Object.assign(company, payload.company);
-                if (payload.customers) customers.splice.apply(customers, [0, customers.length].concat(payload
-                    .customers));
-                if (payload.suppliers) suppliers.splice.apply(suppliers, [0, suppliers.length].concat(payload
-                    .suppliers));
-                if (payload.purchases) purchases.splice.apply(purchases, [0, purchases.length].concat(payload
-                    .purchases));
-                if (payload.sales) sales.splice.apply(sales, [0, sales.length].concat(payload.sales));
-                if (payload.custLedger) custLedger.splice.apply(custLedger, [0, custLedger.length].concat(payload
-                    .custLedger));
-                if (payload.supLedger) supLedger.splice.apply(supLedger, [0, supLedger.length].concat(payload
-                    .supLedger));
-                if (payload.globalCategories) globalCategories.splice.apply(globalCategories, [0, globalCategories
-                    .length
-                ].concat(payload.globalCategories));
-                if (payload.productCategories) productCategories.splice.apply(productCategories, [0,
-                    productCategories.length
-                ].concat(payload.productCategories));
-                if (payload.plugins) plugins.splice.apply(plugins, [0, plugins.length].concat(payload.plugins));
+                if (payload.customers) replaceArrayContents(customers, payload.customers);
+                if (payload.suppliers) replaceArrayContents(suppliers, payload.suppliers);
+                if (payload.purchases) replaceArrayContents(purchases, payload.purchases);
+                if (payload.sales) replaceArrayContents(sales, payload.sales);
+                if (payload.custLedger) replaceArrayContents(custLedger, payload.custLedger);
+                if (payload.supLedger) replaceArrayContents(supLedger, payload.supLedger);
+                if (payload.globalCategories) replaceArrayContents(globalCategories, payload.globalCategories);
+                if (payload.productCategories) replaceArrayContents(productCategories, payload.productCategories);
+                if (payload.plugins) replaceArrayContents(plugins, payload.plugins);
                 if (payload.v3Data && typeof v3Data !== 'undefined') { v3Data.karigars = payload.v3Data.karigars ||
                     v3Data.karigars;
                     v3Data.karigarJobs = payload.v3Data.karigarJobs || v3Data.karigarJobs; }
@@ -10346,14 +10367,37 @@
         }
 
         function pushToCloudDebounced() {
-            if (!cloudAuth || !cloudAuth.currentUser || !cloudBusinessCode || _cloudApplyingRemote) return;
+            if (!cloudAuth || !cloudAuth.currentUser || !cloudBusinessCode || !cloudDb || _cloudApplyingRemote) return;
             clearTimeout(_cloudPushTimer);
             _cloudPushTimer = setTimeout(function() {
-                var payload = buildCloudPayload();
-                window._lastCloudApplied = payload.updatedAt;
-                cloudDb.collection('businesses').doc(cloudBusinessCode).set({ data: payload }, { merge: true })
-                    .catch(function(err) { console.warn('Cloud push failed:', err); });
+                try {
+                    var payload = buildCloudPayload();
+                    window._lastCloudApplied = payload.updatedAt;
+                    cloudDb.collection('businesses').doc(cloudBusinessCode).set({ data: payload }, { merge: true })
+                        .catch(function(err) { console.warn('Cloud push failed:', err); });
+                } catch (e) {
+                    console.warn('Cloud push failed (non-fatal):', e);
+                }
             }, 1200); // debounce so rapid edits don't spam writes
+        }
+
+        function switchActiveBusiness(code) {
+            if (!code || code === cloudBusinessCode) return;
+            cloudBusinessCode = code;
+            localStorage.setItem('jp_business_code', code);
+            startCloudListener(code);
+            renderBusinessSwitcher();
+            showToast('☁️ Switched to business ' + code, 'ok');
+        }
+
+        function renderBusinessSwitcher() {
+            var el = $('businessSwitcherWrap');
+            if (!el) return;
+            var codes = getJoinedBusinessCodes();
+            if (codes.length <= 1) { el.innerHTML = ''; return; }
+            el.innerHTML = '<label style="font-size:12px;color:var(--muted);margin-top:10px;display:block;">Switch active business</label><select id="businessSwitcherSelect" onchange="switchActiveBusiness(this.value)" style="width:auto;margin-top:4px;">' +
+                codes.map(function(c) { return '<option value="' + c + '"' + (c === cloudBusinessCode ?
+                    ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select>';
         }
 
         function updateCloudStatusUI(user) {
@@ -10361,14 +10405,18 @@
             if (!statusEl) return;
             if (user) {
                 statusEl.innerHTML = '✅ Signed in as <b>' + escapeHtml(user.email) +
-                    '</b>' + (cloudBusinessCode ? ' · Business Code: <b>' + cloudBusinessCode + '</b>' : ' · No business joined yet') +
+                    '</b>' + (cloudBusinessCode ? ' · Active business: <b>' + cloudBusinessCode + '</b>' : ' · No business joined yet') +
                     ' <button class="ghost small" onclick="cloudLogout()">Sign out</button>';
                 if ($('cloudAuthForm')) $('cloudAuthForm').style.display = 'none';
-                if ($('cloudJoinForm')) $('cloudJoinForm').style.display = cloudBusinessCode ? 'none' : 'flex';
+                if ($('cloudJoinForm')) $('cloudJoinForm').style.display = 'flex'; // always available so more businesses can be added
+                if ($('cloudJoinLabel')) $('cloudJoinLabel').textContent = cloudBusinessCode ?
+                    'Join another business:' : 'Join a business:';
+                renderBusinessSwitcher();
             } else {
                 statusEl.textContent = '🔴 Not signed in — app works fully offline as before.';
                 if ($('cloudAuthForm')) $('cloudAuthForm').style.display = 'flex';
                 if ($('cloudJoinForm')) $('cloudJoinForm').style.display = 'none';
+                if ($('businessSwitcherWrap')) $('businessSwitcherWrap').innerHTML = '';
             }
         }
 
