@@ -5146,7 +5146,9 @@
             var cats = getAllProductCategories();
             if (cats.length === 0) { container.innerHTML = '<div class="note">No product categories yet.</div>'; return; }
             container.innerHTML = '<div class="cat-mgr-grid">' + cats.map(function(c) {
-                return '<div class="cat-card"> <span class="cat-name">' + escapeHtml(c) +
+                return '<div class="cat-card"> <span class="cat-name" onclick="viewCategoryItems(\'' + escapeHtml(
+                        c) +
+                    '\')" title="Click to view products">' + escapeHtml(c) +
                     '</span> <div class="cat-actions"> <button class="small ghost" onclick="editProductCategoryName(\'' +
                     escapeHtml(c) + '\')" title="Edit">✎</button> <button class="small danger" onclick="deleteProductCategory(\'' +
                     escapeHtml(c) + '\')" title="Delete">✕</button> </div> </div>';
