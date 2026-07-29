@@ -4,7 +4,7 @@
 // (i.e. genuinely offline). This is the opposite of "cache-first" — it means
 // updates show up immediately on next reload instead of needing a cache
 // version bump + manual browser cache clear every time.
-const CACHE_NAME = 'jewellery-pro-v18';
+const CACHE_NAME = 'jewellery-pro-v19';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(event) {
