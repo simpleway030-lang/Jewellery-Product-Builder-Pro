@@ -4285,26 +4285,51 @@
                     </div>
                     <div id="gdriveFileInfo" style="margin-top:6px;font-size:11px;color:var(--muted-2);display:none;"></div>
                     <hr>
-                    <!-- ===== REAL-TIME CLOUD SYNC (multi-user) ===== -->
-                    <div class="section-title" style="font-size:15px;">⚡ Real-Time Cloud Sync (Multi-User) <span class="badge" style="font-size:10px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:8px;">BETA</span></div>
-                    <div class="note">Sign in once, then every device on the same Business Code sees new sales, stock changes, etc. within a second or two — no Sync Now button needed. This is separate from Google Drive backup above.</div>
-                    <div id="cloudStatus" style="margin-top:10px;font-size:13px;">🔴 Not signed in — app works fully offline as before.</div>
-                    <div id="cloudAuthForm" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
-                        <input id="cloudEmail" type="email" placeholder="Email" style="margin-top:0;width:auto;min-width:160px;">
-                        <input id="cloudPassword" type="password" placeholder="Password (min 6 chars)" style="margin-top:0;width:auto;min-width:160px;">
-                        <button class="ghost small" onclick="cloudSignUp()">Create business account</button>
-                        <button class="ghost small" onclick="cloudLogin()">Sign in</button>
+                    <!-- ===== ACCOUNT & BUSINESSES (real-time cloud sync) ===== -->
+                    <div class="section-title" style="font-size:15px;">☁️ Account & Businesses <span class="badge" style="font-size:10px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:8px;">BETA</span></div>
+                    <div class="note">Sign in once, then every device on the same business sees new sales, stock changes, etc. within a second or two — no Sync Now button needed. This is separate from Google Drive backup above.</div>
+
+                    <div id="cloudSignedOutPanel" style="margin-top:12px;">
+                        <div id="cloudStatus" style="font-size:13px;">🔴 Not signed in — app works fully offline as before.</div>
+                        <div id="cloudAuthForm" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+                            <input id="cloudEmail" type="email" placeholder="Email" style="margin-top:0;width:auto;min-width:160px;">
+                            <input id="cloudPassword" type="password" placeholder="Password (min 6 chars)" style="margin-top:0;width:auto;min-width:160px;">
+                            <button class="ghost small" onclick="cloudSignUp()">Create business account</button>
+                            <button class="ghost small" onclick="cloudLogin()">Sign in</button>
+                        </div>
                     </div>
-                    <div id="cloudJoinForm" style="display:none;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
-                        <span id="cloudJoinLabel" class="muted" style="font-size:12px;">Join a business:</span>
-                        <input id="cloudBusinessCodeInput" placeholder="Business Code (e.g. AB12CD)" style="margin-top:0;width:auto;min-width:180px;text-transform:uppercase;">
-                        <button class="ghost small" onclick="cloudJoinBusiness()">Join business</button>
+
+                    <div id="cloudProfileCard" style="display:none;margin-top:12px;background:var(--border-soft);border-radius:14px;padding:14px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                            <div>
+                                <div style="font-weight:700;font-size:14px;" id="cloudProfileEmail"></div>
+                                <div class="muted" style="font-size:11px;">Signed in</div>
+                            </div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <button class="ghost small" onclick="toggleShow('cloudPasswordChangeForm')">🔑 Change Password</button>
+                                <button class="ghost small" onclick="cloudLogout()">Sign out</button>
+                            </div>
+                        </div>
+                        <div id="cloudPasswordChangeForm" style="display:none;margin-top:10px;gap:8px;flex-wrap:wrap;align-items:center;">
+                            <input id="cloudNewPassword" type="password" placeholder="New password (min 6 chars)" style="margin-top:0;width:auto;min-width:180px;">
+                            <button class="ghost small" onclick="cloudChangePassword()">Update Password</button>
+                        </div>
                     </div>
-                    <div id="businessSwitcherWrap"></div>
+
+                    <div id="cloudBusinessSection" style="display:none;margin-top:14px;">
+                        <div style="font-weight:700;font-size:13px;margin-bottom:8px;">🏢 Your Businesses</div>
+                        <div id="businessListWrap"></div>
+                        <div id="cloudJoinForm" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center;">
+                            <span id="cloudJoinLabel" class="muted" style="font-size:12px;">Join another business:</span>
+                            <input id="cloudBusinessCodeInput" placeholder="Business Code (e.g. AB12CD)" style="margin-top:0;width:auto;min-width:180px;text-transform:uppercase;">
+                            <button class="ghost small" onclick="cloudJoinBusiness()">Join business</button>
+                        </div>
+                    </div>
+
                     <div class="note" style="margin-top:8px;font-size:11px;">
-                        <b>New business owner:</b> tap "Create business account" — you'll get a Business Code, share it with your staff.<br>
+                        <b>New business owner:</b> tap "Create business account" — you'll be asked for a business name and get a Business Code, share the code with your staff.<br>
                         <b>Staff / other devices:</b> sign in, then enter the Business Code your owner shared and tap "Join business".<br>
-                        <b>Multiple businesses:</b> the same account can join several businesses — join each one's code, then use the "Switch active business" dropdown to move between them. Only the active business syncs live at any moment.<br>
+                        <b>Multiple businesses:</b> join several, then tap "Set Active" on the one you want to sync live. Only the active business syncs at any moment.<br>
                         Everyone who joins the same code sees and edits the same live data. There is currently no separate admin/staff permission level — anyone signed into the code has full access.
                     </div>
                     <hr>
@@ -10217,6 +10242,21 @@
             if (list.indexOf(code) === -1) { list.push(code);
                 localStorage.setItem('jp_business_codes', JSON.stringify(list)); }
         }
+        function getBusinessNames() {
+            try { return JSON.parse(localStorage.getItem('jp_business_names') || '{}'); } catch (e) { return {}; }
+        }
+        function setBusinessName(code, name) {
+            var map = getBusinessNames();
+            map[code] = name;
+            localStorage.setItem('jp_business_names', JSON.stringify(map));
+        }
+        function removeJoinedBusinessCode(code) {
+            var list = getJoinedBusinessCodes().filter(function(c) { return c !== code; });
+            localStorage.setItem('jp_business_codes', JSON.stringify(list));
+            var map = getBusinessNames();
+            delete map[code];
+            localStorage.setItem('jp_business_names', JSON.stringify(map));
+        }
         var _cloudApplyingRemote = false; // guard against feedback loop while applying a remote update
         var _cloudPushTimer = null;
 
@@ -10250,21 +10290,26 @@
             var email = $('cloudEmail').value.trim(),
                 pass = $('cloudPassword').value;
             if (!email || pass.length < 6) { showToast('Enter an email and a password of at least 6 characters', 'err'); return; }
-            cloudAuth.createUserWithEmailAndPassword(email, pass).then(function(cred) {
-                var code = randomBusinessCode();
-                return cloudDb.collection('businesses').doc(code).set({
-                    ownerUid: cred.user.uid,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    data: buildCloudPayload()
-                }).then(function() {
-                    cloudBusinessCode = code;
-                    localStorage.setItem('jp_business_code', code);
-                    addJoinedBusinessCode(code);
-                    renderBusinessSwitcher();
-                    showToast('☁️ Cloud account created. Your Business Code is ' + code + ' — share this with staff so they can join.', 'ok');
-                    startCloudListener(code);
-                });
-            }).catch(function(err) { showToast('Sign up failed: ' + err.message, 'err'); });
+            showInputPrompt('What should we call this business?', '').then(function(bizName) {
+                bizName = (bizName || '').trim() || 'My Business';
+                cloudAuth.createUserWithEmailAndPassword(email, pass).then(function(cred) {
+                    var code = randomBusinessCode();
+                    return cloudDb.collection('businesses').doc(code).set({
+                        ownerUid: cred.user.uid,
+                        name: bizName,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        data: buildCloudPayload()
+                    }).then(function() {
+                        cloudBusinessCode = code;
+                        localStorage.setItem('jp_business_code', code);
+                        addJoinedBusinessCode(code);
+                        setBusinessName(code, bizName);
+                        renderBusinessList();
+                        showToast('☁️ "' + bizName + '" created. Your Business Code is ' + code + ' — share this with staff so they can join.', 'ok');
+                        startCloudListener(code);
+                    });
+                }).catch(function(err) { showToast('Sign up failed: ' + err.message, 'err'); });
+            });
         }
 
         function cloudLogin() {
@@ -10289,9 +10334,11 @@
                 cloudBusinessCode = code;
                 localStorage.setItem('jp_business_code', code);
                 addJoinedBusinessCode(code);
-                renderBusinessSwitcher();
+                setBusinessName(code, (doc.data() && doc.data().name) || code);
+                $('cloudBusinessCodeInput').value = '';
+                renderBusinessList();
                 startCloudListener(code);
-                showToast('☁️ Joined business ' + code + ' — syncing now', 'ok');
+                showToast('☁️ Joined "' + ((doc.data() && doc.data().name) || code) + '" — syncing now', 'ok');
             }).catch(function(err) { showToast('Could not join: ' + err.message, 'err'); });
         }
 
@@ -10388,37 +10435,121 @@
             cloudBusinessCode = code;
             localStorage.setItem('jp_business_code', code);
             startCloudListener(code);
-            renderBusinessSwitcher();
-            showToast('☁️ Switched to business ' + code, 'ok');
+            renderBusinessList();
+            showToast('☁️ Switched to "' + (getBusinessNames()[code] || code) + '"', 'ok');
         }
 
-        function renderBusinessSwitcher() {
-            var el = $('businessSwitcherWrap');
+        function renderBusinessList() {
+            var el = $('businessListWrap');
             if (!el) return;
             var codes = getJoinedBusinessCodes();
-            if (codes.length <= 1) { el.innerHTML = ''; return; }
-            el.innerHTML = '<label style="font-size:12px;color:var(--muted);margin-top:10px;display:block;">Switch active business</label><select id="businessSwitcherSelect" onchange="switchActiveBusiness(this.value)" style="width:auto;margin-top:4px;">' +
-                codes.map(function(c) { return '<option value="' + c + '"' + (c === cloudBusinessCode ?
-                    ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select>';
+            var names = getBusinessNames();
+            if (codes.length === 0) { el.innerHTML = '<div class="note" style="font-size:12px;">No business joined yet — create one above or join with a code.</div>'; return; }
+            el.innerHTML = codes.map(function(code) {
+                var isActive = code === cloudBusinessCode;
+                var isOwner = cloudBusinessOwnerCache[code] && cloudAuth && cloudAuth.currentUser && cloudBusinessOwnerCache[code] === cloudAuth.currentUser.uid;
+                return '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 12px;background:' +
+                    (isActive ? 'rgba(var(--accent-rgb),0.08)' : 'var(--card-solid)') + ';border:1px solid ' +
+                    (isActive ? 'var(--accent)' : 'var(--border-soft)') + ';border-radius:12px;margin-bottom:8px;">' +
+                    '<div><b>' + escapeHtml(names[code] || code) + '</b>' + (isActive ?
+                        ' <span style="font-size:10px;background:var(--accent);color:#fff;padding:2px 7px;border-radius:8px;">ACTIVE</span>' :
+                        '') + '<div class="muted" style="font-size:11px;">Code: ' + code + '</div></div>' +
+                    '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+                    (isActive ? '' : '<button class="ghost small" onclick="switchActiveBusiness(\'' + code +
+                        '\')">Set Active</button>') +
+                    '<button class="ghost small" onclick="renameBusinessPrompt(\'' + code +
+                    '\')">✎ Rename</button>' +
+                    '<button class="ghost small" onclick="deleteOrLeaveBusiness(\'' + code +
+                    '\')" style="color:var(--danger);">' + (isOwner ? '🗑 Delete' : '🚪 Leave') + '</button>' +
+                    '</div></div>';
+            }).join('');
+        }
+
+        var cloudBusinessOwnerCache = {};
+        function refreshBusinessOwnerCache() {
+            getJoinedBusinessCodes().forEach(function(code) {
+                if (cloudDb) cloudDb.collection('businesses').doc(code).get().then(function(doc) {
+                    if (doc.exists) { cloudBusinessOwnerCache[code] = doc.data().ownerUid;
+                        if (doc.data().name) setBusinessName(code, doc.data().name);
+                        renderBusinessList(); }
+                }).catch(function() {});
+            });
+        }
+
+        function renameBusinessPrompt(code) {
+            var names = getBusinessNames();
+            showInputPrompt('Rename business', names[code] || code).then(function(newName) {
+                newName = (newName || '').trim();
+                if (!newName) return;
+                setBusinessName(code, newName);
+                renderBusinessList();
+                if (cloudDb) cloudDb.collection('businesses').doc(code).set({ name: newName }, { merge: true })
+                    .catch(function() {});
+                showToast('Renamed to "' + newName + '"', 'ok');
+            });
+        }
+
+        function deleteOrLeaveBusiness(code) {
+            var isOwner = cloudBusinessOwnerCache[code] && cloudAuth && cloudAuth.currentUser &&
+                cloudBusinessOwnerCache[code] === cloudAuth.currentUser.uid;
+            var names = getBusinessNames();
+            var label = names[code] || code;
+            if (isOwner) {
+                if (!confirm('Delete "' + label + '" permanently? This removes it for EVERYONE who has joined it, including all synced data. This cannot be undone.')) return;
+                cloudDb.collection('businesses').doc(code).delete().then(function() {
+                    removeJoinedBusinessCode(code);
+                    if (cloudBusinessCode === code) { cloudBusinessCode = null;
+                        localStorage.removeItem('jp_business_code');
+                        if (cloudUnsub) { cloudUnsub();
+                            cloudUnsub = null; } }
+                    renderBusinessList();
+                    updateCloudStatusUI(cloudAuth.currentUser);
+                    showToast('🗑 "' + label + '" deleted', 'ok');
+                }).catch(function(err) { showToast('Delete failed: ' + err.message, 'err'); });
+            } else {
+                if (!confirm('Leave "' + label + '"? You can rejoin later with the same code.')) return;
+                removeJoinedBusinessCode(code);
+                if (cloudBusinessCode === code) { cloudBusinessCode = null;
+                    localStorage.removeItem('jp_business_code');
+                    if (cloudUnsub) { cloudUnsub();
+                        cloudUnsub = null; } }
+                renderBusinessList();
+                updateCloudStatusUI(cloudAuth.currentUser);
+                showToast('🚪 Left "' + label + '"', 'ok');
+            }
+        }
+
+        function cloudChangePassword() {
+            if (!cloudAuth || !cloudAuth.currentUser) { showToast('Sign in first', 'err'); return; }
+            var newPass = $('cloudNewPassword').value;
+            if (!newPass || newPass.length < 6) { showToast('Enter a new password of at least 6 characters', 'err'); return; }
+            cloudAuth.currentUser.updatePassword(newPass).then(function() {
+                $('cloudNewPassword').value = '';
+                toggleShow('cloudPasswordChangeForm');
+                showToast('🔑 Password updated', 'ok');
+            }).catch(function(err) {
+                if (err.code === 'auth/requires-recent-login') {
+                    showToast('For security, please sign out and sign in again before changing your password.', 'err');
+                } else {
+                    showToast('Password update failed: ' + err.message, 'err');
+                }
+            });
         }
 
         function updateCloudStatusUI(user) {
-            var statusEl = $('cloudStatus');
-            if (!statusEl) return;
             if (user) {
-                statusEl.innerHTML = '✅ Signed in as <b>' + escapeHtml(user.email) +
-                    '</b>' + (cloudBusinessCode ? ' · Active business: <b>' + cloudBusinessCode + '</b>' : ' · No business joined yet') +
-                    ' <button class="ghost small" onclick="cloudLogout()">Sign out</button>';
-                if ($('cloudAuthForm')) $('cloudAuthForm').style.display = 'none';
-                if ($('cloudJoinForm')) $('cloudJoinForm').style.display = 'flex'; // always available so more businesses can be added
-                if ($('cloudJoinLabel')) $('cloudJoinLabel').textContent = cloudBusinessCode ?
-                    'Join another business:' : 'Join a business:';
-                renderBusinessSwitcher();
+                if ($('cloudSignedOutPanel')) $('cloudSignedOutPanel').style.display = 'none';
+                if ($('cloudProfileCard')) $('cloudProfileCard').style.display = 'block';
+                if ($('cloudBusinessSection')) $('cloudBusinessSection').style.display = 'block';
+                if ($('cloudProfileEmail')) $('cloudProfileEmail').textContent = user.email;
+                refreshBusinessOwnerCache();
+                renderBusinessList();
             } else {
-                statusEl.textContent = '🔴 Not signed in — app works fully offline as before.';
-                if ($('cloudAuthForm')) $('cloudAuthForm').style.display = 'flex';
-                if ($('cloudJoinForm')) $('cloudJoinForm').style.display = 'none';
-                if ($('businessSwitcherWrap')) $('businessSwitcherWrap').innerHTML = '';
+                if ($('cloudSignedOutPanel')) $('cloudSignedOutPanel').style.display = 'block';
+                if ($('cloudProfileCard')) $('cloudProfileCard').style.display = 'none';
+                if ($('cloudBusinessSection')) $('cloudBusinessSection').style.display = 'none';
+                var statusEl = $('cloudStatus');
+                if (statusEl) statusEl.textContent = '🔴 Not signed in — app works fully offline as before.';
             }
         }
 
