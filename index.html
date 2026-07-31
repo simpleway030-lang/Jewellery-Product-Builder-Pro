@@ -10285,6 +10285,23 @@
             return Math.random().toString(36).slice(2, 8).toUpperCase();
         }
 
+        function showCloudError(msg) {
+            showToast(msg, 'err');
+            var el = $('cloudStatus') || $('cloudSignedOutPanel');
+            if (el) {
+                var banner = document.getElementById('cloudErrorBanner');
+                if (!banner) {
+                    banner = document.createElement('div');
+                    banner.id = 'cloudErrorBanner';
+                    banner.style.cssText =
+                        'margin-top:10px;padding:10px 12px;background:#fdecea;border:1px solid var(--danger);border-radius:10px;color:var(--danger);font-size:12.5px;';
+                    el.parentNode.insertBefore(banner, el.nextSibling);
+                }
+                banner.innerHTML = '⚠️ ' + escapeHtml(msg) +
+                    ' <button class="ghost small" style="margin-left:8px;" onclick="this.parentNode.remove()">Dismiss</button>';
+            }
+        }
+
         function cloudSignUp() {
             if (!cloudAvailable()) { showToast('☁️ Cloud sync could not load — check your internet connection.', 'err'); return; }
             var email = $('cloudEmail').value.trim(),
@@ -10308,7 +10325,7 @@
                         showToast('☁️ "' + bizName + '" created. Your Business Code is ' + code + ' — share this with staff so they can join.', 'ok');
                         startCloudListener(code);
                     });
-                }).catch(function(err) { showToast('Sign up failed: ' + err.message, 'err'); });
+                }).catch(function(err) { showCloudError('Sign up failed: ' + err.message + (err.code === 'permission-denied' ? ' — your Firestore Security Rules are likely blocking writes. See setup instructions.' : '')); });
             });
         }
 
@@ -10322,7 +10339,7 @@
                 var savedCode = localStorage.getItem('jp_business_code');
                 if (savedCode) { cloudBusinessCode = savedCode;
                     startCloudListener(savedCode); } else { showToast('Enter the Business Code your admin shared with you, then tap "Join".', 'info'); }
-            }).catch(function(err) { showToast('Login failed: ' + err.message, 'err'); });
+            }).catch(function(err) { showCloudError('Login failed: ' + err.message); });
         }
 
         function cloudJoinBusiness() {
@@ -10339,7 +10356,7 @@
                 renderBusinessList();
                 startCloudListener(code);
                 showToast('☁️ Joined "' + ((doc.data() && doc.data().name) || code) + '" — syncing now', 'ok');
-            }).catch(function(err) { showToast('Could not join: ' + err.message, 'err'); });
+            }).catch(function(err) { showCloudError('Could not join: ' + err.message + (err.code === 'permission-denied' ? ' — your Firestore Security Rules are likely blocking reads. See setup instructions.' : '')); });
         }
 
         function cloudLogout() {
