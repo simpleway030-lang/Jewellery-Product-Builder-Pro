@@ -4297,6 +4297,7 @@
                             <button class="ghost small" onclick="cloudSignUp()">Create business account</button>
                             <button class="ghost small" onclick="cloudLogin()">Sign in</button>
                         </div>
+                        <div style="margin-top:6px;"><span class="muted" style="font-size:11px;cursor:pointer;text-decoration:underline;" onclick="cloudForgotPassword()">Forgot password?</span></div>
                     </div>
 
                     <div id="cloudProfileCard" style="display:none;margin-top:12px;background:var(--border-soft);border-radius:14px;padding:14px;">
@@ -4317,7 +4318,10 @@
                     </div>
 
                     <div id="cloudBusinessSection" style="display:none;margin-top:14px;">
-                        <div style="font-weight:700;font-size:13px;margin-bottom:8px;">🏢 Your Businesses</div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <span style="font-weight:700;font-size:13px;">🏢 Your Businesses</span>
+                            <button class="ghost small" onclick="cloudFindMyBusinesses()" title="Forgot your business code? Look up every business linked to this account.">🔍 Find my businesses</button>
+                        </div>
                         <div id="businessListWrap"></div>
                         <div id="cloudJoinForm" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center;">
                             <span id="cloudJoinLabel" class="muted" style="font-size:12px;">Join another business:</span>
@@ -10232,7 +10236,7 @@
         var cloudApp = null,
             cloudAuth = null,
             cloudDb = null,
-            cloudUnsub = null;
+            cloudUnsub = [];
         var cloudBusinessCode = localStorage.getItem('jp_business_code') || null; // active business
         function getJoinedBusinessCodes() {
             try { return JSON.parse(localStorage.getItem('jp_business_codes') || '[]'); } catch (e) { return []; }
@@ -10273,8 +10277,8 @@
                 cloudAuth.onAuthStateChanged(function(user) {
                     updateCloudStatusUI(user);
                     if (user && cloudBusinessCode) startCloudListener(cloudBusinessCode);
-                    if (!user && cloudUnsub) { cloudUnsub();
-                        cloudUnsub = null; }
+                    if (!user && cloudUnsub.length) { cloudUnsub.forEach(function(fn) { fn(); });
+                        cloudUnsub = []; }
                 });
             } catch (e) {
                 console.warn('Cloud sync unavailable:', e);
@@ -10311,11 +10315,15 @@
                 bizName = (bizName || '').trim() || 'My Business';
                 cloudAuth.createUserWithEmailAndPassword(email, pass).then(function(cred) {
                     var code = randomBusinessCode();
-                    return cloudDb.collection('businesses').doc(code).set({
+                    var bizRef = cloudDb.collection('businesses').doc(code);
+                    return bizRef.set({
                         ownerUid: cred.user.uid,
                         name: bizName,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        data: buildCloudPayload()
+                        members: [{ uid: cred.user.uid, email: email, role: 'admin' }],
+                        memberUids: [cred.user.uid]
+                    }).then(function() {
+                        return bizRef.collection('core').doc('data').set(buildCloudCorePayload());
                     }).then(function() {
                         cloudBusinessCode = code;
                         localStorage.setItem('jp_business_code', code);
@@ -10346,12 +10354,18 @@
             var code = ($('cloudBusinessCodeInput').value || '').trim().toUpperCase();
             if (!code) { showToast('Enter a Business Code', 'err'); return; }
             if (!cloudAuth || !cloudAuth.currentUser) { showToast('Sign in first', 'err'); return; }
-            cloudDb.collection('businesses').doc(code).get().then(function(doc) {
+            var bizRef = cloudDb.collection('businesses').doc(code);
+            bizRef.get().then(function(doc) {
                 if (!doc.exists) { showToast('No business found with that code', 'err'); return; }
                 cloudBusinessCode = code;
                 localStorage.setItem('jp_business_code', code);
                 addJoinedBusinessCode(code);
                 setBusinessName(code, (doc.data() && doc.data().name) || code);
+                bizRef.update({
+                    members: firebase.firestore.FieldValue.arrayUnion({ uid: cloudAuth.currentUser.uid, email:
+                        cloudAuth.currentUser.email, role: 'staff' }),
+                    memberUids: firebase.firestore.FieldValue.arrayUnion(cloudAuth.currentUser.uid)
+                }).catch(function() {});
                 $('cloudBusinessCodeInput').value = '';
                 renderBusinessList();
                 startCloudListener(code);
@@ -10360,8 +10374,8 @@
         }
 
         function cloudLogout() {
-            if (cloudUnsub) { cloudUnsub();
-                cloudUnsub = null; }
+            if (cloudUnsub.length) { cloudUnsub.forEach(function(fn) { fn(); });
+                cloudUnsub = []; }
             if (cloudAuth) cloudAuth.signOut();
             cloudBusinessCode = null;
             localStorage.removeItem('jp_business_code');
@@ -10371,20 +10385,24 @@
 
         function startCloudListener(code) {
             if (!cloudDb) return;
-            if (cloudUnsub) cloudUnsub();
-            cloudUnsub = cloudDb.collection('businesses').doc(code).onSnapshot(function(doc) {
-                if (!doc.exists) return;
-                var payload = doc.data() && doc.data().data;
-                if (!payload) return;
-                applyCloudPayload(payload);
-            }, function(err) { console.warn('Cloud listener error:', err); });
-            var codeEl = $('cloudCurrentCode');
-            if (codeEl) codeEl.textContent = code;
+            if (cloudUnsub) { cloudUnsub.forEach(function(fn) { fn(); }); }
+            cloudUnsub = [];
+            // Listen to the small 'core' document (everything except products)
+            cloudUnsub.push(cloudDb.collection('businesses').doc(code).collection('core').doc('data')
+                .onSnapshot(function(doc) {
+                    if (!doc.exists) return;
+                    applyCloudCorePayload(doc.data());
+                }, function(err) { console.warn('Cloud core listener error:', err); }));
+            // Listen to the products subcollection (one document per product, so photos never hit the 1MB limit)
+            cloudUnsub.push(cloudDb.collection('businesses').doc(code).collection('products')
+                .onSnapshot(function(snap) {
+                    applyCloudProductsSnapshot(snap);
+                }, function(err) { console.warn('Cloud products listener error:', err); }));
         }
 
-        function buildCloudPayload() {
+        function buildCloudCorePayload() {
             return {
-                items: items, products: products, company: company, customers: customers, suppliers: suppliers,
+                items: items, company: company, customers: customers, suppliers: suppliers,
                 purchases: purchases, sales: sales, custLedger: custLedger, supLedger: supLedger, settings: settings,
                 globalCategories: globalCategories, productCategories: productCategories, plugins: plugins,
                 v3Data: (typeof v3Data !== 'undefined' ? v3Data : null), updatedAt: Date.now()
@@ -10396,15 +10414,13 @@
             if (Array.isArray(newItems)) { for (var i = 0; i < newItems.length; i++) arr.push(newItems[i]); }
         }
 
-        function applyCloudPayload(payload) {
-            // A remote device saved changes — adopt them locally and re-render everything.
-            // Last-write-wins: whichever device saved most recently is reflected everywhere.
-            if (payload.updatedAt && payload.updatedAt <= (window._lastCloudApplied || 0)) return; // already up to date
-            window._lastCloudApplied = payload.updatedAt || Date.now();
+        function applyCloudCorePayload(payload) {
+            if (!payload) return;
+            if (payload.updatedAt && payload.updatedAt <= (window._lastCloudCoreApplied || 0)) return;
+            window._lastCloudCoreApplied = payload.updatedAt || Date.now();
             _cloudApplyingRemote = true;
             try {
                 if (payload.items) replaceArrayContents(items, payload.items);
-                if (payload.products) replaceArrayContents(products, payload.products);
                 if (payload.company) Object.assign(company, payload.company);
                 if (payload.customers) replaceArrayContents(customers, payload.customers);
                 if (payload.suppliers) replaceArrayContents(suppliers, payload.suppliers);
@@ -10420,27 +10436,76 @@
                     v3Data.karigarJobs = payload.v3Data.karigarJobs || v3Data.karigarJobs; }
                 saveAll(true);
                 renderDashboard();
-                renderProductGrid();
                 renderItemsList();
                 renderItemTable();
                 renderStockTable();
                 if (typeof renderKarigarV3 === 'function') renderKarigarV3();
                 showToast('☁️ Synced from another device', 'info');
             } catch (e) {
-                console.warn('Failed applying cloud payload:', e);
+                console.warn('Failed applying cloud core payload:', e);
             }
             _cloudApplyingRemote = false;
         }
 
+        function applyCloudProductsSnapshot(snap) {
+            _cloudApplyingRemote = true;
+            try {
+                snap.docChanges().forEach(function(change) {
+                    var id = parseInt(change.doc.id, 10);
+                    var idx = products.findIndex(function(p) { return p.id === id; });
+                    if (change.type === 'removed') {
+                        if (idx >= 0) products.splice(idx, 1);
+                    } else {
+                        var data = change.doc.data();
+                        data.id = id;
+                        if (idx >= 0) products[idx] = data; else products.push(data);
+                    }
+                });
+                saveAll(true);
+                renderProductGrid();
+                renderDashboard();
+            } catch (e) {
+                console.warn('Failed applying cloud products snapshot:', e);
+            }
+            _cloudApplyingRemote = false;
+        }
+
+        var _cloudSyncedProductIds = {}; // tracks what we've already pushed, to detect local deletions
         function pushToCloudDebounced() {
             if (!cloudAuth || !cloudAuth.currentUser || !cloudBusinessCode || !cloudDb || _cloudApplyingRemote) return;
             clearTimeout(_cloudPushTimer);
             _cloudPushTimer = setTimeout(function() {
                 try {
-                    var payload = buildCloudPayload();
-                    window._lastCloudApplied = payload.updatedAt;
-                    cloudDb.collection('businesses').doc(cloudBusinessCode).set({ data: payload }, { merge: true })
-                        .catch(function(err) { console.warn('Cloud push failed:', err); });
+                    var bizRef = cloudDb.collection('businesses').doc(cloudBusinessCode);
+                    // Core data (small, text-only) — always safe from the size limit
+                    var corePayload = buildCloudCorePayload();
+                    window._lastCloudCoreApplied = corePayload.updatedAt;
+                    bizRef.collection('core').doc('data').set(corePayload).catch(function(err) {
+                        console.warn('Cloud core push failed:', err);
+                        showCloudError('Sync failed: ' + err.message);
+                    });
+                    // Products — one document each, batched, so a large photo on one product
+                    // never blocks or breaks the sync of everything else.
+                    var batch = cloudDb.batch();
+                    var currentIds = {};
+                    products.forEach(function(p) {
+                        currentIds[p.id] = true;
+                        var docRef = bizRef.collection('products').doc(String(p.id));
+                        batch.set(docRef, p);
+                    });
+                    // Remove products that were deleted locally since the last push
+                    Object.keys(_cloudSyncedProductIds).forEach(function(id) {
+                        if (!currentIds[id]) batch.delete(bizRef.collection('products').doc(String(id)));
+                    });
+                    _cloudSyncedProductIds = currentIds;
+                    batch.commit().catch(function(err) {
+                        console.warn('Cloud products push failed:', err);
+                        if (String(err.message || '').indexOf('maximum allowed size') !== -1) {
+                            showCloudError('One of your products has too many/too large photos to sync (over 1MB for that single product). Try using fewer or smaller photos for it.');
+                        } else {
+                            showCloudError('Sync failed: ' + err.message);
+                        }
+                    });
                 } catch (e) {
                     console.warn('Cloud push failed (non-fatal):', e);
                 }
@@ -10465,9 +10530,10 @@
             el.innerHTML = codes.map(function(code) {
                 var isActive = code === cloudBusinessCode;
                 var isOwner = cloudBusinessOwnerCache[code] && cloudAuth && cloudAuth.currentUser && cloudBusinessOwnerCache[code] === cloudAuth.currentUser.uid;
-                return '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 12px;background:' +
+                return '<div style="padding:10px 12px;background:' +
                     (isActive ? 'rgba(var(--accent-rgb),0.08)' : 'var(--card-solid)') + ';border:1px solid ' +
                     (isActive ? 'var(--accent)' : 'var(--border-soft)') + ';border-radius:12px;margin-bottom:8px;">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
                     '<div><b>' + escapeHtml(names[code] || code) + '</b>' + (isActive ?
                         ' <span style="font-size:10px;background:var(--accent);color:#fff;padding:2px 7px;border-radius:8px;">ACTIVE</span>' :
                         '') + '<div class="muted" style="font-size:11px;">Code: ' + code + '</div></div>' +
@@ -10478,8 +10544,22 @@
                     '\')">✎ Rename</button>' +
                     '<button class="ghost small" onclick="deleteOrLeaveBusiness(\'' + code +
                     '\')" style="color:var(--danger);">' + (isOwner ? '🗑 Delete' : '🚪 Leave') + '</button>' +
-                    '</div></div>';
+                    '</div></div>' +
+                    (isOwner ?
+                        ('<div style="margin-top:10px;border-top:1px solid var(--border-soft);padding-top:8px;">' +
+                            '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+                            '<span style="font-weight:600;font-size:12px;">👥 Team Members</span>' +
+                            '<button class="ghost small" onclick="addStaffMember(\'' + code +
+                            '\')">+ Add Staff</button></div>' +
+                            '<div id="teamMembersWrap_' + code + '" style="margin-top:6px;"><div class="note" style="font-size:11px;">Loading…</div></div>' +
+                            '</div>') : '') +
+                    '</div>';
             }).join('');
+            codes.forEach(function(code) {
+                var isOwner = cloudBusinessOwnerCache[code] && cloudAuth && cloudAuth.currentUser &&
+                    cloudBusinessOwnerCache[code] === cloudAuth.currentUser.uid;
+                if (isOwner) renderTeamMembers(code);
+            });
         }
 
         var cloudBusinessOwnerCache = {};
@@ -10513,12 +10593,20 @@
             var label = names[code] || code;
             if (isOwner) {
                 if (!confirm('Delete "' + label + '" permanently? This removes it for EVERYONE who has joined it, including all synced data. This cannot be undone.')) return;
-                cloudDb.collection('businesses').doc(code).delete().then(function() {
+                var bizRef = cloudDb.collection('businesses').doc(code);
+                bizRef.collection('products').get().then(function(snap) {
+                    var batch = cloudDb.batch();
+                    snap.forEach(function(doc) { batch.delete(doc.ref); });
+                    batch.delete(bizRef.collection('core').doc('data'));
+                    return batch.commit();
+                }).then(function() {
+                    return bizRef.delete();
+                }).then(function() {
                     removeJoinedBusinessCode(code);
                     if (cloudBusinessCode === code) { cloudBusinessCode = null;
                         localStorage.removeItem('jp_business_code');
-                        if (cloudUnsub) { cloudUnsub();
-                            cloudUnsub = null; } }
+                        if (cloudUnsub.length) { cloudUnsub.forEach(function(fn) { fn(); });
+                            cloudUnsub = []; } }
                     renderBusinessList();
                     updateCloudStatusUI(cloudAuth.currentUser);
                     showToast('🗑 "' + label + '" deleted', 'ok');
@@ -10528,12 +10616,103 @@
                 removeJoinedBusinessCode(code);
                 if (cloudBusinessCode === code) { cloudBusinessCode = null;
                     localStorage.removeItem('jp_business_code');
-                    if (cloudUnsub) { cloudUnsub();
-                        cloudUnsub = null; } }
+                    if (cloudUnsub.length) { cloudUnsub.forEach(function(fn) { fn(); });
+                        cloudUnsub = []; } }
                 renderBusinessList();
                 updateCloudStatusUI(cloudAuth.currentUser);
                 showToast('🚪 Left "' + label + '"', 'ok');
             }
+        }
+
+        function cloudForgotPassword() {
+            if (!cloudAvailable()) { showToast('☁️ Cloud sync could not load — check your internet connection.', 'err'); return; }
+            var email = $('cloudEmail').value.trim();
+            if (!email) { showToast('Type your email in the field above first', 'err'); return; }
+            cloudAuth.sendPasswordResetEmail(email).then(function() {
+                showToast('📧 Password reset email sent to ' + email + ' — check your inbox.', 'ok');
+            }).catch(function(err) { showCloudError('Could not send reset email: ' + err.message); });
+        }
+
+        function cloudFindMyBusinesses() {
+            if (!cloudAuth || !cloudAuth.currentUser) { showToast('Sign in first', 'err'); return; }
+            cloudDb.collection('businesses').where('memberUids', 'array-contains', cloudAuth.currentUser.uid).get()
+                .then(function(snap) {
+                    if (snap.empty) { showToast('No businesses found for this account.', 'info'); return; }
+                    snap.forEach(function(doc) {
+                        addJoinedBusinessCode(doc.id);
+                        setBusinessName(doc.id, doc.data().name || doc.id);
+                    });
+                    renderBusinessList();
+                    showToast('☁️ Found ' + snap.size + ' business(es) — added to your list below.', 'ok');
+                }).catch(function(err) { showCloudError('Lookup failed: ' + err.message); });
+        }
+
+        // ===== TEAM MEMBERS =====
+        function renderTeamMembers(code) {
+            var el = $('teamMembersWrap_' + code);
+            if (!el || !cloudDb) return;
+            cloudDb.collection('businesses').doc(code).get().then(function(doc) {
+                if (!doc.exists) return;
+                var members = doc.data().members || [];
+                var ownerUid = doc.data().ownerUid;
+                el.innerHTML = members.length === 0 ? '<div class="note" style="font-size:11px;">No members yet.</div>' :
+                    members.map(function(m) {
+                        var isMe = cloudAuth && cloudAuth.currentUser && m.uid === cloudAuth.currentUser.uid;
+                        var isOwnerRow = m.uid === ownerUid;
+                        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border-soft);font-size:12px;">' +
+                            '<span>' + escapeHtml(m.email) + (isOwnerRow ? ' <span class="muted">(owner)</span>' :
+                                '') + (isMe ? ' <span class="muted">(you)</span>' : '') + '</span>' +
+                            (isOwnerRow ? '' : '<button class="ghost small" style="color:var(--danger);" onclick="removeTeamMember(\'' +
+                                code + '\',\'' + m.uid + '\')">Remove</button>') +
+                            '</div>';
+                    }).join('');
+            });
+        }
+
+        function removeTeamMember(code, uid) {
+            if (!confirm('Remove this member\'s access to this business? Their login still works, they just won\'t see this business anymore.')) return;
+            var bizRef = cloudDb.collection('businesses').doc(code);
+            bizRef.get().then(function(doc) {
+                var members = (doc.data().members || []).filter(function(m) { return m.uid !== uid; });
+                return bizRef.update({ members: members, memberUids: firebase.firestore.FieldValue.arrayRemove(
+                    uid) });
+            }).then(function() {
+                renderTeamMembers(code);
+                showToast('Member removed', 'ok');
+            }).catch(function(err) { showCloudError('Could not remove member: ' + err.message); });
+        }
+
+        function addStaffMember(code) {
+            showInputPrompt('Staff member\'s email address').then(function(staffEmail) {
+                staffEmail = (staffEmail || '').trim();
+                if (!staffEmail) return;
+                var tempPassword = Math.random().toString(36).slice(2, 8) + 'A1!' + Math.random().toString(36)
+                    .slice(2, 4);
+                try {
+                    var secondaryApp = firebase.apps.find(function(a) { return a.name === 'Secondary'; }) ||
+                        firebase.initializeApp(firebaseConfig, 'Secondary');
+                    var secondaryAuth = secondaryApp.auth();
+                    secondaryAuth.createUserWithEmailAndPassword(staffEmail, tempPassword).then(function(cred) {
+                        var bizRef = cloudDb.collection('businesses').doc(code);
+                        return bizRef.update({
+                            members: firebase.firestore.FieldValue.arrayUnion({ uid: cred.user.uid, email:
+                                staffEmail, role: 'staff' }),
+                            memberUids: firebase.firestore.FieldValue.arrayUnion(cred.user.uid)
+                        }).then(function() {
+                            return secondaryAuth.signOut();
+                        });
+                    }).then(function() {
+                        renderTeamMembers(code);
+                        showCloudError('✅ Staff account created for ' + staffEmail +
+                            '. Password: ' + tempPassword +
+                            ' — share these with them now (this won\'t be shown again). They can change the password themselves after signing in.');
+                    }).catch(function(err) {
+                        showCloudError('Could not create staff account: ' + err.message);
+                    });
+                } catch (e) {
+                    showCloudError('Could not create staff account: ' + e.message);
+                }
+            });
         }
 
         function cloudChangePassword() {
