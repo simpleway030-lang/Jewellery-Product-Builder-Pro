@@ -4315,6 +4315,17 @@
                             <input id="cloudNewPassword" type="password" placeholder="New password (min 6 chars)" style="margin-top:0;width:auto;min-width:180px;">
                             <button class="ghost small" onclick="cloudChangePassword()">Update Password</button>
                         </div>
+                        <div style="margin-top:12px;border-top:1px solid var(--border-soft);padding-top:10px;">
+                            <div style="font-weight:700;font-size:12.5px;margin-bottom:8px;">🙂 My Profile</div>
+                            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                                <img id="myProfilePhotoPreview" src="" style="display:none;width:52px;height:52px;border-radius:50%;object-fit:cover;border:1px solid var(--border-soft);">
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1;">
+                                    <input id="myProfileName" placeholder="Your display name" style="margin-top:0;width:auto;min-width:150px;">
+                                    <input type="file" accept="image/*" id="myProfilePhotoInput" style="width:auto;margin-top:0;font-size:11px;" onchange="myProfilePhotoSelected(this)">
+                                    <button class="ghost small" onclick="saveMyProfile()">💾 Save Profile</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div id="cloudBusinessSection" style="display:none;margin-top:14px;">
@@ -4447,6 +4458,16 @@
     <div id="ledgerEntryModal" class="modal-backdrop"><div class="modal-box dark" style="max-width:460px"><div class="section-title" id="ledgerEntryTitle">Record</div><div id="ledgerEntryForm"></div><div style="margin-top:14px;text-align:right;display:flex;gap:10px;justify-content:flex-end"><button onclick="saveLedgerEntry()">💾 Save</button><button onclick="closeModal('ledgerEntryModal')" class="ghost">Cancel</button></div></div></div>
     <div id="dashboardDetailModal" class="modal-backdrop"><div class="modal-box dark" style="max-width:720px;"><div class="section-title" id="ddTitle">Details</div><div id="ddContent" style="margin-top:12px;"></div><div style="margin-top:16px;text-align:right;display:flex;gap:10px;justify-content:flex-end;"><button onclick="exportDetailPDF()" class="pdf-export-btn">📄 Export PDF</button><button class="ghost" onclick="closeModal('dashboardDetailModal')">Close</button></div></div></div>
     <!-- AI CHAT MODAL -->
+    <div id="permModal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:440px;padding:22px;">
+            <h2 id="permModalTitle" style="font-size:16px;margin:0 0 10px;">Permissions</h2>
+            <div id="permModalBody"></div>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+                <button style="flex:1;" onclick="savePermissionsModal()">💾 Save</button>
+                <button class="ghost" onclick="closeModal('permModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
     <div id="karigarListModal" class="modal-backdrop">
         <div class="modal-box" style="max-width:520px;padding:22px;max-height:85vh;overflow-y:auto;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -6260,6 +6281,7 @@
         }
 
         function deleteItem(i) {
+            if (!hasPermission('canDelete')) { showToast('🔒 You don\'t have permission to delete items. Ask your admin.', 'err'); return; }
             if (!confirm('Delete this item?')) return;
             var item = items[i];
             items.splice(i, 1);
@@ -6268,6 +6290,7 @@
             renderItemTable();
             renderItemsList();
             populateCategorySelects();
+            logActivity('delete_item', 'Deleted item "' + (item && item.name) + '"');
             showToast('Item deleted (Ctrl+Z to undo)', 'ok');
         }
 
@@ -8111,6 +8134,7 @@
         }
 
         function generateSalesInvoice() {
+            if (!hasPermission('canManageBilling')) { showToast('🔒 You don\'t have permission to create invoices. Ask your admin.', 'err'); return; }
             if (billQueue.length === 0) { showToast('Add products first', 'err'); return; }
             var requiredStock = billQueue.reduce(function(map, line) {
                 map[line.productId] = (map[line.productId] || 0) + Number(line.qty || 0);
@@ -8151,6 +8175,8 @@
                 notes: ''
             };
             sales.push(sale);
+            logActivity('create_sale', 'Created invoice ' + sale.invoiceNo + ' for ' + sale.customer.name + ' — ₹' +
+                sale.grandTotal.toFixed(2));
             billQueue.forEach(function(item) {
                 var prod = products.find(function(p) { return p.id === item.productId; });
                 if (prod) {
@@ -8355,6 +8381,7 @@
         }
 
         function deleteSale(id) {
+            if (!hasPermission('canDelete')) { showToast('🔒 You don\'t have permission to delete sales. Ask your admin.', 'err'); return; }
             if (!confirm('Delete?')) return;
             var s = sales.find(function(x) { return x.id === id; });
             if (s && Array.isArray(s.lines)) {
@@ -8372,6 +8399,7 @@
             if (s && s.customer.id) { custLedger = custLedger.filter(function(
                 e) { return e.invoiceId !== s.id; }); }
             sales = sales.filter(function(s2) { return s2.id !== id; });
+            logActivity('delete_sale', 'Deleted sale ' + (s && s.invoiceNo || id));
             saveAll(true);
             renderSalesHistory();
             renderDashboard();
@@ -8563,6 +8591,8 @@
             purchases.push({ id: Date.now(), date: new Date().toISOString(), supplier: supplier ? supplier.name :
                     '—',
                 item: item.name, category: item.category, qty: qty, unitCost: cost, total: qty * cost });
+            logActivity('record_purchase', 'Purchased ' + qty + 'x ' + item.name + ' from ' + (supplier ? supplier
+                .name : 'unknown supplier') + ' — ₹' + (qty * cost).toFixed(2));
             if (supplier) {
                 supLedger.push({
                     id: Date.now(),
@@ -10398,6 +10428,7 @@
                 .onSnapshot(function(snap) {
                     applyCloudProductsSnapshot(snap);
                 }, function(err) { console.warn('Cloud products listener error:', err); }));
+            loadMyProfile(); // also refreshes _myMemberCache, which hasPermission() relies on
         }
 
         function buildCloudCorePayload() {
@@ -10552,6 +10583,14 @@
                             '<button class="ghost small" onclick="addStaffMember(\'' + code +
                             '\')">+ Add Staff</button></div>' +
                             '<div id="teamMembersWrap_' + code + '" style="margin-top:6px;"><div class="note" style="font-size:11px;">Loading…</div></div>' +
+                            '</div>' +
+                            '<div style="margin-top:10px;border-top:1px solid var(--border-soft);padding-top:8px;">' +
+                            '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+                            '<span style="font-weight:600;font-size:12px;">🕓 Activity Log</span>' +
+                            '<button class="ghost small" onclick="renderActivityLog(\'' + code +
+                            '\')">↻ Refresh</button></div>' +
+                            '<div id="activityLogWrap_' + code +
+                            '" style="margin-top:6px;max-height:180px;overflow-y:auto;"><div class="note" style="font-size:11px;">Tap Refresh to load.</div></div>' +
                             '</div>') : '') +
                     '</div>';
             }).join('');
@@ -10659,11 +10698,21 @@
                     members.map(function(m) {
                         var isMe = cloudAuth && cloudAuth.currentUser && m.uid === cloudAuth.currentUser.uid;
                         var isOwnerRow = m.uid === ownerUid;
+                        var avatar = m.photoUrl ?
+                            '<img src="' + m.photoUrl +
+                            '" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;">' :
+                            '<span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;text-align:center;line-height:22px;vertical-align:middle;margin-right:6px;">' +
+                            (m.email || '?').charAt(0).toUpperCase() + '</span>';
                         return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border-soft);font-size:12px;">' +
-                            '<span>' + escapeHtml(m.email) + (isOwnerRow ? ' <span class="muted">(owner)</span>' :
-                                '') + (isMe ? ' <span class="muted">(you)</span>' : '') + '</span>' +
-                            (isOwnerRow ? '' : '<button class="ghost small" style="color:var(--danger);" onclick="removeTeamMember(\'' +
-                                code + '\',\'' + m.uid + '\')">Remove</button>') +
+                            '<span>' + avatar + (m.name ? escapeHtml(m.name) + ' <span class="muted">(' +
+                                escapeHtml(m.email) + ')</span>' : escapeHtml(m.email)) + (isOwnerRow ?
+                                ' <span class="muted">· owner</span>' : '') + (isMe ?
+                                ' <span class="muted">· you</span>' : '') + '</span>' +
+                            '<span style="display:flex;gap:4px;">' + (isOwnerRow ? '' :
+                                '<button class="ghost small" onclick="openMemberPermissionsModal(\'' + code +
+                                '\',\'' + m.uid + '\',\'' + escapeHtml(m.email) +
+                                '\')">⚙ Permissions</button><button class="ghost small" style="color:var(--danger);" onclick="removeTeamMember(\'' +
+                                code + '\',\'' + m.uid + '\')">Remove</button>') + '</span>' +
                             '</div>';
                     }).join('');
             });
@@ -10713,6 +10762,133 @@
                     showCloudError('Could not create staff account: ' + e.message);
                 }
             });
+        }
+
+        // ===== USER PROFILES (name + photo) =====
+        var _myMemberCache = null;
+        function loadMyProfile() {
+            if (!cloudDb || !cloudBusinessCode || !cloudAuth || !cloudAuth.currentUser) return;
+            cloudDb.collection('businesses').doc(cloudBusinessCode).get().then(function(doc) {
+                if (!doc.exists) return;
+                var members = doc.data().members || [];
+                var me = members.find(function(m) { return m.uid === cloudAuth.currentUser.uid; });
+                _myMemberCache = me || null;
+                if ($('myProfileName')) $('myProfileName').value = (me && me.name) || '';
+                if ($('myProfilePhotoPreview') && me && me.photoUrl) $('myProfilePhotoPreview').src = me.photoUrl;
+                if ($('myProfilePhotoPreview')) $('myProfilePhotoPreview').style.display = (me && me.photoUrl) ?
+                    'inline-block' : 'none';
+            }).catch(function() {});
+        }
+        function myProfilePhotoSelected(input) {
+            var file = input.files && input.files[0];
+            if (!file) return;
+            if (file.size > 300 * 1024) { showToast('Please choose a photo under 300KB for your profile picture.', 'err'); return; }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $('myProfilePhotoPreview').src = e.target.result;
+                $('myProfilePhotoPreview').style.display = 'inline-block';
+                $('myProfilePhotoPreview').dataset.pending = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        function saveMyProfile() {
+            if (!cloudDb || !cloudBusinessCode || !cloudAuth || !cloudAuth.currentUser) { showToast('Sign in and select a business first', 'err'); return; }
+            var name = $('myProfileName').value.trim();
+            var photoUrl = $('myProfilePhotoPreview').dataset.pending || (_myMemberCache && _myMemberCache
+                .photoUrl) || null;
+            var bizRef = cloudDb.collection('businesses').doc(cloudBusinessCode);
+            bizRef.get().then(function(doc) {
+                var members = doc.data().members || [];
+                var idx = members.findIndex(function(m) { return m.uid === cloudAuth.currentUser.uid; });
+                if (idx >= 0) { members[idx].name = name;
+                    if (photoUrl) members[idx].photoUrl = photoUrl; }
+                return bizRef.update({ members: members });
+            }).then(function() {
+                showToast('✅ Profile updated', 'ok');
+                logActivity('profile_update', name + ' updated their profile');
+                renderTeamMembers(cloudBusinessCode);
+            }).catch(function(err) { showCloudError('Could not save profile: ' + err.message); });
+        }
+
+        // ===== PERMISSIONS (admin-controlled, per member) =====
+        var DEFAULT_PERMISSIONS = { canDelete: true, canViewReports: true, canManageTeam: false, canEditSettings:
+            false, canManageBilling: true };
+        function hasPermission(cap) {
+            if (!cloudAuth || !cloudAuth.currentUser || !cloudBusinessCode) return true; // offline/no business = unrestricted local use
+            if (!_myMemberCache) return true; // not loaded yet — fail open rather than lock the owner out
+            if (_myMemberCache.role === 'admin') return true;
+            var perms = _myMemberCache.permissions || DEFAULT_PERMISSIONS;
+            return perms[cap] !== false;
+        }
+        function openMemberPermissionsModal(code, uid, email) {
+            cloudDb.collection('businesses').doc(code).get().then(function(doc) {
+                var members = doc.data().members || [];
+                var m = members.find(function(x) { return x.uid === uid; });
+                var perms = Object.assign({}, DEFAULT_PERMISSIONS, (m && m.permissions) || {});
+                var caps = [
+                    ['canDelete', 'Can delete records (items, sales, purchases…)'],
+                    ['canManageBilling', 'Can create invoices / record payments'],
+                    ['canViewReports', 'Can view profit/cost figures on Dashboard'],
+                    ['canEditSettings', 'Can change app Settings'],
+                    ['canManageTeam', 'Can manage team members (dangerous — near-admin)'],
+                ];
+                $('permModalTitle').textContent = 'Permissions — ' + email;
+                $('permModalBody').innerHTML = caps.map(function(c) {
+                    return '<label style="display:flex;align-items:center;gap:8px;padding:8px 0;font-size:13px;"><input type="checkbox" id="perm_' +
+                        c[0] + '" ' + (perms[c[0]] ? 'checked' : '') + ' style="width:auto;margin:0;"> ' + c[1] +
+                        '</label>';
+                }).join('');
+                $('permModal').dataset.code = code;
+                $('permModal').dataset.uid = uid;
+                $('permModal').style.display = 'flex';
+            });
+        }
+        function savePermissionsModal() {
+            var code = $('permModal').dataset.code,
+                uid = $('permModal').dataset.uid;
+            var caps = ['canDelete', 'canViewReports', 'canManageTeam', 'canEditSettings', 'canManageBilling'];
+            var newPerms = {};
+            caps.forEach(function(c) { newPerms[c] = $('perm_' + c).checked; });
+            var bizRef = cloudDb.collection('businesses').doc(code);
+            bizRef.get().then(function(doc) {
+                var members = doc.data().members || [];
+                var idx = members.findIndex(function(m) { return m.uid === uid; });
+                if (idx >= 0) members[idx].permissions = newPerms;
+                return bizRef.update({ members: members });
+            }).then(function() {
+                closeModal('permModal');
+                showToast('Permissions updated', 'ok');
+                renderTeamMembers(code);
+            }).catch(function(err) { showCloudError('Could not save permissions: ' + err.message); });
+        }
+
+        // ===== ACTIVITY LOG =====
+        function logActivity(action, details) {
+            if (!cloudDb || !cloudBusinessCode || !cloudAuth || !cloudAuth.currentUser) return; // offline: no log
+            cloudDb.collection('businesses').doc(cloudBusinessCode).collection('activityLog').add({
+                action: action,
+                details: details,
+                userEmail: cloudAuth.currentUser.email,
+                userName: (_myMemberCache && _myMemberCache.name) || cloudAuth.currentUser.email,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(function() {}); // logging must never block the app
+        }
+        function renderActivityLog(code) {
+            var el = $('activityLogWrap_' + code);
+            if (!el || !cloudDb) return;
+            cloudDb.collection('businesses').doc(code).collection('activityLog').orderBy('timestamp', 'desc')
+                .limit(30).get().then(function(snap) {
+                    if (snap.empty) { el.innerHTML = '<div class="note" style="font-size:11px;">No activity recorded yet.</div>'; return; }
+                    el.innerHTML = snap.docs.map(function(doc) {
+                        var d = doc.data();
+                        var when = d.timestamp && d.timestamp.toDate ? d.timestamp.toDate().toLocaleString() :
+                            '';
+                        return '<div style="padding:6px 0;border-bottom:1px solid var(--border-soft);font-size:11.5px;"><b>' +
+                            escapeHtml(d.userName || d.userEmail || 'Someone') + '</b> — ' + escapeHtml(d
+                                .details || d.action) + '<div class="muted" style="font-size:10px;">' +
+                            when + '</div></div>';
+                    }).join('');
+                }).catch(function() { el.innerHTML = '<div class="note" style="font-size:11px;">Could not load activity log.</div>'; });
         }
 
         function cloudChangePassword() {
