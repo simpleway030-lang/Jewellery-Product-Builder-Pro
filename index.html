@@ -16083,9 +16083,18 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
             });
 
             // Customers with outstanding / last payment
+            function saleCustomerName(s) {
+                if (!s) return 'Walk-in';
+                var n = '';
+                if (s.customer && typeof s.customer === 'object') n = s.customer.name || s.customer.Name || '';
+                else if (typeof s.customer === 'string') n = s.customer;
+                if (!n && s.customerName) n = s.customerName;
+                n = String(n == null ? '' : n).trim();
+                return n || 'Walk-in';
+            }
             var custMap = {};
             salesArr.forEach(function(s) {
-                var name = (s.customer || s.customerName || 'Walk-in').trim() || 'Walk-in';
+                var name = saleCustomerName(s);
                 if (!custMap[name]) custMap[name] = { name: name, total: 0, paid: 0, lastDate: '', bills: 0 };
                 custMap[name].total += Number(s.grandTotal || 0);
                 custMap[name].paid += Number(s.paid || 0);
@@ -16094,7 +16103,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
                 if (d && d > (custMap[name].lastDate || '')) custMap[name].lastDate = d;
             });
             customersArr.forEach(function(c) {
-                var name = (c.name || '').trim();
+                var name = String((c && c.name) != null ? c.name : '').trim();
                 if (!name) return;
                 if (!custMap[name]) custMap[name] = { name: name, total: 0, paid: 0, lastDate: '', bills: 0, phone: c.phone || '' };
                 if (c.phone) custMap[name].phone = c.phone;
@@ -16142,7 +16151,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
             var recentSales = salesArr.slice(0, 12).map(function(s) {
                 return {
                     date: String(s.date || '').slice(0, 10),
-                    customer: s.customer || s.customerName || '',
+                    customer: saleCustomerName(s),
                     total: Number(s.grandTotal || 0),
                     paid: Number(s.paid || 0),
                     profit: Number(s.profit || 0)
