@@ -262,10 +262,10 @@
                 drawerLinks.appendChild(link);
             }
             var heading = document.querySelector('header h1');
-            if (heading) heading.textContent = 'Jewellery Product Builder Pro 3.0';
-            document.title = 'Jewellery Product Builder Pro 3.0';
+            if (heading) heading.textContent = 'Jewellery Manager Pro';
+            document.title = 'Jewellery Manager Pro';
             var footer = document.querySelector('footer');
-            if (footer) footer.textContent = 'Jewellery Product Builder Pro 3.0 · product passports · rate costing · repair workflow · runs offline';
+            if (footer) footer.textContent = 'Jewellery Manager Pro · product passports · rate costing · repair workflow · runs offline';
             var baseQuickView = renderQuickView;
             renderQuickView = function() {
                 baseQuickView();
@@ -3626,6 +3626,7 @@
                 <div class="mobile-drawer-link" data-tab="team" onclick="mobileDrawerNav('team')"><span class="tab-icon">🏢</span> Team</div>
                 <div class="mobile-drawer-link" data-tab="crm" onclick="mobileDrawerNav('crm')"><span class="tab-icon">🤝</span> CRM</div>
                 <div class="mobile-drawer-link" data-tab="ops" onclick="mobileDrawerNav('ops')"><span class="tab-icon">🔁</span> Ops</div>
+                <div class="mobile-drawer-link" data-tab="billimport" onclick="mobileDrawerNav('billimport')"><span class="tab-icon">📷</span> Import</div>
                 <div class="mobile-drawer-link" data-tab="integrations" onclick="mobileDrawerNav('integrations')"><span class="tab-icon">🔌</span> Integrations</div>
                 <div class="mobile-drawer-link" data-tab="security" onclick="mobileDrawerNav('security')"><span class="tab-icon">🔐</span> Security</div>
                 <div class="mobile-drawer-link" data-tab="admin" onclick="mobileDrawerNav('admin')"><span class="tab-icon">👑</span> Admin</div>
@@ -3649,11 +3650,13 @@
             <div class="tab" data-tab="reports"><span class="tab-icon">📈</span> Reports</div>
             <div class="tab" data-tab="tasks"><span class="tab-icon">✅</span> Tasks</div>
             <div class="tab" data-tab="tools"><span class="tab-icon">🧰</span> Tools</div>
+            <div class="tab" data-tab="studio"><span class="tab-icon">🔧</span> Karigar</div>
             <div class="tab" data-tab="hrm"><span class="tab-icon">👥</span> HRM</div>
             <div class="tab" data-tab="accounts"><span class="tab-icon">📒</span> Accounts</div>
             <div class="tab" data-tab="team"><span class="tab-icon">🏢</span> Team</div>
             <div class="tab" data-tab="crm"><span class="tab-icon">🤝</span> CRM</div>
             <div class="tab" data-tab="ops"><span class="tab-icon">🔁</span> Ops</div>
+            <div class="tab" data-tab="billimport"><span class="tab-icon">📷</span> Import</div>
             <div class="tab" data-tab="integrations"><span class="tab-icon">🔌</span> Integrations</div>
             <div class="tab" data-tab="security"><span class="tab-icon">🔐</span> Security</div>
             <div class="tab" data-tab="admin"><span class="tab-icon">👑</span> Admin</div>
@@ -3952,19 +3955,8 @@
                 </section>
                 <!-- VERSION 3.0 OPERATIONS STUDIO -->
                 <section id="studio" class="card" style="display:none">
-                    <div class="section-head"><div><div class="section-title">V3 Jewellery Operations Studio</div><div class="note">Live metal costing, repair job cards and service follow-ups in one workspace.</div></div><div class="code-chip">Version 3.0</div></div>
-                    <div class="v3-summary" id="v3Summary"></div>
-                    <div class="v3-grid">
-                        <div class="v3-panel"><div class="v3-kicker">Rate Desk</div><h3>Metal rate calculator</h3><div class="note" style="font-size:12px;">Rates are stored locally in INR per gram. Update them at the start of each trading day.</div>
-                            <div class="v3-rate-grid"><label>24K gold<input id="v3Gold24" type="number" step="0.01" oninput="saveV3Rates()"></label><label>22K gold<input id="v3Gold22" type="number" step="0.01" oninput="saveV3Rates()"></label><label>18K gold<input id="v3Gold18" type="number" step="0.01" oninput="saveV3Rates()"></label><label>Silver<input id="v3Silver" type="number" step="0.01" oninput="saveV3Rates()"></label></div>
-                            <div class="v3-form-grid"><label>Metal / purity<select id="v3CalcMetal" onchange="renderV3Calculator()"><option value="gold24">24K gold</option><option value="gold22">22K gold</option><option value="gold18">18K gold</option><option value="silver">Silver</option></select></label><label>Gross weight (g)<input id="v3CalcGross" type="number" min="0" step="0.001" value="0" oninput="renderV3Calculator()"></label><label>Stone weight (g)<input id="v3CalcStone" type="number" min="0" step="0.001" value="0" oninput="renderV3Calculator()"></label><label>Making type<select id="v3MakingType" onchange="renderV3Calculator()"><option value="gram">Per gram</option><option value="percent">Percent</option><option value="fixed">Fixed amount</option></select></label><label>Making charge<input id="v3Making" type="number" min="0" step="0.01" value="0" oninput="renderV3Calculator()"></label><label>Hallmark / certificate<input id="v3Hallmark" type="number" min="0" step="0.01" value="0" oninput="renderV3Calculator()"></label><label>GST %<input id="v3Tax" type="number" min="0" step="0.01" value="3" oninput="renderV3Calculator()"></label></div>
-                            <div class="v3-total"><span class="muted" style="font-size:12px;">Customer estimate</span><strong id="v3CalcTotal">INR 0.00</strong><div id="v3CalcBreakdown" class="note" style="font-size:11px;margin-top:5px;"></div></div>
-                        </div>
-                        <div class="v3-panel"><div class="v3-kicker">Service Desk</div><h3>New repair or custom order</h3><div class="v3-form-grid"><label>Customer name<input id="v3JobCustomer" placeholder="Customer name"></label><label>Phone<input id="v3JobPhone" placeholder="Mobile number"></label><label>Item / design<input id="v3JobItem" placeholder="Ring, necklace, custom piece"></label><label>Promised date<input id="v3JobDue" type="date"></label><label>Estimate (INR)<input id="v3JobEstimate" type="number" min="0" step="0.01" placeholder="0"></label><label>Advance received (INR)<input id="v3JobAdvance" type="number" min="0" step="0.01" placeholder="0"></label><label style="grid-column:1/-1;">Work notes<textarea id="v3JobNotes" placeholder="Resize, polish, stone replacement, custom engraving..."></textarea></label></div><div style="display:flex;gap:8px;align-items:center;margin-top:12px;"><button onclick="createV3Job()">Create job card</button><button class="ghost" onclick="prefillV3JobFromRate()">Use rate estimate</button></div></div>
-                    </div>
-                    <div class="v3-panel" style="margin-top:16px;"><div style="display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap;"><div><div class="v3-kicker">Workflow</div><h3 style="margin-bottom:0;">Repair and custom-order board</h3></div><div class="note" id="v3RateUpdated" style="font-size:11px;"></div></div><div class="v3-jobs" id="v3JobsBoard"></div></div>
-                    <div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">Clienteling</div><h3>Today's action queue</h3><div id="v3ActionQueue"></div></div><div class="v3-panel"><div class="v3-kicker">Operational standard</div><h3>Built for jewellery retail</h3><div class="note" style="line-height:1.7;font-size:12px;">Every piece can carry its metal, purity, weight, stone, certificate and engraving details. Use job cards to track repairs and made-to-order work from intake to delivery, with estimates and advances visible at a glance.</div></div></div>
-                </section>
+<div class="section-head"><div><div class="section-title">Karigar Work & Full Ledger</div><div class="note">কাজ, কারিগরের কাছে থাকা inventory, bill, purchase ও payment এক জায়গায়।</div></div><div class="code-chip">Karigar Ledger</div></div><div class="v3-summary" id="karigarV2Summary"></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">Karigar register</div><h3>New karigar</h3><div class="v3-form-grid"><label>Name<input id="karigarV2Name" placeholder="Karigar name"></label><label>Phone<input id="karigarV2Phone" placeholder="Phone"></label><label style="grid-column:1/-1">Specialty<input id="karigarV2Specialty" placeholder="Polish, casting, setting, repair..."></label></div><button style="margin-top:12px" onclick="saveKarigarV2()">Add karigar</button><button style="margin-top:12px;margin-left:8px;" class="ghost" onclick="openKarigarListModal()">📋 Karigar List</button></div><div class="v3-panel"><div class="v3-kicker">Monthly account</div><h3>One month work summary</h3><label style="display:block;font-size:11px;color:var(--muted);font-weight:700">Month<input id="karigarV2Month" type="month" onchange="renderKarigarV2()" style="width:100%;margin-top:4px"></label><div id="karigarV2Monthly" style="margin-top:12px"></div></div></div><div class="v3-panel" style="margin-top:16px"><div class="v3-kicker">Karigar full ledger</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><label style="flex:1;min-width:200px;font-size:11px;color:var(--muted);font-weight:700">Karigar<select id="karigarLedgerPerson" onchange="renderKarigarLedgerV2()" style="width:100%;margin-top:4px"></select></label><button class="ghost" onclick="renderKarigarLedgerV2()">Open ledger</button></div><div id="karigarFullLedger" style="margin-top:12px"></div></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">New job work</div><h3>Give work to karigar</h3><div class="v3-form-grid"><label>Karigar<select id="karigarV2JobPerson"></select></label><label>Expected delivery<input id="karigarV2Due" type="date"></label><label style="grid-column:1/-1">Work details<textarea id="karigarV2Work" placeholder="কি কাজ দেওয়া হলো"></textarea></label><label>Karigar work bill<input id="karigarV2Charge" type="number" min="0" step="0.01" placeholder="Total labor bill"></label><label>Payment now<input id="karigarV2Paid" type="number" min="0" step="0.01" placeholder="Paid now"></label><label style="grid-column:1/-1">Notes<textarea id="karigarV2Notes" placeholder="Design, size, instruction..."></textarea></label></div><div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><div class="v3-kicker">Issue inventory</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><select id="karigarV2Item" style="flex:1;min-width:190px"></select><input id="karigarV2Qty" type="number" min="0.001" step="0.001" value="1" style="width:100px"><button class="ghost" onclick="addKarigarV2Issue()">Add item</button></div><div id="karigarV2IssueQueue"></div></div><button style="margin-top:14px" onclick="createKarigarJobV2()">Create job work</button></div><div class="v3-panel"><div class="v3-kicker">All jobs</div><h3>Running and completed work</h3><div id="karigarV2Jobs"></div></div></div>
+</section>
                 <!-- ITEM DB -->
                 <section id="itemdb" class="card" style="display:none">
                     <div class="section-head">
@@ -4021,6 +4013,12 @@
                         <div class="field-group">
                             <label>Selling Price (auto)</label>
                             <input id="priceInput" type="number" step="0.01" placeholder="Purchase + making + margin" readonly class="price-input" title="Automatically calculated from purchase price, making charge and margin">
+                        </div>
+                        <div class="field-group">
+                            <label>Item Photo (optional)</label>
+                            <input id="itemPhotoInput" type="file" accept="image/*" style="margin-top:4px">
+                            <div id="itemPhotoPreview" style="margin-top:6px"></div>
+                            <div class="note" style="font-size:11px;margin-top:4px">Gallery বা Camera — দুটো থেকেই বেছে নিতে পারবেন (camera force নেই)</div>
                         </div>
                         <div class="field-group" style="grid-column: span 2;">
                             <button id="saveItemBtn" class="action-btn" style="padding:14px 24px;font-size:16px;font-weight:700;width:100%;">💾 Save Item</button>
@@ -4764,6 +4762,58 @@
                         <div id="systemHealth" class="note"></div>
                     </div>
                 </section>
+
+                <!-- BILL / PHOTO IMPORT -->
+                <section id="billimport" class="card" style="display:none">
+                    <div class="section-head">
+                        <div>
+                            <div class="section-title">📷 Bill & Product Import</div>
+                            <div class="note">Purchase bill / quotation photo upload → editable table → Save to inventory or products</div>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px">
+                        <div style="background:var(--border-soft);border-radius:14px;padding:16px">
+                            <div class="section-title" style="font-size:14px">🛒 Purchase bill → Items</div>
+                            <div class="note">Stone / material bill (4×6, Rose, rate, qty). AI read if Gemini key set, else manual fill from photo.</div>
+                            <label>Supplier name<input id="billSupplier" placeholder="e.g. AB Gems / Brojen Mondal"></label>
+                            <label>Bill date<input id="billDate" type="date"></label>
+                            <label>Bill photo / scan<input id="billPhoto" type="file" accept="image/*"></label>
+                            <div id="billPhotoPreview" style="margin-top:8px"></div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+                                <button onclick="readPurchaseBillAI()">🤖 AI Read bill</button>
+                                <button class="ghost" onclick="addEmptyBillRow()">+ Empty row</button>
+                            </div>
+                            <div class="table-scroll" style="margin-top:12px;max-height:320px">
+                                <table id="billRowsTable">
+                                    <thead><tr><th>Category</th><th>Size</th><th>Name/Color</th><th>Qty</th><th>Rate</th><th>Amount</th><th></th></tr></thead>
+                                    <tbody id="billRowsBody"></tbody>
+                                </table>
+                            </div>
+                            <div style="margin-top:8px;font-weight:600" id="billRowsTotal">Total: ₹0</div>
+                            <button style="margin-top:10px" onclick="saveBillRowsToInventory()">💾 Save to Inventory + Purchase</button>
+                        </div>
+                        <div style="background:var(--border-soft);border-radius:14px;padding:16px">
+                            <div class="section-title" style="font-size:14px">📿 Product photo → Product</div>
+                            <div class="note">Necklace set photo / quotation. Default category <b>White</b>. Image cropped & saved.</div>
+                            <label>Product code / name<input id="prodImportName" placeholder="e.g. NK-0055"></label>
+                            <label>Category<input id="prodImportCat" value="White"></label>
+                            <label>Product photo<input id="prodImportPhoto" type="file" accept="image/*"></label>
+                            <div id="prodImportPreview" style="margin-top:8px"></div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+                                <button onclick="readProductCostingAI()">🤖 AI Read costing</button>
+                                <button class="ghost" onclick="addEmptyProdCostRow()">+ Row</button>
+                            </div>
+                            <div class="table-scroll" style="margin-top:12px;max-height:280px">
+                                <table>
+                                    <thead><tr><th>Item</th><th>Size</th><th>Qty</th><th>Price</th><th>Making</th><th></th></tr></thead>
+                                    <tbody id="prodCostBody"></tbody>
+                                </table>
+                            </div>
+                            <div id="prodCostTotal" style="margin-top:8px;font-weight:600">TOTAL: ₹0</div>
+                            <button style="margin-top:10px" onclick="saveImportedProduct()">💾 Save Product</button>
+                        </div>
+                    </div>
+                </section>
                 <section id="settings" class="card" style="display:none">
                     <div class="section-title">⚙ Settings</div>
                     <div class="note">Company profile, appearance, customization, export/import, plugins and more.</div>
@@ -5007,7 +5057,7 @@
                             <input type="checkbox" id="mod_tools" checked onchange="toggleAppModule('tools', this.checked)"> <span>🧰 Tools</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;margin:0;background:var(--border-soft);padding:10px 12px;border-radius:12px;cursor:pointer">
-                            <input type="checkbox" id="mod_studio" checked onchange="toggleAppModule('studio', this.checked)"> <span>🔧 Karigar / Studio</span>
+                            <input type="checkbox" id="mod_studio" checked onchange="toggleAppModule('studio', this.checked)"> <span>🔧 Karigar</span>
                         </label>
                     </div>
                     <div class="actions" style="margin-top:10px">
@@ -5355,24 +5405,32 @@
             <div class="chat-header">
                 <div class="chat-title">
                     <span>✨ AI Assistant</span>
-                    <span class="chat-status"><span class="dot"></span> Online</span>
                 </div>
                 <button onclick="closeModal('aiChatModal')">✕ Close</button>
+            </div>
+            <!-- Type area on TOP — clear large text, auto-grows -->
+            <div class="chat-compose-top" id="chatComposeTop">
+                <textarea id="chatInput" rows="2" placeholder="এখানে লিখুন… Type your question clearly"></textarea>
+                <div id="chatAttachBar" class="chat-attach-bar"></div>
             </div>
             <div class="chat-messages" id="chatMessages">
                 <div class="chat-msg ai">
                     <span class="ai-label">🤖 AI <span class="ai-online-badge online">● active</span></span>
-                    Hello! 👋 I'm your business assistant — I know your products, stock, sales, customers and profit numbers, and I'm always up to date. Ask me anything — profit, stock, a customer's due, a tip, or even "how do I add a category". I'll do my best to understand even unusual queries!
+                    Hello! 👋 I'm your business assistant — products, stock, sales, customers, profit. Ask anything.
                     <span class="timestamp">Just now</span>
                 </div>
             </div>
-            <div class="chat-input-area">
-                <input id="chatInput" placeholder="Type your question…" onkeydown="if(event.key==='Enter') sendChatMessage()">
-                <button onclick="sendChatMessage()">Send</button>
-                <div class="chat-online-toggle" onclick="toggleAISearch()" title="Toggle online search">
+            <!-- Camera / Attach / Online / Send at BOTTOM -->
+            <div class="chat-toolbar-bottom" id="chatToolbarBottom">
+                <button type="button" class="chat-tool-btn" id="chatCamBtn" title="Camera / Gallery">📷</button>
+                <button type="button" class="chat-tool-btn" id="chatAttachBtn" title="Attach file">📎</button>
+                <input type="file" id="chatFileInput" accept="*/*" multiple style="display:none">
+                <input type="file" id="chatCamInput" accept="image/*" style="display:none">
+                <div class="chat-online-toggle" onclick="toggleAISearch()" title="Toggle online">
                     <span class="indicator on" id="chatOnlineIndicator"></span>
                     <span id="chatOnlineLabel">Online</span>
                 </div>
+                <button type="button" class="chat-send-btn" onclick="sendChatMessage()">Send ➤</button>
             </div>
         </div>
     </div>
@@ -6619,6 +6677,7 @@
                 if (id === 'team') renderTeam();
                 if (id === 'crm') renderCRM();
                 if (id === 'ops') renderOps();
+                if (id === 'billimport') { if($('billDate') && !$('billDate').value) $('billDate').value = new Date().toISOString().slice(0,10); }
                 if (id === 'integrations') renderIntegrations();
                 if (id === 'security') renderSecurity();
                 if (id === 'admin') renderAdmin();
@@ -7007,6 +7066,7 @@
                 it.margin = margin;
                 it.margin_mode = itemMarginMode;
                 it.price = price;
+                if (window.itemPhotoDataUrl) { it.photo = window.itemPhotoDataUrl; it.image = window.itemPhotoDataUrl; }
                 if (pricingChanged) {
                     if (!Array.isArray(it.history)) it.history = [];
                     it.history.push({ date: new Date().toISOString(), purchase_price: purchase_price, making:
@@ -7016,10 +7076,12 @@
                 editingItemIndex = -1;
                 showToast('Item updated', 'ok');
             } else {
-                items.push({ category: cat, name: name, size: size, stock: stock, purchase_price: purchase_price,
+                var _newIt = { category: cat, name: name, size: size, stock: stock, purchase_price: purchase_price,
                     making: making, margin: margin, margin_mode: itemMarginMode, price: price, history: [{ date:
                         new Date().toISOString(), purchase_price: purchase_price, making: making, margin: margin,
-                        margin_mode: itemMarginMode, price: price }] });
+                        margin_mode: itemMarginMode, price: price }] };
+                if (window.itemPhotoDataUrl) { _newIt.photo = window.itemPhotoDataUrl; _newIt.image = window.itemPhotoDataUrl; }
+                items.push(_newIt);
                 showToast('Item saved', 'ok');
             }
             syncAllLivePrices(false);
@@ -8874,6 +8936,7 @@
         function addProductToBill(id, qty) {
             var p = products.find(function(x) { return x.id === id; });
             if (!p) return;
+            qty = Math.max(1, parseInt(qty, 10) || 1);
             var selectedVariant = $('billVarSelect').value;
             var varIdx = selectedVariant === '' ? -1 : parseInt(selectedVariant, 10);
             var price = p.finalSell || 0,
@@ -8888,7 +8951,17 @@
                 var s = computeVariationStats(v);
                 varProfit = s.profit;
             }
+            // Negative stock sell blocked
+            var available = Number(p.stock || 0);
+            if (p.variations && varIdx >= 0 && p.variations[varIdx]) {
+                available = Number(p.variations[varIdx].stock != null ? p.variations[varIdx].stock : p.stock || 0);
+            }
             var existing = billQueue.find(function(l) { return l.productId === id && l.varIdx === varIdx; });
+            var already = existing ? Number(existing.qty || 0) : 0;
+            if (already + qty > available) {
+                showToast('❌ Stock নেই: ' + (p.name || '') + ' (available: ' + available + ', bill-এ আছে: ' + already + ')', 'err');
+                return;
+            }
             if (existing) { existing.qty += qty;
                 existing.total = existing.qty * existing.price;
                 existing.profit = existing.qty * varProfit; } else {
@@ -9002,7 +9075,9 @@
             billQueue.forEach(function(item) {
                 var prod = products.find(function(p) { return p.id === item.productId; });
                 if (prod) {
-                    prod.stock = Number(prod.stock || 0) - Number(item.qty || 0);
+                    var next = Number(prod.stock || 0) - Number(item.qty || 0);
+                    if (next < 0) { showToast('❌ Negative stock blocked for ' + (prod.name || ''), 'err'); next = 0; }
+                    prod.stock = Math.max(0, next);
                     if (prod.variations && item.varIdx >= 0 && prod.variations[item.varIdx]) {
                         var v = prod.variations[item.varIdx];
                         v.stock = Math.max(0, Number(v.stock || 0) - Number(item.qty || 0));
@@ -12279,7 +12354,82 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
             }
         })();
     </script>
-    <script>
+    
+
+<script>
+// ===== LIVE v3Data BOOTSTRAP + RELIABLE SAVE (Karigar data persistence) =====
+(function() {
+  var KEY = 'jp_v3_operations_v1';
+
+  function loadV3() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {};
+      return {
+        rates: Object.assign({ gold24: 0, gold22: 0, gold18: 0, silver: 0, updatedAt: '' }, saved.rates || {}),
+        jobs: Array.isArray(saved.jobs) ? saved.jobs : [],
+        karigars: Array.isArray(saved.karigars) ? saved.karigars : [],
+        karigarJobs: Array.isArray(saved.karigarJobs) ? saved.karigarJobs : [],
+        karigarTransactions: Array.isArray(saved.karigarTransactions) ? saved.karigarTransactions : []
+      };
+    } catch (e) {
+      return { rates: { gold24: 0, gold22: 0, gold18: 0, silver: 0, updatedAt: '' }, jobs: [], karigars: [], karigarJobs: [], karigarTransactions: [] };
+    }
+  }
+
+  function saveV3() {
+    try {
+      // Always read from window.v3Data (canonical)
+      var d = window.v3Data || loadV3();
+      // Keep arrays
+      if (!Array.isArray(d.karigars)) d.karigars = [];
+      if (!Array.isArray(d.karigarJobs)) d.karigarJobs = [];
+      if (!Array.isArray(d.karigarTransactions)) d.karigarTransactions = [];
+      if (!Array.isArray(d.jobs)) d.jobs = [];
+      localStorage.setItem(KEY, JSON.stringify(d));
+      window.v3Data = d;
+      return true;
+    } catch (e) {
+      console.warn('v3 save failed', e);
+      return false;
+    }
+  }
+
+  // Init once
+  window.v3Data = loadV3();
+
+  // Global save — ALWAYS overwrite so karigar scripts persist
+  window.saveV3Data = saveV3;
+
+  // Hook saveAll so inventory/main save also persists karigar data
+  function hookSaveAll() {
+    if (typeof window.saveAll !== 'function' || window.saveAll._v3Hooked) return;
+    var _sa = window.saveAll;
+    window.saveAll = function() {
+      var r = _sa.apply(this, arguments);
+      saveV3();
+      return r;
+    };
+    window.saveAll._v3Hooked = true;
+  }
+  hookSaveAll();
+  setTimeout(hookSaveAll, 500);
+  setTimeout(hookSaveAll, 2000);
+
+  console.log('✅ v3Data ready', {
+    karigars: window.v3Data.karigars.length,
+    karigarJobs: window.v3Data.karigarJobs.length,
+    tx: window.v3Data.karigarTransactions.length
+  });
+})();
+// Classic global binding for bare identifier `v3Data` in subsequent scripts
+var v3Data = window.v3Data;
+function saveV3Data() {
+  return window.saveV3Data();
+}
+</script>
+
+
+<script>
         // ===== CUSTOMER LEDGER UNIFICATION + KARIGAR WORK MANAGEMENT =====
         (function() {
             var baseRenderLedgerPersonList = renderLedgerPersonList;
@@ -14558,10 +14708,31 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
         var _prevRenderAccounts = window.renderAccounts;
         window.renderAccounts = function() {
             if (typeof _prevRenderAccounts === 'function') _prevRenderAccounts();
-            var revenue = (sales || []).reduce(function(s, x) { return s + Number(x.grandTotal || 0); }, 0);
-            var paid = (sales || []).reduce(function(s, x) { return s + Number(x.paid || 0); }, 0);
-            var profit = (sales || []).reduce(function(s, x) { return s + Number(x.profit || 0); }, 0);
-            var purch = (purchases || []).reduce(function(s, p) { return s + Number(p.total || p.amount || 0); }, 0);
+            // Always recompute from live arrays (fix period bugs that zero out P&L)
+            var listS = (typeof sales !== 'undefined' && sales) ? sales : [];
+            var listP = (typeof purchases !== 'undefined' && purchases) ? purchases : [];
+            var revenue = listS.reduce(function(s, x) { return s + Number(x.grandTotal || 0); }, 0);
+            var paid = listS.reduce(function(s, x) { return s + Number(x.paid || 0); }, 0);
+            var profit = listS.reduce(function(s, x) { return s + Number(x.profit || 0); }, 0);
+            var purch = listP.reduce(function(s, p) { return s + Number(p.total || p.amount || 0); }, 0);
+            var cogs = Math.max(0, revenue - profit);
+            // Refresh summary cards if period filter left them at 0 but data exists
+            if ($('accountsSummary') && revenue > 0) {
+                $('accountsSummary').innerHTML =
+                    '<div class="dash-stat"><div class="val">' + money(revenue) + '</div><div class="lbl">Revenue</div></div>' +
+                    '<div class="dash-stat"><div class="val">' + money(cogs) + '</div><div class="lbl">Est. COGS</div></div>' +
+                    '<div class="dash-stat"><div class="val">' + money(profit) + '</div><div class="lbl">Gross Profit</div></div>' +
+                    '<div class="dash-stat"><div class="val">' + money(profit) + '</div><div class="lbl">Net (ops)</div></div>';
+            }
+            if ($('pnlTable') && revenue > 0) {
+                $('pnlTable').innerHTML = '<table><tbody>' +
+                    '<tr><td>Sales revenue</td><td class="num">' + money(revenue) + '</td></tr>' +
+                    '<tr><td>Cost of goods (est.)</td><td class="num">' + money(cogs) + '</td></tr>' +
+                    '<tr><td><b>Gross profit</b></td><td class="num"><b>' + money(profit) + '</b></td></tr>' +
+                    '<tr><td>Purchases (cash out)</td><td class="num">' + money(purch) + '</td></tr>' +
+                    '<tr><td><b>Net result (ops)</b></td><td class="num"><b>' + money(profit) + '</b></td></tr>' +
+                    '</tbody></table><div class="note">All-time from sales/purchases. Use period buttons only if dates are set on records.</div>';
+            }
             var stockCost = (items || []).reduce(function(s, it) {
                 return s + (Number(it.purchase_price || 0) + Number(it.making || 0)) * Number(it.stock || 0);
             }, 0);
@@ -16353,7 +16524,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
         var KEY_SESSION = 'jp_app_session_v1';
         var OPTIONAL = ['hrm','accounts','team','crm','ops','integrations','security','admin','reports','tasks','tools','studio'];
         // Free plan default allows core business modules only
-        var FREE_DEFAULT = { hrm: false, accounts: true, team: false, crm: false, ops: true, integrations: false, security: false, admin: false, reports: true, tasks: true, tools: true, studio: true };
+        var FREE_DEFAULT = { hrm: true, accounts: true, team: true, crm: true, ops: true, integrations: false, security: false, admin: false, reports: true, tasks: true, tools: true, studio: true };
 
         function lj(k, f) { try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch (e) { return f; } }
         function sj(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
@@ -16864,6 +17035,2024 @@ Flow in app:
         console.log('✅ Firebase config UI ready');
     })();
     </script>
+
+
+    <script>
+    // ===== BILL IMPORT + PRODUCT PHOTO + AI CHAT IMAGE + DATA FIXES =====
+    (function() {
+        var billRows = [];
+        var prodCostRows = [];
+        var billImageDataUrl = '';
+        var prodImageDataUrl = '';
+
+        function money(v) { return '₹' + Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
+        function uid(p) { return (p || 'X') + '-' + Date.now().toString(36).toUpperCase(); }
+        function escapeH(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+        // Guess category from size text like 4x6, 4*6 oct, emerald
+        function guessCategory(text) {
+            var t = String(text || '').toLowerCase();
+            if (/emerl?d|emerald|এমারেল্ড/.test(t)) return 'Emerald';
+            if (/ruby|red|লাল/.test(t)) return 'Ruby';
+            if (/saph|blue|নীল/.test(t)) return 'Sapphire';
+            if (/ad\b|cz|american/.test(t)) return 'AD';
+            if (/pearl|মোতি/.test(t)) return 'Pearl';
+            if (/round|1\.\d+mm|wire|w\s*-/.test(t)) return 'Round';
+            if (/brass|1gm|metal/.test(t)) return 'Brass';
+            if (/polish/.test(t)) return 'Polish';
+            if (/drop|markis|marquise/.test(t)) return 'Drop';
+            if (/oct|ps|p\+m|4\s*[x\*]\s*6|5\s*[x\*]\s*7|10\s*[x\*]\s*12/.test(t)) return 'Emerald';
+            if (/rose|green|purple|white|wire|wite/.test(t)) return 'Stone';
+            return 'Stone';
+        }
+
+        function fileToDataUrl(file) {
+            return new Promise(function(resolve, reject) {
+                var r = new FileReader();
+                r.onload = function() { resolve(r.result); };
+                r.onerror = reject;
+                r.readAsDataURL(file);
+            });
+        }
+
+        // Compress / crop-ish: max width 800
+        function compressImage(dataUrl, maxW) {
+            return new Promise(function(resolve) {
+                var img = new Image();
+                img.onload = function() {
+                    var w = img.width, h = img.height;
+                    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+                    var c = document.createElement('canvas');
+                    c.width = w; c.height = h;
+                    c.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(c.toDataURL('image/jpeg', 0.72));
+                };
+                img.onerror = function() { resolve(dataUrl); };
+                img.src = dataUrl;
+            });
+        }
+
+        // ---- Purchase bill ----
+        if (document.getElementById('billPhoto')) {
+            document.getElementById('billPhoto').addEventListener('change', async function(e) {
+                var f = e.target.files && e.target.files[0];
+                if (!f) return;
+                var url = await fileToDataUrl(f);
+                billImageDataUrl = await compressImage(url, 1200);
+                var prev = $('billPhotoPreview');
+                if (prev) prev.innerHTML = '<img src="' + billImageDataUrl + '" style="max-width:100%;max-height:180px;border-radius:10px;border:1px solid var(--border-soft)">';
+            });
+        }
+        if (document.getElementById('prodImportPhoto')) {
+            document.getElementById('prodImportPhoto').addEventListener('change', async function(e) {
+                var f = e.target.files && e.target.files[0];
+                if (!f) return;
+                var url = await fileToDataUrl(f);
+                prodImageDataUrl = await compressImage(url, 900);
+                var prev = $('prodImportPreview');
+                if (prev) prev.innerHTML = '<img src="' + prodImageDataUrl + '" style="max-width:100%;max-height:180px;border-radius:10px;object-fit:cover">';
+            });
+        }
+
+        window.addEmptyBillRow = function() {
+            billRows.push({ category: 'Stone', size: '', name: '', qty: 0, rate: 0, amount: 0 });
+            renderBillRows();
+        };
+        window.addEmptyProdCostRow = function() {
+            prodCostRows.push({ item: '', size: '', qty: 0, price: 0, making: 0 });
+            renderProdCostRows();
+        };
+
+        window.renderBillRows = function() {
+            var body = $('billRowsBody');
+            if (!body) return;
+            body.innerHTML = billRows.map(function(r, i) {
+                return '<tr>' +
+                    '<td><input value="' + escapeH(r.category) + '" onchange="billRows[' + i + '].category=this.value" style="width:90px"></td>' +
+                    '<td><input value="' + escapeH(r.size) + '" onchange="billRows[' + i + '].size=this.value" style="width:70px"></td>' +
+                    '<td><input value="' + escapeH(r.name) + '" onchange="billRows[' + i + '].name=this.value" style="width:90px"></td>' +
+                    '<td><input type="number" step="0.001" value="' + r.qty + '" onchange="billRows[' + i + '].qty=parseFloat(this.value)||0;recalcBillRow(' + i + ')" style="width:70px"></td>' +
+                    '<td><input type="number" step="0.0001" value="' + r.rate + '" onchange="billRows[' + i + '].rate=parseFloat(this.value)||0;recalcBillRow(' + i + ')" style="width:70px"></td>' +
+                    '<td class="num" id="billAmt' + i + '">' + money(r.amount) + '</td>' +
+                    '<td><button class="ghost small" onclick="billRows.splice(' + i + ',1);renderBillRows()">✕</button></td></tr>';
+            }).join('');
+            var tot = billRows.reduce(function(s, r) { return s + Number(r.amount || 0); }, 0);
+            if ($('billRowsTotal')) $('billRowsTotal').textContent = 'Total: ' + money(tot);
+        };
+        window.recalcBillRow = function(i) {
+            if (!billRows[i]) return;
+            billRows[i].amount = Math.round(Number(billRows[i].qty || 0) * Number(billRows[i].rate || 0) * 100) / 100;
+            renderBillRows();
+        };
+
+        window.renderProdCostRows = function() {
+            var body = $('prodCostBody');
+            if (!body) return;
+            body.innerHTML = prodCostRows.map(function(r, i) {
+                var line = Number(r.qty || 0) * Number(r.price || 0) + Number(r.making || 0);
+                return '<tr>' +
+                    '<td><input value="' + escapeH(r.item) + '" onchange="prodCostRows[' + i + '].item=this.value" style="width:80px"></td>' +
+                    '<td><input value="' + escapeH(r.size) + '" onchange="prodCostRows[' + i + '].size=this.value" style="width:60px"></td>' +
+                    '<td><input type="number" value="' + r.qty + '" onchange="prodCostRows[' + i + '].qty=parseFloat(this.value)||0;renderProdCostRows()" style="width:60px"></td>' +
+                    '<td><input type="number" step="0.01" value="' + r.price + '" onchange="prodCostRows[' + i + '].price=parseFloat(this.value)||0;renderProdCostRows()" style="width:60px"></td>' +
+                    '<td><input type="number" step="0.01" value="' + r.making + '" onchange="prodCostRows[' + i + '].making=parseFloat(this.value)||0;renderProdCostRows()" style="width:60px"></td>' +
+                    '<td><button class="ghost small" onclick="prodCostRows.splice(' + i + ',1);renderProdCostRows()">✕</button></td></tr>';
+            }).join('');
+            var tot = prodCostRows.reduce(function(s, r) {
+                return s + Number(r.qty || 0) * Number(r.price || 0) + Number(r.making || 0);
+            }, 0);
+            if ($('prodCostTotal')) $('prodCostTotal').textContent = 'TOTAL: ' + money(tot);
+        };
+
+        async function geminiVision(prompt, dataUrl) {
+            var cfg = (typeof getCloudAi === 'function') ? getCloudAi() : {};
+            if (cfg.provider !== 'gemini' || !cfg.key) throw new Error('Set Gemini API key in Settings → Free Cloud AI');
+            var model = cfg.model || 'gemini-2.0-flash';
+            var b64 = String(dataUrl).split(',')[1] || '';
+            var mime = (String(dataUrl).match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
+            var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(cfg.key);
+            var body = {
+                contents: [{ parts: [
+                    { text: prompt },
+                    { inline_data: { mime_type: mime, data: b64 } }
+                ]}],
+                generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
+            };
+            var r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            var data = await r.json();
+            if (!r.ok) throw new Error((data.error && data.error.message) || ('HTTP ' + r.status));
+            var text = data.candidates && data.candidates[0] && data.candidates[0].content &&
+                data.candidates[0].content.parts && data.candidates[0].content.parts.map(function(p) { return p.text; }).join('');
+            if (!text) throw new Error('Empty AI response');
+            return text;
+        }
+
+        function extractJsonArray(text) {
+            var m = String(text).match(/\[[\s\S]*\]/);
+            if (!m) throw new Error('No JSON array in AI response');
+            return JSON.parse(m[0]);
+        }
+
+        window.readPurchaseBillAI = async function() {
+            if (!billImageDataUrl) { showToast('First choose bill photo', 'err'); return; }
+            showToast('Reading bill…', 'info');
+            try {
+                var prompt = 'This is a jewellery/stone purchase bill (India). Extract EVERY line item as JSON array only, no markdown. Fields: category (Emerald/Stone/Round/Brass/etc), size (e.g. 4x6, 1.40MM), name (color or description like Rose/Green/PS/OCT), qty (number), rate (number), amount (number). Example: {"category":"Emerald","size":"4x6","name":"OCT P+M","qty":40,"rate":1.30,"amount":52}. Return pure JSON array.';
+                var text = await geminiVision(prompt, billImageDataUrl);
+                var arr = extractJsonArray(text);
+                billRows = arr.map(function(r) {
+                    var qty = Number(r.qty || r.quantity || 0);
+                    var rate = Number(r.rate || r.price || 0);
+                    var amt = Number(r.amount || (qty * rate) || 0);
+                    var size = String(r.size || '');
+                    var name = String(r.name || r.description || r.particulars || '');
+                    var cat = String(r.category || guessCategory(size + ' ' + name));
+                    return { category: cat, size: size, name: name, qty: qty, rate: rate, amount: amt };
+                });
+                renderBillRows();
+                showToast('Bill read — review table then Save', 'ok');
+            } catch (e) {
+                showToast('AI read failed: ' + e.message + ' — add rows manually', 'err');
+                if (!billRows.length) addEmptyBillRow();
+            }
+        };
+
+        window.saveBillRowsToInventory = function() {
+            if (!billRows.length) { showToast('No rows', 'err'); return; }
+            if (typeof items === 'undefined') { showToast('Inventory not ready', 'err'); return; }
+            var supplier = ($('billSupplier') && $('billSupplier').value.trim()) || 'Supplier';
+            var date = ($('billDate') && $('billDate').value) || new Date().toISOString().slice(0, 10);
+            var total = 0;
+            billRows.forEach(function(r) {
+                var qty = Number(r.qty || 0);
+                var rate = Number(r.rate || 0);
+                var amt = Number(r.amount || qty * rate);
+                total += amt;
+                var name = (r.name || r.size || 'Item').trim();
+                var label = [r.size, name].filter(Boolean).join(' ').trim() || name;
+                // merge if same category+size+name
+                var existing = items.find(function(it) {
+                    return String(it.category || '').toLowerCase() === String(r.category || '').toLowerCase() &&
+                        String(it.size || '').toLowerCase() === String(r.size || '').toLowerCase() &&
+                        String(it.name || '').toLowerCase() === label.toLowerCase();
+                });
+                if (existing) {
+                    existing.stock = Number(existing.stock || 0) + qty;
+                    existing.purchase_price = rate;
+                } else {
+                    items.push({
+                        id: uid('IT'),
+                        category: r.category || 'Stone',
+                        name: label,
+                        size: r.size || '',
+                        stock: qty,
+                        purchase_price: rate,
+                        selling_price: rate,
+                        making: 0,
+                        reorderLevel: 5,
+                        unit: 'pcs'
+                    });
+                }
+            });
+            if (typeof purchases !== 'undefined') {
+                purchases.unshift({
+                    id: uid('PU'),
+                    supplier: supplier,
+                    date: date,
+                    total: total,
+                    amount: total,
+                    notes: 'Imported from bill photo',
+                    lines: billRows.slice()
+                });
+            }
+            if (typeof saveAll === 'function') saveAll(true);
+            if (typeof renderStockTable === 'function') renderStockTable();
+            if (typeof logActivity === 'function') logActivity('Bill import', supplier + ' ' + money(total));
+            showToast('Saved ' + billRows.length + ' lines to inventory · ' + money(total), 'ok');
+        };
+
+        window.readProductCostingAI = async function() {
+            if (!prodImageDataUrl) { showToast('Choose product photo first', 'err'); return; }
+            showToast('Reading product costing…', 'info');
+            try {
+                var prompt = 'Jewellery set photo or quotation. Extract BOM/costing lines as JSON array only. Fields: item (ROUND/EMERALD/BRASS/POLISH/DROP/etc), size, qty, price, making. Pure JSON array.';
+                var text = await geminiVision(prompt, prodImageDataUrl);
+                var arr = extractJsonArray(text);
+                prodCostRows = arr.map(function(r) {
+                    return {
+                        item: String(r.item || r.name || ''),
+                        size: String(r.size || ''),
+                        qty: Number(r.qty || 0),
+                        price: Number(r.price || r.rate || 0),
+                        making: Number(r.making || 0)
+                    };
+                });
+                renderProdCostRows();
+                showToast('Costing read — review & Save Product', 'ok');
+            } catch (e) {
+                showToast('AI failed: ' + e.message + ' — fill rows manually', 'err');
+                if (!prodCostRows.length) addEmptyProdCostRow();
+            }
+        };
+
+        window.saveImportedProduct = function() {
+            var name = ($('prodImportName') && $('prodImportName').value.trim()) || ('PR-' + Date.now().toString(36).toUpperCase());
+            var cat = ($('prodImportCat') && $('prodImportCat').value.trim()) || 'White';
+            if (typeof products === 'undefined') { showToast('Products not ready', 'err'); return; }
+            var total = prodCostRows.reduce(function(s, r) {
+                return s + Number(r.qty || 0) * Number(r.price || 0) + Number(r.making || 0);
+            }, 0);
+            var bom = prodCostRows.map(function(r) {
+                return { name: r.item, size: r.size, qty: r.qty, price: r.price, making: r.making };
+            });
+            products.push({
+                id: uid('PR'),
+                name: name,
+                category: cat,
+                code: name,
+                image: prodImageDataUrl || '',
+                photo: prodImageDataUrl || '',
+                bom: bom,
+                components: bom,
+                price: total,
+                selling_price: total,
+                cost: total,
+                createdAt: new Date().toISOString()
+            });
+            if (typeof saveAll === 'function') saveAll(true);
+            if (typeof renderProducts === 'function') renderProducts();
+            else if (typeof renderProductGrid === 'function') renderProductGrid();
+            showToast('Product saved: ' + name + ' · ' + money(total), 'ok');
+        };
+
+        // ---- AI Chat image upload ----
+        function ensureChatUploadBtn() {
+            var bar = document.querySelector('#aiChatModal .chat-input, #aiChatModal [class*="input"], #aiChatModal');
+            if (!bar || document.getElementById('chatImageInput')) return;
+            var inputArea = $('chatInput') && $('chatInput').parentNode;
+            if (!inputArea) return;
+            var file = document.createElement('input');
+            file.type = 'file';
+            file.accept = 'image/*';
+            file.id = 'chatImageInput';
+            file.style.display = 'none';
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ghost small';
+            btn.textContent = '📷';
+            btn.title = 'Upload image for AI';
+            btn.onclick = function() { file.click(); };
+            file.onchange = async function() {
+                var f = file.files && file.files[0];
+                if (!f) return;
+                var url = await fileToDataUrl(f);
+                url = await compressImage(url, 1000);
+                window._chatImageDataUrl = url;
+                showToast('Image attached — send question', 'ok');
+                if ($('chatInput') && !$('chatInput').value) $('chatInput').value = 'এই বিল/ছবি পড়ে টেবিল বানিয়ে দাও';
+            };
+            inputArea.insertBefore(btn, $('chatInput'));
+            inputArea.appendChild(file);
+        }
+
+        var _send = window.sendChatMessage;
+        window.sendChatMessage = async function() {
+            var input = $('chatInput');
+            var msg = input ? input.value.trim() : '';
+            var img = window._chatImageDataUrl;
+            if (img && msg) {
+                if (input) input.value = '';
+                // show user bubble
+                var box = $('chatMessages') || document.querySelector('#aiChatModal .chat-messages');
+                if (box) {
+                    var u = document.createElement('div');
+                    u.style.cssText = 'margin:8px 0;padding:10px;border-radius:12px;background:rgba(var(--accent-rgb),0.15);text-align:right';
+                    u.innerHTML = escapeH(msg) + '<br><img src="' + img + '" style="max-width:160px;border-radius:8px;margin-top:6px">';
+                    box.appendChild(u);
+                }
+                var thinking = document.createElement('div');
+                thinking.style.cssText = 'margin:8px 0;padding:10px;border-radius:12px;background:var(--border-soft)';
+                thinking.textContent = '⏳ Reading image…';
+                if (box) box.appendChild(thinking);
+                try {
+                    var prompt = msg + '\n\nIf this is a purchase bill, reply with a JSON array of line items (category,size,name,qty,rate,amount) AND a short Bangla/English summary. If product quotation, extract costing lines. If jewellery photo, describe and suggest BOM.';
+                    var text = await geminiVision(prompt, img);
+                    if (thinking.parentNode) thinking.parentNode.removeChild(thinking);
+                    if (box) {
+                        var b = document.createElement('div');
+                        b.style.cssText = 'margin:8px 0;padding:10px;border-radius:12px;background:var(--border-soft);white-space:pre-wrap;font-size:13px';
+                        b.textContent = text;
+                        box.appendChild(b);
+                        box.scrollTop = box.scrollHeight;
+                    }
+                    // try auto-fill bill table if JSON present
+                    try {
+                        var arr = extractJsonArray(text);
+                        if (arr && arr[0] && (arr[0].qty != null || arr[0].rate != null || arr[0].amount != null)) {
+                            billRows = arr.map(function(r) {
+                                var qty = Number(r.qty || 0), rate = Number(r.rate || r.price || 0);
+                                return {
+                                    category: r.category || guessCategory((r.size || '') + ' ' + (r.name || '')),
+                                    size: String(r.size || ''),
+                                    name: String(r.name || r.item || ''),
+                                    qty: qty, rate: rate,
+                                    amount: Number(r.amount || qty * rate)
+                                };
+                            });
+                            renderBillRows();
+                            showToast('Bill rows filled in Import tab — review & save', 'ok');
+                        }
+                    } catch (e2) {}
+                } catch (e) {
+                    if (thinking.parentNode) thinking.textContent = '⚠️ ' + e.message;
+                    showToast(e.message, 'err');
+                }
+                window._chatImageDataUrl = '';
+                return;
+            }
+            if (typeof _send === 'function') return _send.apply(this, arguments);
+        };
+
+        var _open = window.openAIChat;
+        window.openAIChat = function() {
+            if (typeof _open === 'function') _open();
+            setTimeout(ensureChatUploadBtn, 300);
+        };
+
+        // Expose billRows for inline handlers
+        window.billRows = billRows;
+        window.prodCostRows = prodCostRows;
+        // keep arrays in sync when reassigned
+        Object.defineProperty(window, 'billRows', {
+            get: function() { return billRows; },
+            set: function(v) { billRows = v; }
+        });
+        Object.defineProperty(window, 'prodCostRows', {
+            get: function() { return prodCostRows; },
+            set: function(v) { prodCostRows = v; }
+        });
+
+        console.log('✅ Bill import + Product photo + AI image chat loaded');
+    })();
+    </script>
+
+
+<style id="jp-v4-enhance-css">
+/* ===== V4 UX: Accordion settings, grouped nav, polish ===== */
+.settings-accordion { margin-top: 12px; }
+.sa-item { border: 1px solid var(--border-soft); border-radius: 14px; margin-bottom: 10px; overflow: hidden; background: var(--card-solid); }
+.sa-head {
+  display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer;
+  user-select: none; font-weight: 700; font-size: 14.5px; color: var(--text);
+  transition: background .15s ease;
+}
+.sa-head:hover { background: var(--border-soft); }
+.sa-head .sa-icon { font-size: 18px; width: 26px; text-align: center; }
+.sa-head .sa-chevron { margin-left: auto; transition: transform .22s ease; color: var(--muted); font-size: 12px; }
+.sa-item.open .sa-chevron { transform: rotate(180deg); }
+.sa-body { display: none; padding: 4px 16px 16px; border-top: 1px solid var(--border-soft); }
+.sa-item.open .sa-body { display: block; animation: fadeIn .2s ease; }
+.sa-body > .section-title { display: none; } /* hide original titles inside accordion body */
+.sa-body hr { margin: 12px 0; }
+
+/* Grouped mega-nav for desktop tabs */
+.tabs.mega-tabs { gap: 3px; padding: 4px; }
+.tab-group {
+  position: relative; display: inline-flex; align-items: center;
+}
+.tab-group > .tab-group-btn {
+  padding: 10px 18px; border-radius: 12px; background: transparent; border: none;
+  cursor: pointer; color: var(--muted); font-weight: 600; font-size: 13px;
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-family: inherit;
+}
+.tab-group > .tab-group-btn:hover { color: var(--text); background: var(--border-soft); }
+.tab-group.open > .tab-group-btn, .tab-group.has-active > .tab-group-btn {
+  background: var(--card-solid); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.12);
+}
+.tab-group-menu {
+  display: none !important; position: absolute; top: calc(100% + 6px); left: 0; z-index: 200;
+  min-width: 210px; background: var(--card-solid); border: 1px solid var(--border);
+  border-radius: 14px; box-shadow: var(--shadow-lg); padding: 8px; flex-direction: column;
+  gap: 2px;
+}
+.tab-group.open > .tab-group-menu { display: flex !important; }
+.tab-group-menu .tab {
+  width: 100%; justify-content: flex-start; border-radius: 10px; padding: 10px 12px;
+  background: transparent; box-shadow: none; color: var(--text); display: flex !important;
+  margin: 0; white-space: nowrap;
+}
+.tab-group-menu .tab:hover { background: var(--border-soft); }
+.tab-group-menu .tab.active { background: rgba(var(--accent-rgb), 0.12); color: var(--accent); }
+.tab-group-menu .tab[data-locked="1"] { opacity: 0.55; }
+.tab-group-menu .tab .lock-badge {
+  margin-left: auto; font-size: 10px; color: var(--muted); font-weight: 700;
+}
+
+/* Mobile drawer groups */
+.mobile-drawer-group { margin-bottom: 8px; }
+.mobile-drawer-group-title {
+  font-size: 12px; font-weight: 800; letter-spacing: .04em;
+  color: var(--text); padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+  background: var(--border-soft); border-radius: 12px; user-select: none;
+}
+.mobile-drawer-group-title .chev { margin-left: auto; font-size: 11px; transition: transform .2s; color: var(--muted); }
+.mobile-drawer-group.open .mobile-drawer-group-title .chev { transform: rotate(180deg); }
+.mobile-drawer-group-links {
+  display: none; padding: 6px 4px 4px 8px;
+}
+.mobile-drawer-group.open > .mobile-drawer-group-links { display: block !important; }
+.mobile-drawer-group-links .mobile-drawer-link {
+  display: flex !important;
+}
+.mobile-drawer-group-links .mobile-drawer-link[data-locked="1"] { opacity: 0.55; }
+@media(max-width:700px){
+  .tab-group > .tab-group-btn { padding: 8px 10px; font-size: 11px; }
+}
+
+/* Tutorial panel */
+.tutorial-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+.tutorial-card {
+  background: var(--border-soft); border-radius: 14px; padding: 14px 16px; cursor: pointer;
+  border: 1px solid transparent; transition: all .15s ease;
+}
+.tutorial-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.tutorial-card h4 { margin: 0 0 6px; font-size: 14px; }
+.tutorial-card p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+.tutorial-detail {
+  margin-top: 14px; padding: 16px; border-radius: 14px; background: var(--border-soft);
+  white-space: pre-wrap; font-size: 13.5px; line-height: 1.55; display: none;
+}
+
+/* Chat attach any file */
+.chat-attach-bar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.chat-file-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+  background: rgba(var(--accent-rgb), 0.12); color: var(--accent); font-size: 11px; font-weight: 600;
+}
+.chat-file-chip button { background: none; border: 0; color: inherit; cursor: pointer; padding: 0 2px; font-size: 12px; }
+
+/* Sub-nav inside merged sections */
+.inner-subnav {
+  display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 14px; padding: 6px;
+  background: var(--border-soft); border-radius: 12px;
+}
+.inner-subnav button {
+  padding: 8px 14px; font-size: 12.5px; border-radius: 10px; background: transparent; color: var(--muted);
+}
+.inner-subnav button.active { background: var(--card-solid); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+
+/* API simple wizard */
+.api-simple-box {
+  background: linear-gradient(135deg, rgba(var(--accent-rgb),.08), rgba(var(--accent-rgb),.02));
+  border: 1px solid rgba(var(--accent-rgb),.2); border-radius: 14px; padding: 14px 16px; margin: 10px 0;
+}
+.api-simple-box h4 { margin: 0 0 8px; font-size: 14px; }
+.api-steps { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin: 0; padding-left: 18px; }
+
+/* Smooth scroll + reduce motion respect */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+
+<script>
+// ===== JEWELLERY MANAGER PRO — V4 UX PACK =====
+// Tabs merge, Settings accordion, Tutorial, Any-file AI chat, Gallery photo, API simple, polish
+(function() {
+  'use strict';
+
+  function $(id) { return document.getElementById(id); }
+  function qs(s, r) { return (r || document).querySelector(s); }
+  function qsa(s, r) { return Array.from((r || document).querySelectorAll(s)); }
+
+  // ---------- 1) FIX: photo inputs always allow gallery (no capture) ----------
+  function fixPhotoInputs() {
+    qsa('input[type="file"]').forEach(function(inp) {
+      if (inp.hasAttribute('capture')) inp.removeAttribute('capture');
+      // Ensure image inputs don't force camera on mobile
+      var acc = (inp.getAttribute('accept') || '').toLowerCase();
+      if (acc.indexOf('image') >= 0 && !acc.includes('*/*')) {
+        // keep accept as is
+      }
+    });
+  }
+
+  // ---------- 2) SETTINGS → ACCORDION (expand / collapse) ----------
+  var SETTINGS_SECTIONS = [
+    { id: 'company', title: '🏢 Company Profile', match: /Company Profile|Logo|Company Name/i },
+    { id: 'appearance', title: '🎨 Appearance', match: /Appearance|Dark mode|swatch/i },
+    { id: 'customize', title: '✨ Customization', match: /Customization|Show More Limit|Variation Colour|Cost\/Sell/i },
+    { id: 'modules', title: '📦 Modules & Plan', match: /Module|Free\/Pro|plan|সব চালু/i },
+    { id: 'history', title: '🕘 History & Retention', match: /History & Data|Keep history/i },
+    { id: 'ai', title: '🤖 AI & Cloud', match: /AI Online|Cloud AI|Free Cloud AI|Gemini|Groq/i },
+    { id: 'cloud', title: '☁️ Cloud Sync', match: /Google Drive|Firebase|Account & Business/i },
+    { id: 'security', title: '🔐 Security & Users', match: /Admin|Staff|Password|App lock|planFree_/i },
+    { id: 'data', title: '💾 Data Import / Export', match: /Import|Export|Backup|Restore|Excel/i },
+    { id: 'plugins', title: '🧩 Plugins', match: /Plugins|plugin/i },
+    { id: 'api', title: '🔌 API (Simple)', match: /Integrations|API Key|API Vault/i },
+    { id: 'tutorial', title: '📚 Tutorial — How to run the app', match: /Tutorial/i }
+  ];
+
+  function buildSettingsAccordion() {
+    var sec = $('settings');
+    if (!sec || sec.dataset.accordionDone) return;
+    sec.dataset.accordionDone = '1';
+
+    // Collect existing children (except first title/note)
+    var children = Array.from(sec.children);
+    // Keep top title
+    var topTitle = children.find(function(el) { return el.classList && el.classList.contains('section-title') && !el.style.fontSize; });
+    var topNote = children.find(function(el) { return el.classList && el.classList.contains('note'); });
+
+    // Build groups by scanning hr-separated blocks
+    var blocks = [];
+    var current = { title: 'General', nodes: [] };
+    children.forEach(function(el) {
+      if (el === topTitle || el === topNote) return;
+      if (el.tagName === 'HR') {
+        if (current.nodes.length) blocks.push(current);
+        current = { title: 'Section', nodes: [] };
+        return;
+      }
+      if (el.classList && el.classList.contains('section-title') && current.nodes.length === 0) {
+        current.title = el.textContent.trim().replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\s*/u, '') || current.title;
+        current.iconEl = el;
+      }
+      current.nodes.push(el);
+    });
+    if (current.nodes.length) blocks.push(current);
+
+    // Create accordion container
+    var acc = document.createElement('div');
+    acc.className = 'settings-accordion';
+    acc.id = 'settingsAccordion';
+
+    // Always add Tutorial first as dedicated card
+    var tutItem = document.createElement('div');
+    tutItem.className = 'sa-item open';
+    tutItem.innerHTML =
+      '<div class="sa-head" onclick="this.parentNode.classList.toggle(\'open\')">' +
+      '<span class="sa-icon">📚</span><span>Tutorial — পুরো অ্যাপ কীভাবে চালাবেন</span><span class="sa-chevron">▼</span></div>' +
+      '<div class="sa-body" id="tutorialBody"></div>';
+    acc.appendChild(tutItem);
+    fillTutorial(tutItem.querySelector('#tutorialBody'));
+
+    blocks.forEach(function(b, idx) {
+      var item = document.createElement('div');
+      item.className = 'sa-item' + (idx === 0 ? '' : '');
+      var titleText = (b.iconEl ? b.iconEl.textContent.trim() : b.title) || ('Section ' + (idx + 1));
+      var head = document.createElement('div');
+      head.className = 'sa-head';
+      head.onclick = function() { item.classList.toggle('open'); };
+      head.innerHTML = '<span class="sa-icon">▸</span><span></span><span class="sa-chevron">▼</span>';
+      head.children[1].textContent = titleText;
+      var body = document.createElement('div');
+      body.className = 'sa-body';
+      b.nodes.forEach(function(n) {
+        // hide duplicate section-title at top of body
+        if (n.classList && n.classList.contains('section-title') && n === b.iconEl) {
+          n.style.display = 'none';
+        }
+        body.appendChild(n);
+      });
+      item.appendChild(head);
+      item.appendChild(body);
+      acc.appendChild(item);
+    });
+
+    // Clear section and rebuild
+    sec.innerHTML = '';
+    if (topTitle) sec.appendChild(topTitle);
+    var note = document.createElement('div');
+    note.className = 'note';
+    note.textContent = 'প্রতিটি অপশনে ক্লিক করলে খুলবে / বন্ধ হবে। Tutorial দিয়ে শুরু করুন।';
+    sec.appendChild(note);
+    sec.appendChild(acc);
+
+    // Expand/collapse all controls
+    var ctrl = document.createElement('div');
+    ctrl.style.cssText = 'display:flex;gap:8px;margin:10px 0;flex-wrap:wrap';
+    ctrl.innerHTML = '<button class="ghost small" type="button">সব খুলুন</button><button class="ghost small" type="button">সব বন্ধ</button>';
+    ctrl.children[0].onclick = function() { qsa('.sa-item', acc).forEach(function(i) { i.classList.add('open'); }); };
+    ctrl.children[1].onclick = function() { qsa('.sa-item', acc).forEach(function(i) { i.classList.remove('open'); }); };
+    sec.insertBefore(ctrl, acc);
+  }
+
+  function fillTutorial(box) {
+    if (!box) return;
+    box.innerHTML =
+      '<div class="tutorial-grid">' +
+      card('🚀 শুরু', 'প্রথমবার Admin পাসওয়ার্ড সেট → Unlock → Company Profile পূরণ করুন।', 'start') +
+      card('📦 Items / Inventory', 'Add Items ট্যাবে ক্যাটাগরি + নাম + সাইজ + দাম → Save. Inventory তে স্টক দেখুন।', 'items') +
+      card('💍 Products / Builder', 'Builder এ নাম + ফটো + Variation (ক্যাটাগরি) + items যোগ → প্রাইস অটো।', 'products') +
+      card('💳 Billing', 'Billing এ প্রোডাক্ট/আইটেম যোগ → কাস্টমার → বিল প্রিন্ট/সেভ। Ledger এ বকেয়া।', 'billing') +
+      card('📷 Import', 'বিল ফটো আপলোড → AI পড়ে টেবিল → Inventory তে সেভ (Gemini key লাগে)।', 'import') +
+      card('🤖 AI Chat', 'হেডারে ✨ AI Chat — প্রশ্ন লিখুন বা যেকোনো ফাইল (ইমেজ/PDF/Excel) অ্যাটাচ করুন।', 'ai') +
+      card('☁️ Cloud / Firebase', 'Settings → Firebase config সেভ → Reload → Account তৈরি/Join।', 'cloud') +
+      card('🔐 Security', 'Admin পাসওয়ার্ড, Staff ইউজার, Free/Pro মডিউল কন্ট্রোল Settings এ।', 'security') +
+      card('🔌 API সহজ', 'Integrations বা Settings এ API key বসান। নিচে Simple wizard দেখুন।', 'api') +
+      card('🧰 Tools / Ops', 'Tasks, Reports, Karigar/Studio, Returns, Stock transfer — প্রয়োজনমতো মডিউল চালু করুন।', 'tools') +
+      '</div><div class="tutorial-detail" id="tutorialDetail"></div>' +
+      '<div class="api-simple-box" style="margin-top:16px">' +
+      '<h4>🔌 API সিস্টেম সহজভাবে</h4>' +
+      '<ol class="api-steps">' +
+      '<li><b>Cloud AI:</b> Settings → Free Cloud AI → Provider (Gemini/Groq) + API Key → Test।</li>' +
+      '<li><b>Firebase:</b> Project settings থেকে config কপি → Settings এ পেস্ট → Save → Reload।</li>' +
+      '<li><b>Google Drive:</b> Connect বাটন → Google login → Sync Now।</li>' +
+      '<li><b>Backend (optional):</b> zip এর backend ফোল্ডারে <code>npm i && node server.js</code> — একই মেশিনে offline API।</li>' +
+      '<li>কোনো key ব্রাউজারে থাকে — শেয়ারড ডিভাইসে সাবধান। Pro তে server proxy ব্যবহার করুন।</li>' +
+      '</ol></div>';
+
+    function card(t, p, key) {
+      return '<div class="tutorial-card" data-tut="' + key + '"><h4>' + t + '</h4><p>' + p + '</p></div>';
+    }
+
+    var details = {
+      start: '১) অ্যাপ খুললে First-time Admin Setup — নাম + পাসওয়ার্ড (মিন ৪)।\n২) Settings → Company Profile — লোগো, নাম, ফোন, ঠিকানা।\n৩) Appearance — Dark mode / অ্যাকসেন্ট কালার।\n৪) Modules — কোন ট্যাব Free প্ল্যানে থাকবে সেট করুন।\n৫) Dashboard থেকে কাজ শুরু।',
+      items: 'Add Items:\n• Category সিলেক্ট বা New\n• Name, Size, Stock, Purchase, Making, Margin\n• Sell price অটো ক্যালকুলেট\n• Save → Inventory ট্যাবে লিস্ট\n\nEdit: টেবিলের Actions থেকে। Photo চাইলে Builder/Import ব্যবহার করুন (item-level photo optional)।',
+      products: 'Builder:\n১) Product name + photos (গ্যালারি/ক্যামেরা — দুটোই)\n২) Variation = category (White, Gold…)\n৩) প্রতি variation এ database item বা manual item যোগ\n৪) Other charges / discount\n৫) Save — Products গ্যালারিতে দেখাবে\nQuick View থেকে Sell / Quotation / Edit।',
+      billing: 'Billing ট্যাব:\n• কাস্টমার নাম/ফোন\n• প্রোডাক্ট বা আইটেম লাইন যোগ\n• ডিসকাউন্ট, অ্যাডভান্স, পেমেন্ট মোড\n• Save / Print\nLedger: বকেয়া ও walk-in হিসাব।',
+      import: 'Import ট্যাব:\n• Bill photo সিলেক্ট (গ্যালারি OK)\n• Read with AI (Gemini key Settings এ)\n• টেবিল রিভিউ → Save to inventory\nProduct photo → costing lines → Save Product।',
+      ai: 'AI Chat:\n• ✨ বাটন বা Dashboard AI\n• টেক্সট প্রশ্ন (বাংলা/ইংরেজি)\n• 📎 দিয়ে image, PDF, Excel, CSV, TXT — যেকোনো ফাইল\n• Cloud AI key থাকলে স্মার্ট উত্তর; না থাকলে local agent।',
+      cloud: 'Firebase:\n১) console.firebase.google.com → Web app config\n২) Settings এ apiKey, projectId… সেভ\n৩) Reload\n৪) Create business / Sign in / Share code\nDrive: Connect → auto backup JSON।',
+      security: '• Admin password change\n• Staff users (শুধু unlock, limited tabs)\n• Plan Free/Pro + module checkboxes\n• Lock Now বাটন\nপ্রতিবার রিলোডে পাসওয়ার্ড লাগে (সিকিউর)।',
+      api: 'সহজ পথ:\n1. শুধু AI চাই → Gemini free key\n2. মাল্টি-ডিভাইস → Firebase\n3. ব্যাকআপ → Drive বা JSON export\n4. নিজস্ব সার্ভার → backend/server.js\nKeys কখনো পাবলিক রিপোতে দিবেন না।',
+      tools: 'Reports = সেলস/প্রফিট\nTasks = টু-ডু\nOps = transfer, return, BOM\nStudio/Karigar = জব কার্ড ও রেট\nHRM/Accounts/CRM = প্রয়োজনে Settings → Modules এ চালু।'
+    };
+
+    box.querySelectorAll('.tutorial-card').forEach(function(c) {
+      c.onclick = function() {
+        var d = $('tutorialDetail');
+        if (!d) return;
+        d.style.display = 'block';
+        d.textContent = details[c.getAttribute('data-tut')] || '';
+        d.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      };
+    });
+  }
+
+  // ---------- 3) TAB MERGE — group related tabs ----------
+  var TAB_GROUPS = [
+    { id: 'core', label: '🏠 Home', tabs: ['dashboard'] },
+    { id: 'catalog', label: '💍 Catalog', tabs: ['products', 'builder', 'categories'] },
+    { id: 'stock', label: '📦 Stock', tabs: ['itemdb', 'itemslist', 'inventory', 'billimport'] },
+    { id: 'sales', label: '💳 Sales', tabs: ['billing', 'ledger', 'reports'] },
+    { id: 'work', label: '🧰 Work', tabs: ['tasks', 'tools', 'ops', 'studio'] },
+    { id: 'biz', label: '🏢 Business', tabs: ['hrm', 'accounts', 'team', 'crm'] },
+    { id: 'system', label: '⚙ System', tabs: ['settings', 'integrations', 'security', 'admin'] }
+  ];
+
+  function isTabLocked(id) {
+    try {
+      var sec = (typeof getAppSecurity === 'function') ? getAppSecurity() : { plan: 'free', freeModules: {} };
+      var plan = sec.plan || 'free';
+      if (plan === 'pro') return false;
+      var FREE = { hrm: true, accounts: true, team: true, crm: true, ops: true, integrations: false, security: false, admin: false, reports: true, tasks: true, tools: true, studio: true };
+      var freeMap = Object.assign({}, FREE, sec.freeModules || {});
+      var mods = {};
+      try { mods = JSON.parse(localStorage.getItem('jp_modules_enabled_v1') || '{}'); } catch (e) {}
+      if (mods[id] === false) return true;
+      if (OPTIONAL_IDS.indexOf(id) >= 0 && freeMap[id] === false) return true;
+      return false;
+    } catch (e) { return false; }
+  }
+  var OPTIONAL_IDS = ['hrm','accounts','team','crm','ops','integrations','security','admin','reports','tasks','tools','studio'];
+
+  function collectTabs(selector) {
+    var map = {};
+    qsa(selector).forEach(function(t) {
+      if (t.dataset && t.dataset.tab) map[t.dataset.tab] = t;
+    });
+    return map;
+  }
+
+  function rebuildDesktopTabs() {
+    var tabsBar = qs('.tabs');
+    if (!tabsBar) return;
+
+    // Collect from current bar AND any leftover group menus
+    var existing = collectTabs('.tabs .tab[data-tab], .tab-group-menu .tab[data-tab]');
+    // Also scan whole document for orphaned studio tabs
+    qsa('.tab[data-tab]').forEach(function(t) {
+      if (t.dataset.tab && !existing[t.dataset.tab]) existing[t.dataset.tab] = t;
+    });
+
+    if (!Object.keys(existing).length) return;
+
+    tabsBar.innerHTML = '';
+    tabsBar.classList.add('mega-tabs');
+    tabsBar.dataset.grouped = '1';
+
+    TAB_GROUPS.forEach(function(g) {
+      var available = g.tabs.filter(function(id) { return !!existing[id]; });
+      if (!available.length) return;
+
+      if (available.length === 1 && g.id === 'core') {
+        var only = existing[available[0]];
+        only.style.display = '';
+        only.className = 'tab' + (only.classList.contains('active') ? ' active' : '');
+        tabsBar.appendChild(only);
+        return;
+      }
+
+      var wrap = document.createElement('div');
+      wrap.className = 'tab-group';
+      wrap.dataset.group = g.id;
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tab-group-btn';
+      btn.innerHTML = g.label + ' <span style="font-size:10px;opacity:.7">▾</span>';
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var wasOpen = wrap.classList.contains('open');
+        qsa('.tab-group').forEach(function(x) { x.classList.remove('open'); });
+        if (!wasOpen) wrap.classList.add('open');
+      });
+
+      var menu = document.createElement('div');
+      menu.className = 'tab-group-menu';
+
+      available.forEach(function(id) {
+        var t = existing[id];
+        t.style.display = 'flex';
+        t.style.visibility = 'visible';
+        t.removeAttribute('hidden');
+        var locked = isTabLocked(id);
+        t.dataset.locked = locked ? '1' : '0';
+        // strip old lock badge
+        var oldBadge = t.querySelector('.lock-badge');
+        if (oldBadge) oldBadge.remove();
+        if (locked) {
+          var b = document.createElement('span');
+          b.className = 'lock-badge';
+          b.textContent = '🔒';
+          t.appendChild(b);
+        }
+        t.className = 'tab' + (t.classList.contains('active') ? ' active' : '');
+        if (t.classList.contains('active')) wrap.classList.add('has-active');
+        menu.appendChild(t);
+      });
+
+      wrap.appendChild(btn);
+      wrap.appendChild(menu);
+      tabsBar.appendChild(wrap);
+    });
+
+    // leftovers
+    Object.keys(existing).forEach(function(id) {
+      var used = TAB_GROUPS.some(function(g) { return g.tabs.indexOf(id) >= 0; });
+      if (!used && existing[id].parentNode !== tabsBar) {
+        existing[id].style.display = '';
+        tabsBar.appendChild(existing[id]);
+      }
+    });
+
+    if (!window._jpGroupClickBound) {
+      window._jpGroupClickBound = true;
+      document.addEventListener('click', function(e) {
+        if (e.target.closest && e.target.closest('.tab-group')) return;
+        qsa('.tab-group').forEach(function(x) { x.classList.remove('open'); });
+      });
+    }
+  }
+
+  function rebuildMobileDrawer() {
+    var links = qs('.mobile-drawer-links');
+    if (!links) return;
+
+    var map = collectTabs('.mobile-drawer-links .mobile-drawer-link[data-tab], .mobile-drawer-group-links .mobile-drawer-link[data-tab]');
+    qsa('.mobile-drawer-link[data-tab]').forEach(function(l) {
+      if (l.dataset.tab && !map[l.dataset.tab]) map[l.dataset.tab] = l;
+    });
+    if (!Object.keys(map).length) return;
+
+    links.innerHTML = '';
+    links.dataset.grouped = '1';
+
+    TAB_GROUPS.forEach(function(g) {
+      var available = g.tabs.filter(function(id) { return !!map[id]; });
+      if (!available.length) return;
+
+      var group = document.createElement('div');
+      // Work & Business start open so user sees items
+      group.className = 'mobile-drawer-group' + (g.id === 'work' || g.id === 'biz' || g.id === 'core' || g.id === 'catalog' || g.id === 'stock' || g.id === 'sales' ? ' open' : ' open');
+      group.dataset.group = g.id;
+
+      var title = document.createElement('div');
+      title.className = 'mobile-drawer-group-title';
+      title.innerHTML = '<span>' + g.label + '</span><span class="chev">▼</span>';
+      title.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        group.classList.toggle('open');
+      });
+
+      var body = document.createElement('div');
+      body.className = 'mobile-drawer-group-links';
+
+      available.forEach(function(id) {
+        var l = map[id];
+        l.style.display = 'flex';
+        l.style.visibility = 'visible';
+        l.removeAttribute('hidden');
+        var locked = isTabLocked(id);
+        l.dataset.locked = locked ? '1' : '0';
+        body.appendChild(l);
+      });
+
+      group.appendChild(title);
+      group.appendChild(body);
+      links.appendChild(group);
+    });
+
+    Object.keys(map).forEach(function(id) {
+      var used = TAB_GROUPS.some(function(g) { return g.tabs.indexOf(id) >= 0; });
+      if (!used) {
+        map[id].style.display = 'flex';
+        links.appendChild(map[id]);
+      }
+    });
+  }
+
+  // After plan gating, re-show grouped items (plan still blocks on click for locked)
+  function softShowGroupedTabs() {
+    qsa('.tab-group-menu .tab, .mobile-drawer-group-links .mobile-drawer-link').forEach(function(el) {
+      el.style.display = el.classList.contains('tab') ? 'flex' : 'flex';
+      el.style.visibility = 'visible';
+    });
+  }
+
+  // Patch applyRoleAndPlan so it doesn't empty groups
+  function patchPlanGating() {
+    var orig = window.applyRoleAndPlan;
+    if (typeof orig !== 'function' || orig._jpPatched) return;
+    window.applyRoleAndPlan = function() {
+      orig.apply(this, arguments);
+      // Force grouped submenu items visible again
+      softShowGroupedTabs();
+      // Refresh lock badges
+      qsa('.tab-group-menu .tab, .mobile-drawer-group-links .mobile-drawer-link').forEach(function(el) {
+        var id = el.dataset.tab;
+        if (!id) return;
+        var locked = isTabLocked(id);
+        el.dataset.locked = locked ? '1' : '0';
+      });
+    };
+    window.applyRoleAndPlan._jpPatched = true;
+  }
+
+  // ---------- 4) AI CHAT — any file upload ----------
+  function enhanceAIChatFiles() {
+    function ensure() {
+      var inputArea = $('chatInput') && $('chatInput').parentNode;
+      if (!inputArea) return;
+      var old = $('chatImageInput');
+      if (old) {
+        old.accept = '*/*';
+        old.removeAttribute('capture');
+      }
+      if ($('chatAnyFileInput')) return;
+
+      var file = document.createElement('input');
+      file.type = 'file';
+      file.accept = '*/*';
+      file.id = 'chatAnyFileInput';
+      file.multiple = true;
+      file.style.display = 'none';
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ghost small';
+      btn.textContent = '📎';
+      btn.title = 'Upload any file (image, PDF, Excel, text…)';
+      btn.onclick = function() { file.click(); };
+
+      var chipBar = document.createElement('div');
+      chipBar.className = 'chat-attach-bar';
+      chipBar.id = 'chatAttachBar';
+
+      window._chatFiles = window._chatFiles || [];
+
+      file.onchange = function() {
+        var files = Array.from(file.files || []);
+        files.forEach(function(f) {
+          var reader = new FileReader();
+          var isImg = /^image\//.test(f.type);
+          reader.onload = function() {
+            window._chatFiles.push({ name: f.name, type: f.type || 'application/octet-stream', size: f.size, dataUrl: reader.result, isImage: isImg });
+            renderChips();
+            showToast((isImg ? 'Image' : 'File') + ' attached: ' + f.name, 'ok');
+          };
+          if (isImg || f.size < 2 * 1024 * 1024) reader.readAsDataURL(f);
+          else {
+            // large non-image: read as text if possible
+            if (/text|json|csv|xml|javascript|markdown/i.test(f.type) || /\.(txt|csv|json|md|log)$/i.test(f.name)) {
+              reader.readAsText(f);
+              reader.onload = function() {
+                window._chatFiles.push({ name: f.name, type: f.type, size: f.size, text: reader.result, isImage: false });
+                renderChips();
+                showToast('File attached: ' + f.name, 'ok');
+              };
+            } else {
+              reader.readAsDataURL(f);
+            }
+          }
+        });
+        file.value = '';
+      };
+
+      function renderChips() {
+        chipBar.innerHTML = window._chatFiles.map(function(f, i) {
+          return '<span class="chat-file-chip">' + (f.isImage ? '🖼' : '📄') + ' ' + (f.name || 'file').slice(0, 18) +
+            ' <button type="button" onclick="window._chatFiles.splice(' + i + ',1);document.getElementById(\'chatAttachBar\').dispatchEvent(new Event(\'refresh\'))">✕</button></span>';
+        }).join('');
+      }
+      chipBar.addEventListener('refresh', renderChips);
+
+      inputArea.insertBefore(btn, $('chatInput'));
+      inputArea.appendChild(file);
+      if ($('chatInput') && $('chatInput').parentNode) {
+        $('chatInput').parentNode.appendChild(chipBar);
+      }
+    }
+
+    var _open = window.openAIChat;
+    window.openAIChat = function() {
+      if (typeof _open === 'function') _open.apply(this, arguments);
+      setTimeout(ensure, 200);
+      setTimeout(ensure, 600);
+    };
+
+    var _send = window.sendChatMessage;
+    window.sendChatMessage = async function() {
+      var files = window._chatFiles || [];
+      var input = $('chatInput');
+      var msg = input ? input.value.trim() : '';
+      if (files.length && (msg || files.length)) {
+        if (input) input.value = '';
+        var box = $('chatMessages') || qs('#aiChatModal .chat-messages');
+        if (box) {
+          var u = document.createElement('div');
+          u.style.cssText = 'margin:8px 0;padding:10px;border-radius:12px;background:rgba(var(--accent-rgb),0.15);text-align:right;font-size:13px;white-space:pre-wrap';
+          var html = (msg ? escapeHtmlSafe(msg) + '<br>' : '');
+          files.forEach(function(f) {
+            if (f.isImage && f.dataUrl) html += '<img src="' + f.dataUrl + '" style="max-width:160px;border-radius:8px;margin-top:6px;display:block">';
+            else html += '<div style="margin-top:4px;font-size:11px">📎 ' + escapeHtmlSafe(f.name) + ' (' + Math.round((f.size || 0) / 1024) + ' KB)</div>';
+          });
+          u.innerHTML = html;
+          box.appendChild(u);
+        }
+        var thinking = document.createElement('div');
+        thinking.style.cssText = 'margin:8px 0;padding:10px;border-radius:12px;background:var(--border-soft);font-size:13px';
+        thinking.textContent = '⏳ Processing attachment(s)…';
+        if (box) box.appendChild(thinking);
+
+        try {
+          var reply = '';
+          var imgFile = files.find(function(f) { return f.isImage && f.dataUrl; });
+          var textParts = files.filter(function(f) { return f.text; }).map(function(f) {
+            return '--- FILE: ' + f.name + ' ---\n' + String(f.text).slice(0, 12000);
+          }).join('\n\n');
+
+          var prompt = (msg || 'Analyze the attached file(s). If bill/quotation, extract line items as JSON array. Summarize in Bangla and English.') +
+            (textParts ? '\n\nAttached text content:\n' + textParts : '');
+
+          if (imgFile && typeof geminiVision === 'function') {
+            // geminiVision may not be global — try cloud path
+            reply = await callVisionOrText(prompt, imgFile.dataUrl);
+          } else if (imgFile) {
+            reply = await callVisionOrText(prompt, imgFile.dataUrl);
+          } else {
+            // text / other via normal cloud AI
+            if (typeof callCloudAI === 'function') {
+              try { reply = await callCloudAI(prompt); }
+              catch (e) { reply = (typeof aiBusinessAgentReply === 'function') ? aiBusinessAgentReply(prompt) : e.message; }
+            } else if (typeof aiBusinessAgentReply === 'function') {
+              reply = aiBusinessAgentReply(prompt);
+            } else {
+              reply = 'File received (' + files.map(function(f) { return f.name; }).join(', ') + '). Set Cloud AI key in Settings for analysis.';
+            }
+          }
+
+          if (thinking.parentNode) thinking.parentNode.removeChild(thinking);
+          if (box) {
+            var b = document.createElement('div');
+            b.style.cssText = 'margin:8px 0;padding:10px;border-radius:12px;background:var(--border-soft);white-space:pre-wrap;font-size:13px';
+            b.textContent = reply;
+            box.appendChild(b);
+            box.scrollTop = box.scrollHeight;
+          }
+        } catch (e) {
+          if (thinking.parentNode) thinking.textContent = '⚠️ ' + e.message;
+        }
+        window._chatFiles = [];
+        var bar = $('chatAttachBar');
+        if (bar) bar.innerHTML = '';
+        return;
+      }
+      if (typeof _send === 'function') return _send.apply(this, arguments);
+    };
+  }
+
+  function escapeHtmlSafe(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  }
+
+  async function callVisionOrText(prompt, dataUrl) {
+    try {
+      if (typeof getCloudAi === 'function') {
+        var cfg = getCloudAi();
+        if (cfg.provider === 'gemini' && cfg.key && dataUrl) {
+          var model = cfg.model || 'gemini-2.0-flash';
+          var b64 = String(dataUrl).split(',')[1] || '';
+          var mime = (String(dataUrl).match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
+          var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(cfg.key);
+          var body = {
+            contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: mime, data: b64 } }] }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
+          };
+          var r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          var data = await r.json();
+          if (!r.ok) throw new Error((data.error && data.error.message) || ('HTTP ' + r.status));
+          var text = data.candidates && data.candidates[0] && data.candidates[0].content &&
+            data.candidates[0].content.parts && data.candidates[0].content.parts.map(function(p) { return p.text; }).join('');
+          if (text) return text;
+        }
+      }
+      if (typeof callCloudAI === 'function') return await callCloudAI(prompt);
+      if (typeof aiBusinessAgentReply === 'function') return aiBusinessAgentReply(prompt);
+      return 'Attachment noted. Configure Gemini/Groq in Settings → Free Cloud AI for full analysis.';
+    } catch (e) {
+      if (typeof aiBusinessAgentReply === 'function') return '⚠️ ' + e.message + '\n\n' + aiBusinessAgentReply(prompt);
+      return '⚠️ ' + e.message;
+    }
+  }
+
+  // ---------- 5) Inner sub-nav for Inventory cluster (optional smooth) ----------
+  function addInventorySubnav() {
+    var pairs = [
+      { section: 'itemdb', links: [['itemdb', 'Add Items'], ['itemslist', 'Inventory'], ['categories', 'Categories'], ['inventory', 'Supplier'], ['billimport', 'Import']] },
+      { section: 'itemslist', links: [['itemdb', 'Add Items'], ['itemslist', 'Inventory'], ['categories', 'Categories'], ['inventory', 'Supplier'], ['billimport', 'Import']] },
+      { section: 'products', links: [['products', 'Gallery'], ['builder', 'Builder'], ['categories', 'Categories']] },
+      { section: 'builder', links: [['products', 'Gallery'], ['builder', 'Builder'], ['categories', 'Categories']] },
+      { section: 'billing', links: [['billing', 'Billing'], ['ledger', 'Ledger'], ['reports', 'Reports']] },
+      { section: 'ledger', links: [['billing', 'Billing'], ['ledger', 'Ledger'], ['reports', 'Reports']] }
+    ];
+    pairs.forEach(function(p) {
+      var sec = $(p.section);
+      if (!sec || sec.querySelector('.inner-subnav')) return;
+      var nav = document.createElement('div');
+      nav.className = 'inner-subnav';
+      p.links.forEach(function(L) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = L[1];
+        if (L[0] === p.section) b.classList.add('active');
+        b.onclick = function() {
+          if (typeof switchTab === 'function') switchTab(L[0]);
+          else {
+            var t = qs('.tab[data-tab="' + L[0] + '"]');
+            if (t) t.click();
+          }
+        };
+        nav.appendChild(b);
+      });
+      var head = sec.querySelector('.section-head') || sec.firstElementChild;
+      if (head && head.nextSibling) sec.insertBefore(nav, head.nextSibling);
+      else sec.insertBefore(nav, sec.firstChild);
+    });
+  }
+
+  // ---------- 6) Hook switchTab to rebuild accordion when settings opens ----------
+  function hookSwitchTab() {
+    var _sw = window.switchTab;
+    if (typeof _sw !== 'function') return;
+    window.switchTab = function(id) {
+      _sw.apply(this, arguments);
+      if (id === 'settings') {
+        setTimeout(function() {
+          buildSettingsAccordion();
+          if (typeof renderSecurityPanel === 'function') renderSecurityPanel();
+          if (typeof loadCloudAiForm === 'function') loadCloudAiForm();
+        }, 50);
+      }
+      // highlight group menus
+      setTimeout(function() {
+        qsa('.tab-group-menu .tab').forEach(function(t) {
+          t.classList.toggle('active', t.dataset.tab === id);
+        });
+      }, 30);
+    };
+  }
+
+  // ---------- 7) Extra customization: density + compact mode ----------
+  function addExtraCustomize() {
+    // Inject into settings when accordion builds — also store preference
+    try {
+      var dens = localStorage.getItem('jp_ui_density') || 'comfortable';
+      document.body.dataset.density = dens;
+      if (dens === 'compact') {
+        var st = document.createElement('style');
+        st.id = 'jp-compact-css';
+        st.textContent = 'body[data-density="compact"] .card{padding:14px}body[data-density="compact"] .tab{padding:7px 12px;font-size:12px}body[data-density="compact"] label{margin-top:8px}';
+        document.head.appendChild(st);
+      }
+    } catch (e) {}
+  }
+
+  window.setUIDensity = function(mode) {
+    localStorage.setItem('jp_ui_density', mode);
+    document.body.dataset.density = mode;
+    showToast('UI density: ' + mode, 'ok');
+    location.reload();
+  };
+
+  // ---------- Boot ----------
+  function boot() {
+    fixPhotoInputs();
+    enhanceAIChatFiles();
+    addExtraCustomize();
+    hookSwitchTab();
+    patchPlanGating();
+    function runGroups() {
+      try {
+        rebuildDesktopTabs();
+        rebuildMobileDrawer();
+        softShowGroupedTabs();
+        patchPlanGating();
+        if (typeof applyRoleAndPlan === 'function') {
+          // re-apply then soft-show so groups stay populated
+          applyRoleAndPlan();
+          softShowGroupedTabs();
+        }
+      } catch (err) { console.warn('group rebuild', err); }
+    }
+    setTimeout(function() { runGroups(); addInventorySubnav(); }, 300);
+    setTimeout(runGroups, 900);
+    setTimeout(runGroups, 1800);
+    setTimeout(runGroups, 3200);
+    if ($('settings') && $('settings').style.display !== 'none') {
+      buildSettingsAccordion();
+    }
+    console.log('✅ V4 UX pack fixed: Work/Business groups always show items');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(boot, 200); });
+  } else {
+    setTimeout(boot, 200);
+  }
+})();
+</script>
+
+<script>
+(function(){
+  var itemPhotoDataUrl = '';
+  function bindItemPhoto() {
+    var inp = document.getElementById('itemPhotoInput');
+    if (!inp || inp.dataset.bound) return;
+    inp.dataset.bound = '1';
+    inp.removeAttribute('capture');
+    inp.accept = 'image/*';
+    inp.addEventListener('change', function(e) {
+      var f = e.target.files && e.target.files[0];
+      if (!f) return;
+      var r = new FileReader();
+      r.onload = function() {
+        itemPhotoDataUrl = r.result;
+        window.itemPhotoDataUrl = itemPhotoDataUrl;
+        var prev = document.getElementById('itemPhotoPreview');
+        if (prev) prev.innerHTML = '<img src="'+itemPhotoDataUrl+'" style="max-width:120px;max-height:120px;border-radius:10px;object-fit:cover;border:1px solid var(--border-soft)">';
+      };
+      r.readAsDataURL(f);
+    });
+  }
+  var tries = 0;
+  var t = setInterval(function() {
+    bindItemPhoto();
+    tries++;
+    if (tries > 25) clearInterval(t);
+  }, 400);
+  Object.defineProperty(window, 'itemPhotoDataUrl', {
+    get: function() { return itemPhotoDataUrl; },
+    set: function(v) { itemPhotoDataUrl = v || ''; },
+    configurable: true
+  });
+  var _clear = window.clearItemForm;
+  if (typeof _clear === 'function') {
+    window.clearItemForm = function() {
+      _clear.apply(this, arguments);
+      itemPhotoDataUrl = '';
+      var prev = document.getElementById('itemPhotoPreview');
+      if (prev) prev.innerHTML = '';
+      var inp = document.getElementById('itemPhotoInput');
+      if (inp) inp.value = '';
+    };
+  }
+  console.log('✅ Item photo gallery upload ready');
+})();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style id="karigar-mobile-fix">
+/* Karigar mobile + layout fixes */
+#studio { max-width: 100%; overflow-x: hidden; }
+#studio .v3-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#studio .v3-panel { min-width: 0; }
+#studio .v3-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#studio .v3-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+#studio .v3-summary > div { padding: 10px; border-radius: 12px; text-align: center; }
+#studio .v3-summary b { display: block; font-size: 18px; }
+#studio .v3-summary span { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+@media (max-width: 800px) {
+  #studio .v3-grid { grid-template-columns: 1fr !important; }
+  #studio .v3-form-grid { grid-template-columns: 1fr !important; }
+  #studio .v3-summary { grid-template-columns: 1fr 1fr 1fr !important; }
+  #studio .v3-panel { width: 100%; }
+  /* Ensure Karigar tab visible in mobile drawer */
+  .mobile-drawer-link[data-tab="studio"] { display: flex !important; }
+  .tab[data-tab="studio"] { display: flex !important; }
+}
+</style>
+
+
+<script>
+// ===== KARIGAR MODULE: mobile + save + dashboard + no Studio label =====
+(function() {
+  var FULL_HTML = "<div class=\"section-head\"><div><div class=\"section-title\">Karigar Work & Full Ledger</div><div class=\"note\">\u0995\u09be\u099c, \u0995\u09be\u09b0\u09bf\u0997\u09b0\u09c7\u09b0 \u0995\u09be\u099b\u09c7 \u09a5\u09be\u0995\u09be inventory, bill, purchase \u0993 payment \u098f\u0995 \u099c\u09be\u09df\u0997\u09be\u09df\u0964</div></div><div class=\"code-chip\">Karigar Ledger</div></div><div class=\"v3-summary\" id=\"karigarV2Summary\"></div><div class=\"v3-grid\"><div class=\"v3-panel\"><div class=\"v3-kicker\">Karigar register</div><h3>New karigar</h3><div class=\"v3-form-grid\"><label>Name<input id=\"karigarV2Name\" placeholder=\"Karigar name\"></label><label>Phone<input id=\"karigarV2Phone\" placeholder=\"Phone\"></label><label style=\"grid-column:1/-1\">Specialty<input id=\"karigarV2Specialty\" placeholder=\"Polish, casting, setting, repair...\"></label></div><button style=\"margin-top:12px\" onclick=\"saveKarigarV2()\">Add karigar</button><button style=\"margin-top:12px;margin-left:8px;\" class=\"ghost\" onclick=\"openKarigarListModal()\">\ud83d\udccb Karigar List</button></div><div class=\"v3-panel\"><div class=\"v3-kicker\">Monthly account</div><h3>One month work summary</h3><label style=\"display:block;font-size:11px;color:var(--muted);font-weight:700\">Month<input id=\"karigarV2Month\" type=\"month\" onchange=\"renderKarigarV2()\" style=\"width:100%;margin-top:4px\"></label><div id=\"karigarV2Monthly\" style=\"margin-top:12px\"></div></div></div><div class=\"v3-panel\" style=\"margin-top:16px\"><div class=\"v3-kicker\">Karigar full ledger</div><div style=\"display:flex;gap:8px;flex-wrap:wrap;align-items:end\"><label style=\"flex:1;min-width:200px;font-size:11px;color:var(--muted);font-weight:700\">Karigar<select id=\"karigarLedgerPerson\" onchange=\"renderKarigarLedgerV2()\" style=\"width:100%;margin-top:4px\"></select></label><button class=\"ghost\" onclick=\"renderKarigarLedgerV2()\">Open ledger</button></div><div id=\"karigarFullLedger\" style=\"margin-top:12px\"></div></div><div class=\"v3-grid\"><div class=\"v3-panel\"><div class=\"v3-kicker\">New job work</div><h3>Give work to karigar</h3><div class=\"v3-form-grid\"><label>Karigar<select id=\"karigarV2JobPerson\"></select></label><label>Expected delivery<input id=\"karigarV2Due\" type=\"date\"></label><label style=\"grid-column:1/-1\">Work details<textarea id=\"karigarV2Work\" placeholder=\"\u0995\u09bf \u0995\u09be\u099c \u09a6\u09c7\u0993\u09df\u09be \u09b9\u09b2\u09cb\"></textarea></label><label>Karigar work bill<input id=\"karigarV2Charge\" type=\"number\" min=\"0\" step=\"0.01\" placeholder=\"Total labor bill\"></label><label>Payment now<input id=\"karigarV2Paid\" type=\"number\" min=\"0\" step=\"0.01\" placeholder=\"Paid now\"></label><label style=\"grid-column:1/-1\">Notes<textarea id=\"karigarV2Notes\" placeholder=\"Design, size, instruction...\"></textarea></label></div><div style=\"margin-top:12px;padding-top:12px;border-top:1px solid var(--border)\"><div class=\"v3-kicker\">Issue inventory</div><div style=\"display:flex;gap:8px;flex-wrap:wrap;margin-top:8px\"><select id=\"karigarV2Item\" style=\"flex:1;min-width:190px\"></select><input id=\"karigarV2Qty\" type=\"number\" min=\"0.001\" step=\"0.001\" value=\"1\" style=\"width:100px\"><button class=\"ghost\" onclick=\"addKarigarV2Issue()\">Add item</button></div><div id=\"karigarV2IssueQueue\"></div></div><button style=\"margin-top:14px\" onclick=\"createKarigarJobV2()\">Create job work</button></div><div class=\"v3-panel\"><div class=\"v3-kicker\">All jobs</div><h3>Running and completed work</h3><div id=\"karigarV2Jobs\"></div></div></div>";
+
+  function ensureV3() {
+    if (!window.v3Data) {
+      try {
+        window.v3Data = JSON.parse(localStorage.getItem('jp_v3_operations_v1') || '{}') || {};
+      } catch (e) { window.v3Data = {}; }
+    }
+    ['karigars', 'karigarJobs', 'karigarTransactions', 'jobs'].forEach(function(k) {
+      if (!Array.isArray(window.v3Data[k])) window.v3Data[k] = [];
+    });
+    try { v3Data = window.v3Data; } catch (e) {}
+  }
+
+  function persistKarigar() {
+    ensureV3();
+    if (typeof window.saveV3Data === 'function') window.saveV3Data();
+    else {
+      try { localStorage.setItem('jp_v3_operations_v1', JSON.stringify(window.v3Data)); } catch (e) {}
+    }
+    // also try main save
+    try { if (typeof window.saveAll === 'function') window.saveAll(true); } catch (e) {}
+  }
+
+  function inject() {
+    ensureV3();
+    var studio = document.getElementById('studio');
+    if (!studio) return null;
+    if (studio.innerHTML.indexOf('Karigar Work & Full Ledger') < 0 ||
+        !document.getElementById('karigarV2Name') ||
+        !document.getElementById('karigarV2JobPerson')) {
+      studio.innerHTML = FULL_HTML;
+    }
+    return studio;
+  }
+
+  function showKarigar() {
+    ensureV3();
+    var studio = inject();
+    if (!studio) return;
+    document.querySelectorAll('section.card').forEach(function(s) { s.style.display = 'none'; });
+    studio.style.display = 'block';
+    studio.style.visibility = 'visible';
+    document.querySelectorAll('.tab, .mobile-drawer-link').forEach(function(t) {
+      t.classList.toggle('active', t.getAttribute('data-tab') === 'studio');
+    });
+    setTimeout(function() {
+      try {
+        if (typeof window.renderKarigarV3 === 'function') window.renderKarigarV3();
+        else if (typeof window.renderKarigarV2 === 'function') window.renderKarigarV2();
+      } catch (err) { console.warn(err); }
+      updateDashboardKarigar();
+    }, 40);
+  }
+
+  window.openKarigarStudio = showKarigar;
+  window.openV3Studio = showKarigar;
+
+  // Capture clicks (desktop tabs + mobile drawer)
+  document.addEventListener('click', function(e) {
+    var el = e.target && e.target.closest && e.target.closest('[data-tab="studio"]');
+    if (!el) return;
+    e.preventDefault();
+    e.stopPropagation();
+    showKarigar();
+    if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+  }, true);
+
+  // Rename every "Studio" label to Karigar across UI
+  function stripStudioLabels() {
+    document.querySelectorAll('[data-tab="studio"]').forEach(function(n) {
+      n.innerHTML = '<span class="tab-icon">🔧</span> Karigar';
+      n.style.display = '';
+      n.style.visibility = 'visible';
+      n.style.opacity = '1';
+    });
+    // any leftover text nodes / buttons
+    document.querySelectorAll('button, .tab, .mobile-drawer-link, .section-title, .code-chip').forEach(function(n) {
+      if (!n.childElementCount && /\bStudio\b/i.test(n.textContent || '') && /karigar|v3|operations/i.test(n.textContent || '')) {
+        n.textContent = (n.textContent || '').replace(/V3\s*/ig, '').replace(/Studio/ig, 'Karigar');
+      }
+    });
+  }
+
+  // Force mobile drawer to include Karigar in Work group
+  function ensureMobileKarigar() {
+    var drawer = document.querySelector('.mobile-drawer-links');
+    if (!drawer) return;
+    var existing = drawer.querySelector('[data-tab="studio"]');
+    if (!existing) {
+      // find Work group links container or append
+      var workGroup = null;
+      drawer.querySelectorAll('.mobile-drawer-group').forEach(function(g) {
+        var t = (g.textContent || '');
+        if (/Work|কাজ|🧰/i.test(t)) workGroup = g;
+      });
+      var host = workGroup
+        ? (workGroup.querySelector('.mobile-drawer-group-links') || workGroup)
+        : drawer;
+      var l = document.createElement('div');
+      l.className = 'mobile-drawer-link';
+      l.setAttribute('data-tab', 'studio');
+      l.innerHTML = '<span class="tab-icon">🔧</span> Karigar';
+      host.appendChild(l);
+    }
+    // unhide
+    drawer.querySelectorAll('[data-tab="studio"]').forEach(function(n) {
+      n.style.display = 'flex';
+      n.style.visibility = 'visible';
+      n.classList.remove('hidden');
+    });
+    // ensure parent group not display:none
+    drawer.querySelectorAll('.mobile-drawer-group').forEach(function(g) {
+      if (g.querySelector('[data-tab="studio"]')) {
+        g.style.display = '';
+        g.classList.add('open');
+        var links = g.querySelector('.mobile-drawer-group-links');
+        if (links) { links.style.display = 'block'; links.style.maxHeight = 'none'; }
+      }
+    });
+  }
+
+  // Dashboard numbers from karigar data
+  function updateDashboardKarigar() {
+    ensureV3();
+    var jobs = window.v3Data.karigarJobs || [];
+    var pending = jobs.filter(function(j) { return j.status !== 'completed'; }).length;
+    var done = jobs.filter(function(j) { return j.status === 'completed'; }).length;
+    var el = document.getElementById('dPendingJobs');
+    if (el) el.textContent = String(pending);
+    // optional extra stats if present
+    var d2 = document.getElementById('dKarigarDone');
+    if (d2) d2.textContent = String(done);
+    var d3 = document.getElementById('dKarigarTotal');
+    if (d3) d3.textContent = String(jobs.length);
+  }
+
+  // Wrap save functions so every karigar mutation persists
+  function wrapSaves() {
+    ['saveKarigarV2', 'createKarigarJobV2', 'addJobPaymentV2', 'addKarigarDirectPayment',
+     'addKarigarPurchase', 'completeKarigarJobV2', 'setKarigarJobRunning', 'receiveKarigarReturnsV2',
+     'deleteKarigar', 'editKarigar', 'saveKarigar'].forEach(function(name) {
+      if (typeof window[name] !== 'function' || window[name]._persistWrap) return;
+      var orig = window[name];
+      window[name] = function() {
+        var r = orig.apply(this, arguments);
+        setTimeout(function() {
+          persistKarigar();
+          updateDashboardKarigar();
+        }, 20);
+        return r;
+      };
+      window[name]._persistWrap = true;
+    });
+    // render after save
+    if (typeof window.saveAndRender === 'function' && !window.saveAndRender._p) {
+      var _sr = window.saveAndRender;
+      window.saveAndRender = function() {
+        var r = _sr.apply(this, arguments);
+        persistKarigar();
+        updateDashboardKarigar();
+        return r;
+      };
+      window.saveAndRender._p = true;
+    }
+  }
+
+  function boot() {
+    ensureV3();
+    inject();
+    stripStudioLabels();
+    ensureMobileKarigar();
+    updateDashboardKarigar();
+    wrapSaves();
+    window.openKarigarStudio = showKarigar;
+    window.openV3Studio = showKarigar;
+    var n = 0;
+    var t = setInterval(function() {
+      stripStudioLabels();
+      ensureMobileKarigar();
+      wrapSaves();
+      updateDashboardKarigar();
+      window.openKarigarStudio = showKarigar;
+      window.openV3Studio = showKarigar;
+      n++;
+      if (n > 60) clearInterval(t);
+    }, 300);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+
+  setTimeout(function() {
+    var _sw = window.switchTab;
+    if (typeof _sw === 'function' && !_sw._kg3) {
+      window.switchTab = function(id) {
+        if (id === 'studio') { showKarigar(); return; }
+        var r = _sw.apply(this, arguments);
+        if (id === 'dashboard') setTimeout(updateDashboardKarigar, 50);
+        return r;
+      };
+      window.switchTab._kg3 = true;
+    }
+    // When mobile drawer opens, ensure karigar visible
+    if (typeof window.openMobileDrawer === 'function' && !window.openMobileDrawer._kg) {
+      var _od = window.openMobileDrawer;
+      window.openMobileDrawer = function() {
+        var r = _od.apply(this, arguments);
+        setTimeout(ensureMobileKarigar, 50);
+        return r;
+      };
+      window.openMobileDrawer._kg = true;
+    }
+  }, 600);
+
+  // kill buildKarigarWorkspace overwriting Full Ledger
+  setTimeout(function() {
+    window.buildKarigarWorkspace = function() { inject(); };
+  }, 1000);
+
+  console.log('✅ Karigar module: mobile + persist + dashboard linked');
+})();
+</script>
+
+
+
+
+<style id="karigar-nav-force">
+/* Always show Karigar entry points */
+.tab[data-tab="studio"],
+.mobile-drawer-link[data-tab="studio"],
+.tab-group-menu .tab[data-tab="studio"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.mobile-drawer-group:has([data-tab="studio"]) {
+  display: block !important;
+}
+.mobile-drawer-group:has([data-tab="studio"]) .mobile-drawer-group-links {
+  display: block !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+/* Fallback without :has */
+.mobile-drawer-links [data-tab="studio"] {
+  display: flex !important;
+}
+</style>
+
+
+<script>
+// Force Karigar (studio) module always available — linked to dashboard & mobile
+(function() {
+  function forceShow() {
+    document.querySelectorAll('[data-tab="studio"]').forEach(function(n) {
+      n.style.setProperty('display', 'flex', 'important');
+      n.style.visibility = 'visible';
+      n.removeAttribute('hidden');
+      n.classList.remove('hidden', 'tab-locked', 'plan-locked');
+    });
+  }
+  function hookPlan() {
+    if (typeof window.applyRoleAndPlan === 'function' && !window.applyRoleAndPlan._kgForce) {
+      var _ap = window.applyRoleAndPlan;
+      window.applyRoleAndPlan = function() {
+        var r = _ap.apply(this, arguments);
+        forceShow();
+        return r;
+      };
+      window.applyRoleAndPlan._kgForce = true;
+    }
+  }
+  forceShow();
+  hookPlan();
+  setInterval(function() { forceShow(); hookPlan(); }, 2000);
+})();
+</script>
+
+
+<style id="jp-final-mobile-forms">
+/* ===== FINAL: Large readable form fields on mobile (like clear chat text) ===== */
+@media (max-width: 900px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  select,
+  textarea {
+    font-size: 16px !important;          /* prevents iOS zoom, readable */
+    min-height: 48px !important;
+    padding: 12px 14px !important;
+    line-height: 1.35 !important;
+    border-radius: 12px !important;
+  }
+  textarea {
+    min-height: 110px !important;
+  }
+  label {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    margin-bottom: 4px !important;
+    display: block;
+  }
+  .v3-form-grid,
+  .itemdb-form-grid,
+  .manual-item-grid,
+  .manual-fields-grid,
+  .inv-full-form {
+    gap: 14px !important;
+  }
+  button, .btn, .tab {
+    min-height: 44px;
+    font-size: 15px !important;
+    padding: 10px 16px !important;
+  }
+  .ghost.small, button.small {
+    min-height: 40px;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+  select {
+    background-size: 16px;
+  }
+  /* Karigar panels stack cleanly */
+  #studio .v3-grid { grid-template-columns: 1fr !important; }
+  #studio .v3-form-grid { grid-template-columns: 1fr !important; }
+}
+/* Desktop also slightly roomier inputs */
+@media (min-width: 901px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  select, textarea {
+    min-height: 42px;
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+}
+</style>
+<script>
+// ===== FINAL GUARDS: no negative stock sell + form UX =====
+(function() {
+  // Hard block any product.stock write below 0 via helpers
+  window.clampStock = function(n) {
+    n = Number(n || 0);
+    return n < 0 ? 0 : n;
+  };
+
+  // Wrap addProductToBill if not already stock-checked
+  function wrapAdd() {
+    if (typeof window.addProductToBill !== 'function' || window.addProductToBill._negGuard) return;
+    var _a = window.addProductToBill;
+    window.addProductToBill = function(id, qty) {
+      try {
+        var p = (typeof products !== 'undefined' ? products : []).find(function(x) { return x.id === id; });
+        if (p) {
+          qty = Math.max(1, parseInt(qty, 10) || 1);
+          var available = Number(p.stock || 0);
+          var already = 0;
+          if (typeof billQueue !== 'undefined' && billQueue) {
+            billQueue.forEach(function(l) {
+              if (l.productId === id) already += Number(l.qty || 0);
+            });
+          }
+          if (already + qty > available) {
+            if (typeof showToast === 'function') {
+              showToast('❌ Stock নেই — "' + (p.name || id) + '" available: ' + available, 'err');
+            }
+            return;
+          }
+        }
+      } catch (e) {}
+      return _a.apply(this, arguments);
+    };
+    window.addProductToBill._negGuard = true;
+  }
+
+  function wrapInvoice() {
+    if (typeof window.generateSalesInvoice !== 'function' || window.generateSalesInvoice._negGuard) return;
+    var _g = window.generateSalesInvoice;
+    window.generateSalesInvoice = function() {
+      try {
+        if (typeof billQueue !== 'undefined' && billQueue && billQueue.length) {
+          var need = {};
+          billQueue.forEach(function(line) {
+            need[line.productId] = (need[line.productId] || 0) + Number(line.qty || 0);
+          });
+          for (var pid in need) {
+            if (!need.hasOwnProperty(pid)) continue;
+            var product = (products || []).find(function(p) { return String(p.id) === String(pid); });
+            if (!product) continue;
+            if (Number(product.stock || 0) < need[pid]) {
+              if (typeof showToast === 'function') {
+                showToast('❌ Insufficient stock: ' + product.name + ' (have ' + Number(product.stock || 0) + ', need ' + need[pid] + ')', 'err');
+              }
+              return;
+            }
+          }
+        }
+      } catch (e) {}
+      return _g.apply(this, arguments);
+    };
+    window.generateSalesInvoice._negGuard = true;
+  }
+
+  function wrapAdjust() {
+    if (typeof window.adjustStock !== 'function' || window.adjustStock._negGuard) return;
+    var _ad = window.adjustStock;
+    window.adjustStock = function(idx, delta) {
+      try {
+        if (typeof items !== 'undefined' && items[idx]) {
+          var next = Number(items[idx].stock || 0) + Number(delta || 0);
+          if (next < 0) {
+            if (typeof showToast === 'function') showToast('❌ Stock cannot be negative', 'err');
+            return;
+          }
+        }
+      } catch (e) {}
+      return _ad.apply(this, arguments);
+    };
+    window.adjustStock._negGuard = true;
+  }
+
+  function boot() {
+    wrapAdd();
+    wrapInvoice();
+    wrapAdjust();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 800);
+  setTimeout(boot, 2500);
+  console.log('✅ Final: no negative stock + large mobile fields');
+})();
+</script>
+
+
+<style id="jp-chat-ux-v2">
+/* AI Chat UX v2: compose TOP, tools BOTTOM, clear typing, auto-grow */
+.chat-modal .modal-box {
+  max-width: min(560px, 96vw) !important;
+  height: min(88vh, 640px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+.chat-modal .chat-compose-top {
+  flex-shrink: 0;
+  padding: 12px 14px 8px;
+  background: var(--card-solid);
+  border-bottom: 1px solid var(--border-soft);
+}
+.chat-modal #chatInput {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 52px;
+  max-height: 60%; /* JS also clamps to 60% of modal */
+  padding: 14px 16px !important;
+  font-size: 16px !important;
+  line-height: 1.45 !important;
+  font-weight: 500;
+  color: var(--text) !important;
+  background: #fff !important;
+  border: 2px solid rgba(var(--accent-rgb), 0.35) !important;
+  border-radius: 14px !important;
+  resize: none;
+  overflow-y: auto;
+  -webkit-text-fill-color: var(--text);
+  opacity: 1 !important;
+}
+body.dark .chat-modal #chatInput {
+  background: #1c1c1e !important;
+  color: #f5f5f7 !important;
+  -webkit-text-fill-color: #f5f5f7;
+  border-color: rgba(255,255,255,0.2) !important;
+}
+.chat-modal #chatInput::placeholder {
+  color: var(--muted) !important;
+  opacity: 0.85;
+  font-weight: 400;
+}
+.chat-modal .chat-messages {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+.chat-modal .chat-toolbar-bottom {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 14px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--card-solid);
+  border-radius: 0 0 24px 24px;
+  flex-wrap: wrap;
+}
+.chat-modal .chat-tool-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  background: var(--border-soft);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.chat-modal .chat-send-btn {
+  margin-left: auto;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-on);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+.chat-modal .chat-online-toggle {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--border-soft);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+.chat-modal .chat-attach-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.chat-modal .chat-attach-bar span {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(var(--accent-rgb), 0.12);
+}
+@media (max-width: 600px) {
+  .chat-modal .modal-box {
+    height: 92vh !important;
+    max-height: 92vh !important;
+    border-radius: 16px !important;
+  }
+  .chat-modal #chatInput {
+    font-size: 16px !important;
+    min-height: 56px;
+  }
+}
+</style>
+
+
+<script>
+// ===== AI Chat UX v2: top compose, bottom tools, auto-grow to 60% =====
+(function() {
+  function $(id) { return document.getElementById(id); }
+
+  function autoGrowChatInput() {
+    var ta = $('chatInput');
+    var box = document.querySelector('#aiChatModal .modal-box');
+    if (!ta) return;
+    ta.style.height = 'auto';
+    var maxPx = 160;
+    if (box) {
+      maxPx = Math.floor(box.clientHeight * 0.60); // up to 60% of chat box
+    }
+    var next = Math.min(ta.scrollHeight, maxPx);
+    next = Math.max(next, 52);
+    ta.style.height = next + 'px';
+    ta.style.overflowY = ta.scrollHeight > maxPx ? 'auto' : 'hidden';
+  }
+
+  function wireChatUX() {
+    var ta = $('chatInput');
+    if (!ta) return;
+    // Convert leftover input to behave; already textarea in new HTML
+    if (ta.tagName === 'INPUT') {
+      var n = document.createElement('textarea');
+      n.id = 'chatInput';
+      n.rows = 2;
+      n.placeholder = ta.placeholder || 'Type your question…';
+      n.value = ta.value || '';
+      ta.parentNode.replaceChild(n, ta);
+      ta = n;
+    }
+    if (!ta.dataset.growBound) {
+      ta.dataset.growBound = '1';
+      ta.addEventListener('input', autoGrowChatInput);
+      ta.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          if (typeof sendChatMessage === 'function') sendChatMessage();
+        }
+      });
+    }
+    autoGrowChatInput();
+
+    var camBtn = $('chatCamBtn');
+    var attBtn = $('chatAttachBtn');
+    var camIn = $('chatCamInput');
+    var fileIn = $('chatFileInput');
+    if (camBtn && camIn && !camBtn.dataset.bound) {
+      camBtn.dataset.bound = '1';
+      camBtn.onclick = function() { camIn.click(); };
+      camIn.onchange = function() {
+        handleFiles(camIn.files);
+        camIn.value = '';
+      };
+    }
+    if (attBtn && fileIn && !attBtn.dataset.bound) {
+      attBtn.dataset.bound = '1';
+      attBtn.onclick = function() { fileIn.click(); };
+      fileIn.onchange = function() {
+        handleFiles(fileIn.files);
+        fileIn.value = '';
+      };
+    }
+  }
+
+  function handleFiles(fileList) {
+    if (!fileList || !fileList.length) return;
+    window._chatFiles = window._chatFiles || [];
+    Array.prototype.forEach.call(fileList, function(f) {
+      var isImg = /^image\//.test(f.type || '');
+      var reader = new FileReader();
+      if (isImg) {
+        reader.onload = function() {
+          window._chatFiles.push({ name: f.name, type: f.type, size: f.size, dataUrl: reader.result, isImage: true });
+          renderChips();
+          if (typeof showToast === 'function') showToast('Image: ' + f.name, 'ok');
+        };
+        reader.readAsDataURL(f);
+      } else if (/^text\//.test(f.type || '') || /\.(txt|csv|json|md)$/i.test(f.name)) {
+        reader.onload = function() {
+          window._chatFiles.push({ name: f.name, type: f.type, size: f.size, text: reader.result, isImage: false });
+          renderChips();
+          if (typeof showToast === 'function') showToast('File: ' + f.name, 'ok');
+        };
+        reader.readAsText(f);
+      } else {
+        reader.onload = function() {
+          window._chatFiles.push({ name: f.name, type: f.type, size: f.size, dataUrl: reader.result, isImage: false });
+          renderChips();
+          if (typeof showToast === 'function') showToast('Attached: ' + f.name, 'ok');
+        };
+        reader.readAsDataURL(f);
+      }
+    });
+  }
+
+  function renderChips() {
+    var bar = $('chatAttachBar');
+    if (!bar) return;
+    var files = window._chatFiles || [];
+    bar.innerHTML = files.map(function(f, i) {
+      return '<span>' + (f.isImage ? '🖼️ ' : '📎 ') + (f.name || 'file') +
+        ' <button type="button" data-i="' + i + '">✕</button></span>';
+    }).join('');
+    bar.querySelectorAll('button[data-i]').forEach(function(btn) {
+      btn.onclick = function() {
+        window._chatFiles.splice(Number(btn.getAttribute('data-i')), 1);
+        renderChips();
+      };
+    });
+  }
+
+  // After send, reset height
+  var _send = window.sendChatMessage;
+  if (typeof _send === 'function' && !_send._growReset) {
+    window.sendChatMessage = function() {
+      var r = _send.apply(this, arguments);
+      setTimeout(function() {
+        var ta = $('chatInput');
+        if (ta) { ta.style.height = '52px'; }
+        autoGrowChatInput();
+      }, 50);
+      return r;
+    };
+    window.sendChatMessage._growReset = true;
+  }
+
+  function boot() {
+    wireChatUX();
+    // When modal opens
+    var obs = new MutationObserver(function() {
+      var m = $('aiChatModal');
+      if (m && m.style.display !== 'none' && getComputedStyle(m).display !== 'none') {
+        wireChatUX();
+        setTimeout(autoGrowChatInput, 100);
+      }
+    });
+    var m = $('aiChatModal');
+    if (m) obs.observe(m, { attributes: true, attributeFilter: ['style', 'class'] });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 600);
+  setTimeout(boot, 2000);
+
+  // Hook openAIChat
+  setTimeout(function() {
+    if (typeof window.openAIChat === 'function' && !window.openAIChat._ux2) {
+      var _o = window.openAIChat;
+      window.openAIChat = function() {
+        var r = _o.apply(this, arguments);
+        setTimeout(function() { wireChatUX(); autoGrowChatInput(); var t=$('chatInput'); if(t) t.focus(); }, 80);
+        return r;
+      };
+      window.openAIChat._ux2 = true;
+    }
+  }, 900);
+
+  console.log('✅ AI Chat UX v2: compose top, tools bottom, auto-grow 60%');
+})();
+</script>
 
 </body>
 </html>
