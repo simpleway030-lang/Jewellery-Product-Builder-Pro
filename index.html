@@ -5115,7 +5115,8 @@
                     <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
                         <button id="gdriveLoginBtn" onclick="loginGoogleDrive()" class="ghost">🔑 Connect to Google Drive</button>
                         <button id="gdriveLogoutBtn" onclick="logoutGoogleDrive()" class="ghost" style="display:none;">🔒 Disconnect</button>
-                        <button id="gdriveSyncBtn" onclick="manualSyncToDrive()" class="ghost" style="display:none;">🔄 Sync Now</button>
+                        <button id="gdriveSyncBtn" onclick="manualSyncToDrive()" class="ghost" style="display:none;">🔄 Sync Now (Upload)</button>
+                        <button id="gdriveRestoreBtn" onclick="restoreFromDrive()" class="ghost" style="display:none;">⬇️ Restore from Drive</button>
                         <span id="gdriveStatus" class="muted" style="font-size:12px;">Not connected</span>
                     </div>
                     <div id="gdriveFileInfo" style="margin-top:6px;font-size:11px;color:var(--muted-2);display:none;"></div>
@@ -7718,6 +7719,31 @@
             document.querySelector('.tab[data-tab="builder"]').click();
             updateSaveProductButtonLabel();
         }
+
+        function readV3ProductProfile() {
+            function value(id) { var el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; }
+            return {
+                metal: value('prodMetal'), purity: value('prodPurity'),
+                grossWeight: value('prodGrossWeight'), netWeight: value('prodNetWeight'),
+                stone: value('prodStone'), certificate: value('prodCertificate'),
+                engraving: value('prodEngraving')
+            };
+        }
+        function writeV3ProductProfile(profile) {
+            profile = profile || {};
+            var fields = {
+                prodMetal: profile.metal, prodPurity: profile.purity,
+                prodGrossWeight: profile.grossWeight, prodNetWeight: profile.netWeight,
+                prodStone: profile.stone, prodCertificate: profile.certificate,
+                prodEngraving: profile.engraving
+            };
+            Object.keys(fields).forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.value = fields[id] || '';
+            });
+        }
+        window.readV3ProductProfile = readV3ProductProfile;
+        window.writeV3ProductProfile = writeV3ProductProfile;
 
         function saveProduct() {
             if (!checkProductDuplicate()) { showToast('Duplicate product!', 'err'); return; }
@@ -12271,11 +12297,53 @@ function loadFromDrive(_retry) {
 function manualSyncToDrive() {
     if (!gdriveLoggedIn) { showToast('❌ Not connected to Google Drive', 'err'); return; }
     if (!navigator.onLine) { showToast('❌ No internet connection', 'err'); return; }
-    // We attempt to load from Drive (which will also find/create file)
-    loadFromDrive().catch(function(err) {
-        showToast('❌ Sync failed: ' + (err.message || 'Unknown error'), 'err');
+    // Sync Now = PUSH local data TO Drive (local is source of truth after deletes/edits)
+    // Use Restore from Drive separately if you want to pull remote data.
+    showToast('🔄 Uploading local data to Google Drive…', 'info');
+    function doUpload(fileId) {
+        gdriveFileId = fileId || gdriveFileId;
+        var data = {
+            items: items,
+            products: products,
+            company: company,
+            customers: customers,
+            suppliers: suppliers,
+            purchases: purchases,
+            sales: sales,
+            custLedger: custLedger,
+            supLedger: supLedger,
+            settings: settings,
+            globalCategories: globalCategories,
+            productCategories: typeof productCategories !== 'undefined' ? productCategories : [],
+            plugins: plugins,
+            syncedAt: new Date().toISOString(),
+            version: 1
+        };
+        return uploadToDrive(gdriveFileId, data).then(function() {
+            showToast('✅ Drive sync complete — local data uploaded (deletes kept)', 'ok');
+            if (typeof updateGdriveUI === 'function') updateGdriveUI();
+        });
+    }
+    var p = gdriveFileId
+        ? Promise.resolve(gdriveFileId)
+        : findOrCreateDriveFile();
+    p.then(doUpload).catch(function(err) {
+        showToast('❌ Sync failed: ' + ((err && err.message) || 'Unknown error'), 'err');
+        console.warn('manualSyncToDrive', err);
     });
 }
+
+function restoreFromDrive() {
+    if (!gdriveLoggedIn) { showToast('❌ Not connected to Google Drive', 'err'); return; }
+    if (!navigator.onLine) { showToast('❌ No internet connection', 'err'); return; }
+    if (!confirm('Drive থেকে ডেটা লোড করবে। লোকালে যেগুলো ডিলিট করেছেন, Drive-এ থাকলে আবার আসতে পারে। চালিয়ে যাবেন?')) return;
+    showToast('⬇️ Loading from Google Drive…', 'info');
+    loadFromDrive().catch(function(err) {
+        showToast('❌ Restore failed: ' + ((err && err.message) || 'Unknown'), 'err');
+    });
+}
+window.restoreFromDrive = restoreFromDrive;
+window.manualSyncToDrive = manualSyncToDrive;
 
 
 function renderAll() {
@@ -19051,6 +19119,127 @@ body.dark .chat-modal #chatInput {
   }, 900);
 
   console.log('✅ AI Chat UX v2: compose top, tools bottom, auto-grow 60%');
+})();
+</script>
+
+
+<script>
+(function() {
+  function syncRestoreBtnVisibility() {
+    var s = document.getElementById('gdriveSyncBtn');
+    var r = document.getElementById('gdriveRestoreBtn');
+    if (!s || !r) return;
+    r.style.display = s.style.display;
+  }
+  var obs = new MutationObserver(syncRestoreBtnVisibility);
+  setTimeout(function() {
+    var s = document.getElementById('gdriveSyncBtn');
+    if (s) obs.observe(s, { attributes: true, attributeFilter: ['style'] });
+    syncRestoreBtnVisibility();
+  }, 500);
+  setInterval(syncRestoreBtnVisibility, 2000);
+
+  // Ensure profile helpers always exist
+  if (typeof window.readV3ProductProfile !== 'function') {
+    window.readV3ProductProfile = function() {
+      function value(id) { var el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; }
+      return { metal: value('prodMetal'), purity: value('prodPurity'), grossWeight: value('prodGrossWeight'),
+        netWeight: value('prodNetWeight'), stone: value('prodStone'), certificate: value('prodCertificate'),
+        engraving: value('prodEngraving') };
+    };
+  }
+  if (typeof window.writeV3ProductProfile !== 'function') {
+    window.writeV3ProductProfile = function(profile) {
+      profile = profile || {};
+      var fields = { prodMetal: profile.metal, prodPurity: profile.purity, prodGrossWeight: profile.grossWeight,
+        prodNetWeight: profile.netWeight, prodStone: profile.stone, prodCertificate: profile.certificate,
+        prodEngraving: profile.engraving };
+      Object.keys(fields).forEach(function(id) { var el = document.getElementById(id); if (el) el.value = fields[id] || ''; });
+    };
+  }
+
+  // Harden saveProduct against missing helpers / errors
+  function wrapSaveProduct() {
+    if (typeof window.saveProduct !== 'function' || window.saveProduct._safeWrap) return;
+    var _sp = window.saveProduct;
+    window.saveProduct = function() {
+      try {
+        if (typeof readV3ProductProfile !== 'function' && typeof window.readV3ProductProfile === 'function') {
+          // bind bare name for classic code paths
+        }
+        return _sp.apply(this, arguments);
+      } catch (err) {
+        console.error('saveProduct error', err);
+        if (typeof showToast === 'function') showToast('❌ Product save failed: ' + (err.message || err), 'err');
+      }
+    };
+    window.saveProduct._safeWrap = true;
+  }
+  wrapSaveProduct();
+  setTimeout(wrapSaveProduct, 800);
+  setTimeout(wrapSaveProduct, 2500);
+
+  // If manualSync still only loads, force push override
+  window.manualSyncToDrive = function() {
+    if (typeof gdriveLoggedIn === 'undefined' || !gdriveLoggedIn) {
+      if (typeof showToast === 'function') showToast('❌ Not connected to Google Drive', 'err');
+      return;
+    }
+    if (!navigator.onLine) {
+      if (typeof showToast === 'function') showToast('❌ No internet connection', 'err');
+      return;
+    }
+    if (typeof showToast === 'function') showToast('🔄 Uploading local data to Google Drive…', 'info');
+    function pack() {
+      return {
+        items: typeof items !== 'undefined' ? items : [],
+        products: typeof products !== 'undefined' ? products : [],
+        company: typeof company !== 'undefined' ? company : {},
+        customers: typeof customers !== 'undefined' ? customers : [],
+        suppliers: typeof suppliers !== 'undefined' ? suppliers : [],
+        purchases: typeof purchases !== 'undefined' ? purchases : [],
+        sales: typeof sales !== 'undefined' ? sales : [],
+        custLedger: typeof custLedger !== 'undefined' ? custLedger : [],
+        supLedger: typeof supLedger !== 'undefined' ? supLedger : [],
+        settings: typeof settings !== 'undefined' ? settings : {},
+        globalCategories: typeof globalCategories !== 'undefined' ? globalCategories : [],
+        productCategories: typeof productCategories !== 'undefined' ? productCategories : [],
+        plugins: typeof plugins !== 'undefined' ? plugins : [],
+        syncedAt: new Date().toISOString(),
+        version: 1
+      };
+    }
+    function go(fileId) {
+      if (fileId) window.gdriveFileId = fileId;
+      var id = window.gdriveFileId || gdriveFileId;
+      if (!id) throw new Error('No Drive file id');
+      return uploadToDrive(id, pack()).then(function() {
+        if (typeof showToast === 'function') showToast('✅ Drive sync complete — local uploaded (deletes kept)', 'ok');
+      });
+    }
+    var start = (window.gdriveFileId || (typeof gdriveFileId !== 'undefined' && gdriveFileId))
+      ? Promise.resolve(window.gdriveFileId || gdriveFileId)
+      : (typeof findOrCreateDriveFile === 'function' ? findOrCreateDriveFile() : Promise.reject(new Error('No file helper')));
+    start.then(go).catch(function(err) {
+      console.warn(err);
+      if (typeof showToast === 'function') showToast('❌ Sync failed: ' + ((err && err.message) || 'Unknown'), 'err');
+    });
+  };
+
+  window.restoreFromDrive = function() {
+    if (typeof gdriveLoggedIn === 'undefined' || !gdriveLoggedIn) {
+      if (typeof showToast === 'function') showToast('❌ Not connected to Google Drive', 'err');
+      return;
+    }
+    if (!confirm('Drive থেকে restore করবে। লোকাল ডিলিট Drive-এ থাকলে ফিরে আসতে পারে। OK?')) return;
+    if (typeof loadFromDrive === 'function') {
+      loadFromDrive().catch(function(err) {
+        if (typeof showToast === 'function') showToast('❌ Restore failed', 'err');
+      });
+    }
+  };
+
+  console.log('✅ Product save helpers + Drive Sync push fix');
 })();
 </script>
 
