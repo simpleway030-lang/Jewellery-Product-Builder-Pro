@@ -4984,7 +4984,7 @@
                         <span id="dataFolderStatus" class="muted" style="font-size:12px;">No folder selected</span>
                         <button onclick="clearDataFolder()" class="small ghost">✕ Clear</button>
                     </div>
-                    <div class="note" style="margin-top:6px;font-size:11px;">💡 Data is auto-saved to localStorage AND to the selected folder on every change. All images are stored as base64, so everything is portable.</div>
+                    <div class="note" style="margin-top:6px;font-size:11px;">💡 Primary storage: IndexedDB (large capacity — photos OK). Optional folder = extra JSON backup. Google Drive = cloud backup.</div>
                     <hr>
                     <div class="section-title" style="font-size:15px;">Export & Import</div>
                     <div class="note">Move data in/out. Images embedded in Excel.</div>
@@ -5277,24 +5277,56 @@
         // ==================== HELPERS ====================
         function $(id) { return document.getElementById(id) }
 
+        function safeSetItem(key, val) {
+            try {
+                localStorage.setItem(key, val);
+                return true;
+            } catch (e) {
+                console.warn('quota/setItem', key, e);
+                // Free NON-PRODUCT space only — product photos are NEVER auto-deleted
+                var junk = [KEY_BACKUPS, 'jp_full_snapshot_v1', 'jp_backups_v1', 'jp_activity_log_v1'];
+                try { if (typeof KEY_DRAFT !== 'undefined') junk.push(KEY_DRAFT); } catch (x) {}
+                junk.forEach(function(k) { try { localStorage.removeItem(k); } catch (e2) {} });
+                // try trim old sales history only if still failing (keep last 200)
+                try {
+                    if (key !== KEY_SALES && typeof sales !== 'undefined' && sales.length > 200) {
+                        var keep = sales.slice(0, 200);
+                        localStorage.setItem(KEY_SALES, JSON.stringify(keep));
+                    }
+                } catch (e2) {}
+                try {
+                    localStorage.setItem(key, val);
+                    if (typeof showToast === 'function') showToast('Storage cleaned (backups cleared) — photos kept', 'info');
+                    return true;
+                } catch (e3) {
+                    // Still full — do NOT strip product images; ask user to export/Drive
+                    if (typeof showToast === 'function') {
+                        showToast('Storage full — Export JSON বা Google Drive Sync করুন। প্রোডাক্ট ছবি মুছে ফেলা হয়নি।', 'err');
+                    }
+                    return false;
+                }
+            }
+        }
         function saveAll(silent) {
-            localStorage.setItem(KEY_ITEMS, JSON.stringify(items));
-            localStorage.setItem(KEY_PRODUCTS, JSON.stringify(products));
-            localStorage.setItem(KEY_CUSTOMERS, JSON.stringify(customers));
-            localStorage.setItem(KEY_SUPPLIERS, JSON.stringify(suppliers));
-            localStorage.setItem(KEY_PURCHASES, JSON.stringify(purchases));
-            localStorage.setItem(KEY_SALES, JSON.stringify(sales));
-            localStorage.setItem(KEY_CUST_LEDGER, JSON.stringify(custLedger));
-            localStorage.setItem(KEY_SUP_LEDGER, JSON.stringify(supLedger));
-            localStorage.setItem(KEY_CATEGORIES, JSON.stringify(globalCategories));
-            localStorage.setItem(KEY_PRODUCT_CATEGORIES, JSON.stringify(productCategories));
-            localStorage.setItem(KEY_PLUGINS, JSON.stringify(plugins));
-            localStorage.setItem(KEY_AI_SEARCH, String(aiSearchEnabled));
+            safeSetItem(KEY_ITEMS, JSON.stringify(items));
+            safeSetItem(KEY_PRODUCTS, JSON.stringify(products));
+            safeSetItem(KEY_CUSTOMERS, JSON.stringify(customers));
+            safeSetItem(KEY_SUPPLIERS, JSON.stringify(suppliers));
+            safeSetItem(KEY_PURCHASES, JSON.stringify(purchases));
+            safeSetItem(KEY_SALES, JSON.stringify(sales));
+            safeSetItem(KEY_CUST_LEDGER, JSON.stringify(custLedger));
+            safeSetItem(KEY_SUP_LEDGER, JSON.stringify(supLedger));
+            safeSetItem(KEY_CATEGORIES, JSON.stringify(globalCategories));
+            safeSetItem(KEY_PRODUCT_CATEGORIES, JSON.stringify(productCategories));
+            safeSetItem(KEY_PLUGINS, JSON.stringify(plugins));
+            safeSetItem(KEY_AI_SEARCH, String(aiSearchEnabled));
             updateStats();
             updateMiniStats();
             updateQuickStatsInSettings();
-            if (!silent) { createBackup(false);
-                saveToFolderIfAvailable(); }
+            if (!silent) {
+                try { createBackup(false); } catch (e) { console.warn(e); }
+                try { saveToFolderIfAvailable(); } catch (e) { console.warn(e); }
+            }
             executePlugins();
             renderItemsList();
             renderCategoryManager();
@@ -7610,16 +7642,41 @@
             localStorage.setItem(KEY_INVOICE_COUNTER, String(n)); return 'INV-' + String(n).padStart(6, '0'); }
 
         // ===== IMAGES =====
+        function compressDataUrl(dataUrl, maxW, quality) {
+            return new Promise(function(resolve) {
+                try {
+                    var img = new Image();
+                    img.onload = function() {
+                        var w = img.width, h = img.height;
+                        maxW = maxW || 1200;
+                        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+                        var c = document.createElement('canvas');
+                        c.width = w; c.height = h;
+                        var ctx = c.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(c.toDataURL('image/jpeg', quality || 0.72));
+                    };
+                    img.onerror = function() { resolve(dataUrl); };
+                    img.src = dataUrl;
+                } catch (e) { resolve(dataUrl); }
+            });
+        }
         function handleImageFiles(files) {
             Array.from(files).slice(0, 8 - prodImages.length).forEach(function(f) {
                 var reader = new FileReader();
-                reader.onload = function(ev) { prodImages.push(ev.target.result);
-                    renderProdImages();
-                    autosaveDraft(); };
+                reader.onload = function(ev) {
+                    compressDataUrl(ev.target.result, 1200, 0.72).then(function(out) {
+                        prodImages.push(out);
+                        renderProdImages();
+                        autosaveDraft();
+                    });
+                };
                 reader.readAsDataURL(f);
             });
             if ($('prodImage')) $('prodImage').value = '';
         }
+        window.handleImageFiles = handleImageFiles;
+        window.compressDataUrl = compressDataUrl;
 
         function renderProdImages() {
             var strip = $('imgStrip');
@@ -7638,7 +7695,7 @@
         }
 
         function removeProdImage(i) { prodImages.splice(i, 1); if (prodPrimaryIndex >= prodImages.length)
-                prodPrimaryIndex = 0;
+                prodPrimaryIndex = 0; window.removeProdImage = removeProdImage;
             renderProdImages();
             autosaveDraft(); }
 
@@ -10825,13 +10882,64 @@
 
         // ===== BACKUP =====
         function createBackup(manual) {
-            var backups = JSON.parse(localStorage.getItem(KEY_BACKUPS) || "[]");
-            backups.unshift({ ts: Date.now(), items: JSON.parse(JSON.stringify(items)), products: JSON.parse(JSON
-                        .stringify(products)), manual: !!manual });
-            backups = backups.slice(0, 5);
-            localStorage.setItem(KEY_BACKUPS, JSON.stringify(backups));
-            if (manual) { showToast('Backup created', 'ok');
-                renderBackupList(); }
+            try {
+                // Strip heavy base64 images so localStorage quota is not blown
+                function slimProducts(arr) {
+                    return (arr || []).map(function(p) {
+                        var o = {};
+                        Object.keys(p || {}).forEach(function(k) {
+                            if (k === 'images' || k === 'image' || k === 'photo' || k === 'photos') return;
+                            o[k] = p[k];
+                        });
+                        o.images = []; // placeholders only
+                        o._imgCount = Array.isArray(p.images) ? p.images.length : (p.image ? 1 : 0);
+                        return o;
+                    });
+                }
+                function slimItems(arr) {
+                    return (arr || []).map(function(it) {
+                        var o = {};
+                        Object.keys(it || {}).forEach(function(k) {
+                            if (k === 'photo' || k === 'image' || k === 'images') return;
+                            o[k] = it[k];
+                        });
+                        return o;
+                    });
+                }
+                var entry = {
+                    ts: Date.now(),
+                    items: slimItems(items),
+                    products: slimProducts(products),
+                    manual: !!manual,
+                    slim: true
+                };
+                var backups = [];
+                try { backups = JSON.parse(localStorage.getItem(KEY_BACKUPS) || '[]'); } catch (e) { backups = []; }
+                if (!Array.isArray(backups)) backups = [];
+                backups.unshift(entry);
+                backups = backups.slice(0, manual ? 3 : 2); // keep few
+                try {
+                    localStorage.setItem(KEY_BACKUPS, JSON.stringify(backups));
+                } catch (qerr) {
+                    // quota — keep only latest one, or clear
+                    try {
+                        localStorage.setItem(KEY_BACKUPS, JSON.stringify(backups.slice(0, 1)));
+                    } catch (q2) {
+                        try { localStorage.removeItem(KEY_BACKUPS); } catch (e3) {}
+                        if (manual && typeof showToast === 'function') {
+                            showToast('Backup skip — storage full. Export JSON / Drive use করুন', 'info');
+                        }
+                        return;
+                    }
+                }
+                if (manual) {
+                    showToast('Backup created (images excluded — space save)', 'ok');
+                    renderBackupList();
+                }
+            } catch (e) {
+                console.warn('createBackup', e);
+                if (manual && typeof showToast === 'function') showToast('Backup failed: ' + (e.message || e), 'err');
+            }
         }
 
         function renderBackupList() {
@@ -20031,6 +20139,385 @@ body.split-on #splitWorkspace { display: grid; }
   else boot();
   setTimeout(boot, 600);
   console.log('✅ App-mode / PWA helpers ready');
+})();
+</script>
+
+
+<script>
+(function() {
+  try {
+    // Clear bloated backup store that caused quota errors
+    var raw = localStorage.getItem('jp_backups_v1');
+    if (raw && raw.length > 500000) {
+      localStorage.removeItem('jp_backups_v1');
+      console.log('Cleared oversized jp_backups_v1');
+    }
+    localStorage.removeItem('jp_full_snapshot_v1');
+  } catch (e) {}
+})();
+</script>
+
+
+<script>
+(function() {
+  // Ensure product image Add / Edit / Delete always available
+  function bind() {
+    if (typeof removeProdImage === 'function') window.removeProdImage = removeProdImage;
+    if (typeof handleImageFiles === 'function') window.handleImageFiles = handleImageFiles;
+    if (typeof renderProdImages === 'function') window.renderProdImages = renderProdImages;
+    // Replace image at index
+    window.replaceProdImage = function(i) {
+      var inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = 'image/*';
+      inp.onchange = function() {
+        if (!inp.files || !inp.files[0]) return;
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          var done = function(url) {
+            if (typeof prodImages === 'undefined') return;
+            prodImages[i] = url;
+            if (typeof renderProdImages === 'function') renderProdImages();
+            if (typeof autosaveDraft === 'function') autosaveDraft();
+            if (typeof showToast === 'function') showToast('Photo updated', 'ok');
+          };
+          if (typeof compressDataUrl === 'function') compressDataUrl(ev.target.result, 1200, 0.72).then(done);
+          else done(ev.target.result);
+        };
+        reader.readAsDataURL(inp.files[0]);
+      };
+      inp.click();
+    };
+    // Enhance thumbs with Replace button if missing
+    if (typeof renderProdImages === 'function' && !renderProdImages._photoCrud) {
+      var _r = renderProdImages;
+      window.renderProdImages = renderProdImages = function() {
+        _r.apply(this, arguments);
+        var strip = document.getElementById('imgStrip');
+        if (!strip) return;
+        strip.querySelectorAll('.img-thumb').forEach(function(d, i) {
+          if (d.querySelector('.img-replace')) return;
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'ghost small img-replace';
+          b.textContent = '✎';
+          b.title = 'Replace photo';
+          b.style.cssText = 'position:absolute;bottom:4px;left:4px;padding:2px 6px;font-size:11px';
+          b.onclick = function(e) { e.stopPropagation(); replaceProdImage(i); };
+          d.style.position = 'relative';
+          d.appendChild(b);
+        });
+      };
+      renderProdImages._photoCrud = true;
+    }
+  }
+  bind();
+  setTimeout(bind, 500);
+  setTimeout(bind, 2000);
+  console.log('✅ Product photos: add / replace / delete — never auto-removed');
+})();
+</script>
+
+
+<script>
+// ===== UNLIMITED-ish STORAGE via IndexedDB (products, items, images, sales) =====
+(function() {
+  var DB_NAME = 'JewelleryManagerProDB';
+  var DB_VER = 1;
+  var STORE = 'kv';
+  var HEAVY = ['jp_products_v4', 'jp_items_v2', 'jp_sales_v4', 'jp_purchases_v2', 'jp_cust_ledger_v1', 'jp_sup_ledger_v1'];
+  var dbPromise = null;
+
+  function openDB() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function(resolve, reject) {
+      if (!window.indexedDB) {
+        reject(new Error('IndexedDB not supported'));
+        return;
+      }
+      var req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = function(e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE)) {
+          db.createObjectStore(STORE, { keyPath: 'key' });
+        }
+      };
+      req.onsuccess = function() { resolve(req.result); };
+      req.onerror = function() { reject(req.error); };
+    });
+    return dbPromise;
+  }
+
+  function idbSet(key, value) {
+    return openDB().then(function(db) {
+      return new Promise(function(resolve, reject) {
+        var tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).put({ key: key, value: value, updated: Date.now() });
+        tx.oncomplete = function() { resolve(true); };
+        tx.onerror = function() { reject(tx.error); };
+      });
+    });
+  }
+
+  function idbGet(key) {
+    return openDB().then(function(db) {
+      return new Promise(function(resolve, reject) {
+        var tx = db.transaction(STORE, 'readonly');
+        var req = tx.objectStore(STORE).get(key);
+        req.onsuccess = function() {
+          resolve(req.result ? req.result.value : null);
+        };
+        req.onerror = function() { reject(req.error); };
+      });
+    });
+  }
+
+  function idbDelete(key) {
+    return openDB().then(function(db) {
+      return new Promise(function(resolve, reject) {
+        var tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).delete(key);
+        tx.oncomplete = function() { resolve(true); };
+        tx.onerror = function() { reject(tx.error); };
+      });
+    });
+  }
+
+  // Estimate usage
+  window.getJpStorageInfo = async function() {
+    var info = { idb: true, usage: 0, quota: 0, localKeys: 0 };
+    try {
+      if (navigator.storage && navigator.storage.estimate) {
+        var est = await navigator.storage.estimate();
+        info.usage = est.usage || 0;
+        info.quota = est.quota || 0;
+      }
+    } catch (e) {}
+    try {
+      var n = 0;
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        n += (localStorage.getItem(k) || '').length;
+      }
+      info.localKeys = n;
+    } catch (e) {}
+    return info;
+  };
+
+  window.formatBytes = function(n) {
+    n = Number(n) || 0;
+    if (n < 1024) return n + ' B';
+    if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+    return (n / 1048576).toFixed(2) + ' MB';
+  };
+
+  // Migrate heavy keys from localStorage → IndexedDB once
+  async function migrateFromLocal() {
+    for (var i = 0; i < HEAVY.length; i++) {
+      var key = HEAVY[i];
+      try {
+        var existing = await idbGet(key);
+        var ls = localStorage.getItem(key);
+        if (ls && (!existing || (JSON.stringify(existing).length < ls.length))) {
+          var parsed = JSON.parse(ls);
+          await idbSet(key, parsed);
+          // remove from localStorage to free quota (data now in IDB)
+          try { localStorage.removeItem(key); } catch (e) {}
+          console.log('Migrated to IndexedDB:', key);
+        }
+      } catch (e) {
+        console.warn('migrate', key, e);
+      }
+    }
+  }
+
+  // Load heavy arrays into live variables
+  async function hydrateFromIdb() {
+    function apply(key, assign) {
+      return idbGet(key).then(function(val) {
+        if (val == null) {
+          // fallback localStorage
+          try {
+            var ls = localStorage.getItem(key);
+            if (ls) val = JSON.parse(ls);
+          } catch (e) {}
+        }
+        if (val != null) assign(val);
+      });
+    }
+    await apply('jp_products_v4', function(v) {
+      if (typeof products !== 'undefined' && Array.isArray(v)) {
+        products.length = 0;
+        v.forEach(function(p) { products.push(p); });
+        window.products = products;
+      }
+    });
+    await apply('jp_items_v2', function(v) {
+      if (typeof items !== 'undefined' && Array.isArray(v)) {
+        items.length = 0;
+        v.forEach(function(it) { items.push(it); });
+        window.items = items;
+      }
+    });
+    await apply('jp_sales_v4', function(v) {
+      if (typeof sales !== 'undefined' && Array.isArray(v)) {
+        sales.length = 0;
+        v.forEach(function(s) { sales.push(s); });
+      }
+    });
+    await apply('jp_purchases_v2', function(v) {
+      if (typeof purchases !== 'undefined' && Array.isArray(v)) {
+        purchases.length = 0;
+        v.forEach(function(p) { purchases.push(p); });
+      }
+    });
+    await apply('jp_cust_ledger_v1', function(v) {
+      if (typeof custLedger !== 'undefined' && Array.isArray(v)) {
+        custLedger.length = 0;
+        v.forEach(function(e) { custLedger.push(e); });
+      }
+    });
+    await apply('jp_sup_ledger_v1', function(v) {
+      if (typeof supLedger !== 'undefined' && Array.isArray(v)) {
+        supLedger.length = 0;
+        v.forEach(function(e) { supLedger.push(e); });
+      }
+    });
+  }
+
+  // Hook saveAll to persist heavy data in IndexedDB
+  function hookSave() {
+    if (typeof window.saveAll !== 'function' || window.saveAll._idb) return;
+    var _save = window.saveAll;
+    window.saveAll = function(silent) {
+      // Write light keys via original path first (safeSetItem inside)
+      var r = _save.apply(this, arguments);
+      // Async persist heavy data to IndexedDB (unlimited-ish)
+      var jobs = [];
+      try {
+        if (typeof products !== 'undefined') jobs.push(idbSet('jp_products_v4', products));
+        if (typeof items !== 'undefined') jobs.push(idbSet('jp_items_v2', items));
+        if (typeof sales !== 'undefined') jobs.push(idbSet('jp_sales_v4', sales));
+        if (typeof purchases !== 'undefined') jobs.push(idbSet('jp_purchases_v2', purchases));
+        if (typeof custLedger !== 'undefined') jobs.push(idbSet('jp_cust_ledger_v1', custLedger));
+        if (typeof supLedger !== 'undefined') jobs.push(idbSet('jp_sup_ledger_v1', supLedger));
+      } catch (e) { console.warn(e); }
+      Promise.all(jobs).then(function() {
+        // After successful IDB write, clear heavy localStorage copies to avoid quota
+        HEAVY.forEach(function(k) {
+          try { localStorage.removeItem(k); } catch (e) {}
+        });
+        if (!silent && typeof showToast === 'function') {
+          // silent success — avoid spam every save
+        }
+      }).catch(function(err) {
+        console.warn('IDB save failed', err);
+        if (typeof showToast === 'function') showToast('Storage warning: ' + (err.message || err), 'err');
+      });
+      return r;
+    };
+    window.saveAll._idb = true;
+  }
+
+  // Override safeSetItem for heavy keys — skip localStorage write (IDB handles it)
+  function hookSafeSet() {
+    if (typeof window.safeSetItem === 'function' && !window.safeSetItem._idb) {
+      var _ss = window.safeSetItem;
+      window.safeSetItem = function(key, val) {
+        if (HEAVY.indexOf(key) >= 0) {
+          // parse and queue IDB; don't fill localStorage
+          try {
+            var parsed = JSON.parse(val);
+            idbSet(key, parsed).catch(function(e) { console.warn(e); });
+          } catch (e) {
+            idbSet(key, val).catch(function() {});
+          }
+          return true;
+        }
+        return _ss.apply(this, arguments);
+      };
+      window.safeSetItem._idb = true;
+      return;
+    }
+    // if safeSetItem not global yet, patch later
+  }
+
+  // Also intercept localStorage.setItem for heavy keys as safety net
+  try {
+    var _setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function(key, val) {
+      if (HEAVY.indexOf(key) >= 0) {
+        try {
+          var parsed = typeof val === 'string' ? JSON.parse(val) : val;
+          idbSet(key, parsed).catch(function() {});
+        } catch (e) {
+          idbSet(key, val).catch(function() {});
+        }
+        // store tiny marker only
+        try { _setItem.call(this, key + '__idb', '1'); } catch (e) {}
+        return;
+      }
+      return _setItem.apply(this, arguments);
+    };
+  } catch (e) {}
+
+  function refreshUI() {
+    try {
+      if (typeof renderProductGrid === 'function') renderProductGrid();
+      if (typeof renderStockTable === 'function') renderStockTable();
+      if (typeof renderItemTable === 'function') renderItemTable();
+      if (typeof renderDashboard === 'function') renderDashboard();
+      if (typeof renderSalesHistory === 'function') renderSalesHistory();
+      if (typeof updateStats === 'function') updateStats();
+    } catch (e) { console.warn(e); }
+  }
+
+  function showStorageBadge() {
+    window.getJpStorageInfo().then(function(info) {
+      var el = document.getElementById('jpStorageStatus');
+      if (!el) {
+        var host = document.querySelector('#settings .note') || document.getElementById('settings');
+        if (!host) return;
+        el = document.createElement('div');
+        el.id = 'jpStorageStatus';
+        el.className = 'note';
+        el.style.cssText = 'margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(52,199,89,0.12);';
+        host.parentNode.insertBefore(el, host.nextSibling);
+      }
+      var q = info.quota ? formatBytes(info.quota) : 'device limit';
+      var u = formatBytes(info.usage);
+      el.innerHTML = '💾 <b>Big storage (IndexedDB)</b> active — used ~' + u + ' / quota ~' + q +
+        '<br><span style="font-size:12px">Products + photos no longer limited to 5–10 MB localStorage.</span>';
+    });
+  }
+
+  async function boot() {
+    try {
+      await openDB();
+      await migrateFromLocal();
+      await hydrateFromIdb();
+      hookSave();
+      hookSafeSet();
+      refreshUI();
+      showStorageBadge();
+      console.log('✅ IndexedDB storage ready (large capacity)');
+      if (typeof showToast === 'function') {
+        // only first time
+        if (!sessionStorage.getItem('jp_idb_toast')) {
+          sessionStorage.setItem('jp_idb_toast', '1');
+          showToast('💾 Unlimited storage mode ON (IndexedDB)', 'ok');
+        }
+      }
+    } catch (e) {
+      console.warn('IDB boot failed, using localStorage', e);
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 800);
+  setTimeout(hookSave, 1200);
+  setTimeout(hookSafeSet, 1200);
 })();
 </script>
 
