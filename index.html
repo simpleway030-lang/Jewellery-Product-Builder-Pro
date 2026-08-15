@@ -3390,7 +3390,6 @@
                 <div class="mobile-drawer-link" data-tab="ops" onclick="mobileDrawerNav('ops')"><span class="tab-icon">🔁</span> Ops</div>
                 <div class="mobile-drawer-link" data-tab="billimport" onclick="mobileDrawerNav('billimport')"><span class="tab-icon">📷</span> Import</div>
                 <div class="mobile-drawer-link" data-tab="integrations" onclick="mobileDrawerNav('integrations')"><span class="tab-icon">🔌</span> Integrations</div>
-                <div class="mobile-drawer-link" data-tab="security" onclick="mobileDrawerNav('security')"><span class="tab-icon">🔐</span> Security</div>
                 <div class="mobile-drawer-link" data-tab="admin" onclick="mobileDrawerNav('admin')"><span class="tab-icon">👑</span> Admin</div>
             </div>
             <div class="mobile-drawer-foot">
@@ -3420,7 +3419,6 @@
             <div class="tab" data-tab="ops"><span class="tab-icon">🔁</span> Ops</div>
             <div class="tab" data-tab="billimport"><span class="tab-icon">📷</span> Import</div>
             <div class="tab" data-tab="integrations"><span class="tab-icon">🔌</span> Integrations</div>
-            <div class="tab" data-tab="security"><span class="tab-icon">🔐</span> Security</div>
             <div class="tab" data-tab="admin"><span class="tab-icon">👑</span> Admin</div>
         </div>
         <div class="grid">
@@ -4446,46 +4444,8 @@
                 </section>
 
                 <!-- SECURITY: OTP, 2FA, Devices, API keys list -->
-                <section id="security" class="card" style="display:none">
-                    <div class="section-head">
-                        <div>
-                            <div class="section-title">Security</div>
-                            <div class="note">Email OTP, TOTP 2FA, device sessions, API key inventory</div>
-                        </div>
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
-                        <div style="background:var(--border-soft);border-radius:14px;padding:14px">
-                            <div class="section-title" style="font-size:14px">📧 Email OTP / verification</div>
-                            <label>Email<input id="otpEmail" type="email" placeholder="user@email.com"></label>
-                            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-                                <button onclick="sendEmailOtp()">Send OTP</button>
-                                <input id="otpCodeInput" placeholder="Enter 6-digit OTP" style="margin:0;width:140px">
-                                <button class="ghost" onclick="verifyEmailOtp()">Verify</button>
-                            </div>
-                            <div id="otpStatus" class="note" style="margin-top:8px"></div>
-                            <hr>
-                            <div class="section-title" style="font-size:14px">🔐 TOTP 2FA (Authenticator app)</div>
-                            <div class="note">Google Authenticator / Authy — secret local-এ জেনারেট হয়</div>
-                            <button style="margin-top:8px" onclick="setupTotp2FA()">Generate 2FA secret</button>
-                            <div id="totpSetup" style="margin-top:8px"></div>
-                            <div style="display:flex;gap:8px;margin-top:8px">
-                                <input id="totpCode" placeholder="6-digit from app" style="margin:0;width:140px">
-                                <button class="ghost" onclick="verifyTotp2FA()">Enable / Verify</button>
-                            </div>
-                            <button class="danger small" style="margin-top:8px" onclick="disableTotp2FA()">Disable 2FA</button>
-                            <div id="totpStatus" class="note" style="margin-top:6px"></div>
-                        </div>
-                        <div style="background:var(--border-soft);border-radius:14px;padding:14px">
-                            <div class="section-title" style="font-size:14px">📱 Device management</div>
-                            <button class="ghost small" onclick="registerThisDevice()">Register this device</button>
-                            <button class="ghost small" onclick="renderDevices()">Refresh</button>
-                            <div id="deviceList" style="margin-top:10px;max-height:260px;overflow:auto"></div>
-                            <hr>
-                            <div class="section-title" style="font-size:14px">API keys on file</div>
-                            <div id="apiKeyInventory" class="note" style="margin-top:8px"></div>
-                        </div>
-                    </div>
-                </section>
+                
+
 
                 <!-- ADMIN: SaaS multi-company + subscription mock + mobile API -->
                 <section id="admin" class="card" style="display:none">
@@ -4801,7 +4761,6 @@
                             <input type="checkbox" id="mod_integrations" checked onchange="toggleAppModule('integrations', this.checked)"> <span>🔌 Integrations (API)</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;margin:0;background:var(--border-soft);padding:10px 12px;border-radius:12px;cursor:pointer">
-                            <input type="checkbox" id="mod_security" checked onchange="toggleAppModule('security', this.checked)"> <span>🔐 Security (OTP/2FA)</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;margin:0;background:var(--border-soft);padding:10px 12px;border-radius:12px;cursor:pointer">
                             <input type="checkbox" id="mod_admin" checked onchange="toggleAppModule('admin', this.checked)"> <span>👑 Admin / SaaS</span>
@@ -8643,12 +8602,29 @@
             }).join('');
         }
 
-        function deleteCustomer(i) { if (!confirm('Delete?')) return;
+        function deleteCustomer(i) {
+            if (!confirm('Customer + এই কাস্টমারের ledger হিস্ট্রি মুছে যাবে। নিশ্চিত?')) return;
+            var c = customers[i];
+            if (!c) return;
+            var cid = c.id;
             customers.splice(i, 1);
+            // HARD delete all ledger rows for this customer
+            if (typeof custLedger !== 'undefined' && Array.isArray(custLedger)) {
+                custLedger = custLedger.filter(function(e) {
+                    return String(e.customerId) !== String(cid);
+                });
+                window.custLedger = custLedger;
+            }
             saveAll(true);
             renderCustomerManager();
             populateCustomerSelect();
-            showToast('Deleted', 'ok'); }
+            if (typeof renderCustomerLedger === 'function') renderCustomerLedger();
+            if (typeof renderLedgerPersonList === 'function') renderLedgerPersonList('customer');
+            if (typeof updateStats === 'function') updateStats();
+            if (typeof updateMiniStats === 'function') updateMiniStats();
+            showToast('Customer + ledger history deleted', 'ok');
+        }
+        window.deleteCustomer = deleteCustomer;
 
         function editCustomer(i) { var c = customers[i]; if (!c) return;
             openEditPersonModal('customer', i, c.name, c.phone || '', c.address || ''); }
@@ -15340,13 +15316,13 @@ function saveV3Data() {
                     clearTimeout(t);
                     window.JP_BACKEND_OK = !!(d && d.ok);
                     var el = document.getElementById('backendStatusLine');
-                    if (el) el.textContent = window.JP_BACKEND_OK ? '🟢 Backend connected' : '🔴 Backend offline';
+                    if (el) el.textContent = window.JP_BACKEND_OK ? '🟢 Backend connected (localhost)' : '🟢 Local mode — backend optional';
                 })
                 .catch(function() {
                     clearTimeout(t);
                     window.JP_BACKEND_OK = false;
                     var el = document.getElementById('backendStatusLine');
-                    if (el) el.textContent = '🔴 Backend offline (app still works offline)';
+                    if (el) el.textContent = '🟢 Local mode — backend optional (app OK offline)';
                 });
         }
 
@@ -15387,7 +15363,7 @@ function saveV3Data() {
                 p.id = 'backendStatusLine';
                 p.className = 'note';
                 p.style.marginTop = '8px';
-                p.textContent = 'Checking backend…';
+                p.textContent = 'Local mode ready';
                 grid.parentNode.appendChild(p);
             }
         }, 600);
@@ -16613,19 +16589,31 @@ function saveV3Data() {
         };
 
         window.saveSecurityPlan = function() {
+            // Auto-elevate if session missing (app open without lock)
+            var sess = getSession();
+            if (!sess.role) setSession('Admin', 'Admin');
             if (getSession().role !== 'Admin') { showToast('Only Admin', 'err'); return; }
             var sec = getAppSecurity();
-            sec.plan = ($('appPlanSelect') && $('appPlanSelect').value) || 'free';
+            sec.plan = ($('appPlanSelect') && $('appPlanSelect').value) || sec.plan || 'pro';
             var free = {};
             OPTIONAL.forEach(function(m) {
                 var cb = document.getElementById('planFree_' + m);
                 free[m] = !!(cb && cb.checked);
             });
             sec.freeModules = free;
+            sec.setup = true;
+            sec.requireLockOnOpen = !!(document.getElementById('secRequireLockOnOpen') && document.getElementById('secRequireLockOnOpen').checked);
+            // default staff role
+            var dsr = document.getElementById('defaultStaffRole');
+            if (dsr) sec.defaultStaffRole = dsr.value || 'Staff';
             sj(KEY_SEC, sec);
+            try { localStorage.setItem('jp_app_security_v1', JSON.stringify(sec)); } catch (e) {}
             applyRoleAndPlan();
-            if ($('secStatus')) $('secStatus').textContent = 'Saved plan: ' + sec.plan.toUpperCase();
-            showToast('Security & plan saved', 'ok');
+            if ($('secStatus')) $('secStatus').textContent = 'Saved plan: ' + String(sec.plan).toUpperCase() + (sec.requireLockOnOpen ? ' · lock on open' : ' · open free');
+            showToast('✅ Security & plan saved', 'ok');
+            // try cloud sync of settings blob
+            try { if (typeof saveAll === 'function') saveAll(true); } catch (e) {}
+            try { if (typeof pushToCloudDebounced === 'function') pushToCloudDebounced(); } catch (e) {}
         };
 
         window.renderSecurityPanel = function() {
@@ -16781,14 +16769,33 @@ function saveV3Data() {
         // Boot gate
         function bootLock() {
             var sec = getAppSecurity();
-            var sess = lj(KEY_SESSION, {});
-            // require password every load (secure default)
+            // OPTIONAL lock only — app opens freely; use "Lock app now" when needed
+            // First-time: soft create Admin session without blocking UI
             if (!sec.setup || !sec.adminHash) {
-                showLock('setup');
+                sec.setup = true;
+                sec.adminName = sec.adminName || 'Admin';
+                sec.plan = sec.plan || 'pro';
+                if (!sec.adminHash) {
+                    // no password yet — leave empty hash; Lock will ask to set password
+                    sec.adminHash = '';
+                }
+                if (!sec.freeModules) sec.freeModules = Object.assign({}, FREE_DEFAULT);
+                sec.requireLockOnOpen = false;
+                sj(KEY_SEC, sec);
+            }
+            // Always soft-session as Admin so Settings/config can save without lock wall
+            var sess = lj(KEY_SESSION, {});
+            if (!sess || !sess.role) {
+                setSession('Admin', sec.adminName || 'Admin');
             } else {
+                window.JP_SESSION = sess;
+                applyRoleAndPlan();
+            }
+            hideLock();
+            // Only show lock if user explicitly enabled requireLockOnOpen
+            if (sec.requireLockOnOpen && sec.adminHash) {
                 showLock('login');
             }
-            // if session still valid same page soft unlock optional — always ask password on fresh load
         }
 
         // Hook switchTab settings
@@ -19560,7 +19567,7 @@ body.dark .chat-modal #chatInput {
 
 
 <style id="jp-split-real">
-/* ===== Real dual-module split screen ===== */
+/* ===== Real dual-module split screen + resize ===== */
 #splitBar {
   display: none;
   gap: 8px;
@@ -19574,21 +19581,20 @@ body.dark .chat-modal #chatInput {
 }
 body.split-on #splitBar { display: flex; }
 body.split-on .tabs { opacity: 0.55; pointer-events: none; }
-body.split-on .wrap > section.card,
-body.split-on main section.card,
-body.split-on #app section.card {
-  /* hide default single sections when split — panes own the view */
-}
 #splitWorkspace {
   display: none;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: var(--split-left, 1fr) 6px var(--split-right, 1fr);
+  gap: 0;
   align-items: stretch;
   min-height: 70vh;
 }
 body.split-on #splitWorkspace { display: grid; }
 @media (max-width: 800px) {
-  #splitWorkspace { grid-template-columns: 1fr !important; }
+  #splitWorkspace {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(40vh, auto) 6px minmax(40vh, auto);
+  }
+  #splitDivider { cursor: row-resize !important; min-height: 6px; }
 }
 .split-pane {
   border: 1px solid var(--border-soft);
@@ -19596,9 +19602,10 @@ body.split-on #splitWorkspace { display: grid; }
   background: var(--card-solid, var(--bg));
   display: flex;
   flex-direction: column;
-  min-height: 60vh;
+  min-height: 50vh;
   max-height: calc(100vh - 140px);
   overflow: hidden;
+  min-width: 0;
 }
 .split-pane-head {
   display: flex;
@@ -19620,6 +19627,7 @@ body.split-on #splitWorkspace { display: grid; }
   overflow: auto;
   padding: 10px;
   position: relative;
+  min-height: 0;
 }
 .split-pane-body .card,
 .split-pane-body section {
@@ -19630,8 +19638,39 @@ body.split-on #splitWorkspace { display: grid; }
   padding: 0 !important;
   background: transparent !important;
 }
+#splitDivider {
+  cursor: col-resize;
+  background: rgba(var(--accent-rgb), 0.25);
+  border-radius: 4px;
+  position: relative;
+  touch-action: none;
+  user-select: none;
+}
+#splitDivider:hover,
+#splitDivider.dragging {
+  background: rgba(var(--accent-rgb), 0.55);
+}
+#splitDivider::after {
+  content: '⋮';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  opacity: 0.8;
+  pointer-events: none;
+}
+#splitBar .split-size-btns {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+#splitBar .split-size-btns button {
+  padding: 4px 8px;
+  font-size: 11px;
+}
 
-/* Settings accordion */
+/* Settings accordion (keep) */
 .settings-accordion { margin-top: 10px; }
 .settings-accordion .sa-item {
   border: 1px solid var(--border-soft);
@@ -19650,14 +19689,9 @@ body.split-on #splitWorkspace { display: grid; }
   user-select: none;
   background: rgba(var(--accent-rgb), 0.07);
 }
-.settings-accordion .sa-head:active { opacity: 0.85; }
 .settings-accordion .sa-chevron { margin-left: auto; transition: transform .2s; opacity: .7; }
 .settings-accordion .sa-item.open .sa-chevron { transform: rotate(180deg); }
-.settings-accordion .sa-body {
-  display: none;
-  padding: 12px 14px 16px;
-  border-top: 1px solid var(--border-soft);
-}
+.settings-accordion .sa-body { display: none; padding: 12px 14px 16px; border-top: 1px solid var(--border-soft); }
 .settings-accordion .sa-item.open .sa-body { display: block; }
 #settingsAccControls { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
 </style>
@@ -19676,7 +19710,6 @@ body.split-on #splitWorkspace { display: grid; }
     { id: 'reports', label: '📈 Reports' },
     { id: 'settings', label: '⚙ Settings' },
     { id: 'integrations', label: '🔌 Integrations' },
-    { id: 'security', label: '🔐 Security' }
   ];
 
   function $(id) { return document.getElementById(id); }
@@ -19693,7 +19726,14 @@ body.split-on #splitWorkspace { display: grid; }
     bar.id = 'splitBar';
     bar.innerHTML =
       '<strong style="font-size:13px">⧉ Split Screen</strong>' +
-      '<span class="note" style="margin:0;font-size:12px">প্রতি পাশে আলাদা মডিউল</span>' +
+      '<span class="note" style="margin:0;font-size:12px">ড্র্যাগ করে রিসাইজ</span>' +
+      '<span class="split-size-btns">' +
+        '<button type="button" class="ghost small" data-split="30">30/70</button>' +
+        '<button type="button" class="ghost small" data-split="40">40/60</button>' +
+        '<button type="button" class="ghost small" data-split="50">50/50</button>' +
+        '<button type="button" class="ghost small" data-split="60">60/40</button>' +
+        '<button type="button" class="ghost small" data-split="70">70/30</button>' +
+      '</span>' +
       '<button type="button" class="ghost small" id="splitExitBtn">✕ Exit Split</button>';
 
     var ws = document.createElement('div');
@@ -19703,6 +19743,7 @@ body.split-on #splitWorkspace { display: grid; }
         '<div class="split-pane-head"><select id="splitLeftMod"></select></div>' +
         '<div class="split-pane-body" id="splitLeftBody"></div>' +
       '</div>' +
+      '<div id="splitDivider" title="Drag to resize"></div>' +
       '<div class="split-pane" id="splitRight">' +
         '<div class="split-pane-head"><select id="splitRightMod"></select></div>' +
         '<div class="split-pane-body" id="splitRightBody"></div>' +
@@ -19736,6 +19777,8 @@ body.split-on #splitWorkspace { display: grid; }
       loadPane('right', this.value);
     };
     $('splitExitBtn').onclick = function() { setSplit(false); };
+    bindSplitResize();
+    applySplitRatio(localStorage.getItem('jp_split_ratio') || 50);
 
     // Header toggle button
     if (!$('splitToggleBtn')) {
@@ -19796,12 +19839,77 @@ body.split-on #splitWorkspace { display: grid; }
     } catch (e) { console.warn(e); }
   }
 
+
+
+  function applySplitRatio(leftPct) {
+    leftPct = Math.max(20, Math.min(80, Number(leftPct) || 50));
+    var rightPct = 100 - leftPct;
+    var ws = document.getElementById('splitWorkspace');
+    if (!ws) return;
+    if (window.matchMedia('(max-width: 800px)').matches) {
+      ws.style.gridTemplateColumns = '1fr';
+      ws.style.gridTemplateRows = leftPct + 'fr 6px ' + rightPct + 'fr';
+    } else {
+      ws.style.gridTemplateRows = '';
+      ws.style.gridTemplateColumns = leftPct + 'fr 6px ' + rightPct + 'fr';
+    }
+    document.documentElement.style.setProperty('--split-left', leftPct + 'fr');
+    document.documentElement.style.setProperty('--split-right', rightPct + 'fr');
+    localStorage.setItem('jp_split_ratio', String(leftPct));
+  }
+  window.applySplitRatio = applySplitRatio;
+
+  function bindSplitResize() {
+    var bar = document.getElementById('splitBar');
+    if (bar) {
+      bar.querySelectorAll('[data-split]').forEach(function(btn) {
+        btn.onclick = function() { applySplitRatio(btn.getAttribute('data-split')); };
+      });
+    }
+    var div = document.getElementById('splitDivider');
+    var ws = document.getElementById('splitWorkspace');
+    if (!div || !ws || div.dataset.bound) return;
+    div.dataset.bound = '1';
+    var dragging = false;
+    function posToPct(clientX, clientY) {
+      var rect = ws.getBoundingClientRect();
+      var mobile = window.matchMedia('(max-width: 800px)').matches;
+      if (mobile) {
+        var y = clientY - rect.top;
+        return Math.round((y / rect.height) * 100);
+      }
+      var x = clientX - rect.left;
+      return Math.round((x / rect.width) * 100);
+    }
+    function onStart(e) {
+      dragging = true;
+      div.classList.add('dragging');
+      e.preventDefault();
+    }
+    function onMove(e) {
+      if (!dragging) return;
+      var pt = e.touches ? e.touches[0] : e;
+      applySplitRatio(posToPct(pt.clientX, pt.clientY));
+    }
+    function onEnd() {
+      dragging = false;
+      div.classList.remove('dragging');
+    }
+    div.addEventListener('mousedown', onStart);
+    div.addEventListener('touchstart', onStart, { passive: false });
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchend', onEnd);
+  }
+
   function setSplit(on) {
     ensureChrome();
     document.body.classList.toggle('split-on', !!on);
     localStorage.setItem('jp_split_screen', on ? '1' : '0');
     if (on) {
-      // Hide normal sections that are not in panes
+      bindSplitResize();
+      applySplitRatio(localStorage.getItem('jp_split_ratio') || 50);
       loadPane('left', $('splitLeftMod').value);
       loadPane('right', $('splitRightMod').value);
       // Hide other sections still in main flow
@@ -20518,6 +20626,154 @@ body.split-on #splitWorkspace { display: grid; }
   setTimeout(boot, 800);
   setTimeout(hookSave, 1200);
   setTimeout(hookSafeSet, 1200);
+})();
+</script>
+
+
+<script>
+// ===== Security simplify + config save + ledger clean + optional lock =====
+(function() {
+  // Hide Security tab/module (not needed for most shops)
+  function hideSecurityModule() {
+    document.querySelectorAll('.tab[data-tab="security"], .mobile-drawer-link[data-tab="security"]').forEach(function(el) {
+      el.style.display = 'none';
+    });
+    var secSec = document.getElementById('security');
+    if (secSec) secSec.style.display = 'none';
+  }
+
+  // Ledger: only show customers that still exist
+  function patchLedgerLists() {
+    if (typeof window.renderLedgerPersonList === 'function' && !window.renderLedgerPersonList._clean) {
+      var _r = window.renderLedgerPersonList;
+      window.renderLedgerPersonList = function(kind) {
+        var r = _r.apply(this, arguments);
+        // After render, remove rows for missing customers
+        try {
+          if (kind === 'customer' && typeof customers !== 'undefined' && typeof custLedger !== 'undefined') {
+            var ids = {};
+            customers.forEach(function(c) { ids[String(c.id)] = c.name; });
+            document.querySelectorAll('.ledger-person-item').forEach(function(row) {
+              var oc = row.getAttribute('onclick') || '';
+              var m = oc.match(/renderCustomerLedger\('([^']+)'\)/);
+              if (m && m[1] !== 'walkin' && !ids[m[1]]) row.style.display = 'none';
+            });
+            // Clean select options
+            var sel = document.getElementById('ledgerCustSelect');
+            if (sel) {
+              Array.prototype.slice.call(sel.options).forEach(function(opt) {
+                if (!opt.value || opt.value === 'walkin') return;
+                if (!ids[opt.value]) opt.remove();
+              });
+            }
+          }
+        } catch (e) {}
+        return r;
+      };
+      window.renderLedgerPersonList._clean = true;
+    }
+    if (typeof window.renderCustomerLedger === 'function' && !window.renderCustomerLedger._orphan) {
+      var _rc = window.renderCustomerLedger;
+      window.renderCustomerLedger = function(id) {
+        // Skip deleted-customer entries in filter
+        if (typeof custLedger !== 'undefined' && id) {
+          var still = (typeof customers !== 'undefined') && customers.some(function(c) { return String(c.id) === String(id); });
+          if (!still && id !== 'walkin') {
+            // show note
+            var box = document.getElementById('custLedgerEntries');
+            if (box) box.innerHTML = '<div class="note">Customer deleted — history hidden.</div>';
+            var sum = document.getElementById('custLedgerSummary');
+            if (sum) sum.innerHTML = '';
+            return;
+          }
+        }
+        return _rc.apply(this, arguments);
+      };
+      window.renderCustomerLedger._orphan = true;
+    }
+  }
+
+  // Forgot password on lock screen (local reset)
+  window.appForgotPassword = function() {
+    if (!confirm('Admin password রিসেট করবেন? Staff লিস্ট থাকবে। OK চাপলে নতুন পাসওয়ার্ড সেট করতে পারবেন।')) return;
+    var p1 = prompt('New Admin password (min 4 chars)');
+    if (!p1 || p1.length < 4) { alert('Too short'); return; }
+    var p2 = prompt('Confirm password');
+    if (p1 !== p2) { alert('Mismatch'); return; }
+    try {
+      var sec = (typeof getAppSecurity === 'function') ? getAppSecurity() : {};
+      var h = (typeof hashPass === 'function') ? hashPass(p1) : p1;
+      sec.adminHash = h;
+      sec.setup = true;
+      localStorage.setItem('jp_app_security_v1', JSON.stringify(sec));
+      if (typeof setSession === 'function') setSession('Admin', sec.adminName || 'Admin');
+      if (typeof hideLock === 'function') hideLock();
+      if (typeof showToast === 'function') showToast('Password reset — unlocked as Admin', 'ok');
+      else alert('Password reset OK');
+    } catch (e) {
+      alert('Reset failed: ' + e.message);
+    }
+  };
+
+  // Staff login help: password alone unlocks (name not required on lock screen)
+  function enhanceLockUI() {
+    var login = document.getElementById('lockLoginBox');
+    if (!login || login.dataset.help) return;
+    login.dataset.help = '1';
+    var hint = document.createElement('div');
+    hint.style.cssText = 'font-size:12px;opacity:.75;margin-top:10px;line-height:1.4;text-align:center';
+    hint.innerHTML = 'Staff: শুধু <b>নিজের password</b> দিন (নাম লাগবে না)।<br>' +
+      '<span style="text-decoration:underline;cursor:pointer;color:#c9a227" onclick="appForgotPassword()">Forgot Admin password?</span>';
+    login.appendChild(hint);
+    // Require lock on open checkbox near security panel
+    var panel = document.getElementById('adminSecurityPanel');
+    if (panel && !document.getElementById('secRequireLockOnOpen')) {
+      var lab = document.createElement('label');
+      lab.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px';
+      lab.innerHTML = '<input type="checkbox" id="secRequireLockOnOpen"> অ্যাপ খুললেই পাসওয়ার্ড চাইবে (ডিফল্ট: বন্ধ)';
+      panel.appendChild(lab);
+      try {
+        var sec = JSON.parse(localStorage.getItem('jp_app_security_v1') || '{}');
+        if (sec.requireLockOnOpen) lab.querySelector('input').checked = true;
+      } catch (e) {}
+    }
+  }
+
+  // Force Admin session so config always saves
+  function ensureAdminSession() {
+    try {
+      if (typeof setSession === 'function' && typeof getSession === 'function') {
+        var s = getSession();
+        if (!s || !s.role) setSession('Admin', 'Admin');
+      } else {
+        var raw = localStorage.getItem('jp_app_session_v1');
+        if (!raw || raw === '{}') {
+          localStorage.setItem('jp_app_session_v1', JSON.stringify({ role: 'Admin', name: 'Admin', at: Date.now() }));
+        }
+      }
+    } catch (e) {}
+  }
+
+  function boot() {
+    ensureAdminSession();
+    hideSecurityModule();
+    patchLedgerLists();
+    enhanceLockUI();
+    // Hide lock if visible and not required
+    try {
+      var sec = JSON.parse(localStorage.getItem('jp_app_security_v1') || '{}');
+      if (!sec.requireLockOnOpen) {
+        var el = document.getElementById('appLockScreen');
+        if (el) el.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 400);
+  setTimeout(boot, 1500);
+  console.log('✅ Security optional + config save + ledger clean');
 })();
 </script>
 
