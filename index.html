@@ -30,6 +30,27 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<script>
+// Early Firebase SDK ensure (fixes file:// and slow CDN)
+(function() {
+  function ensure() {
+    if (typeof firebase !== 'undefined') return;
+    var base = 'https://www.gstatic.com/firebasejs/10.14.1/';
+    ['firebase-app-compat.js','firebase-auth-compat.js','firebase-firestore-compat.js'].forEach(function(f) {
+      var src = base + f;
+      if (document.querySelector('script[src="' + src + '"]')) return;
+      var s = document.createElement('script');
+      s.src = src;
+      s.async = false;
+      document.head.appendChild(s);
+    });
+  }
+  ensure();
+  setTimeout(ensure, 1000);
+})();
+</script>
+
     <!-- Google APIs for Drive -->
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
@@ -16748,11 +16769,22 @@ function saveV3Data() {
                 Object.keys(cfg).forEach(function(k) { firebaseConfig[k] = cfg[k]; });
             }
             if ($('fbConfigStatus')) $('fbConfigStatus').textContent = 'Saved. Reload page once to re-init Firebase with new project: ' + cfg.projectId;
-            showToast('Firebase config saved — reload page', 'ok');
-            // soft re-init if possible
+            showToast('Firebase config saved', 'ok');
             try {
-                if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-                    if (typeof initCloudSDK === 'function') initCloudSDK();
+                if (typeof loadFirebaseSdkIfNeeded === 'function') {
+                    loadFirebaseSdkIfNeeded().then(function() {
+                        try {
+                            if (typeof firebase !== 'undefined') {
+                                // re-init with new config if no app yet
+                                if (!firebase.apps.length && typeof initCloudSDK === 'function') initCloudSDK();
+                                if ($('fbConfigStatus')) $('fbConfigStatus').textContent = 'Saved · SDK OK · project: ' + cfg.projectId;
+                            }
+                        } catch (e2) {
+                            if ($('fbConfigStatus')) $('fbConfigStatus').textContent = 'Saved. Reload page once.';
+                        }
+                    }).catch(function() {
+                        if ($('fbConfigStatus')) $('fbConfigStatus').textContent = 'Saved. Reload page (SDK pending).';
+                    });
                 }
             } catch (e) {}
         };
@@ -16764,10 +16796,52 @@ function saveV3Data() {
             showToast('Using built-in Firebase project — reload page', 'info');
         };
 
+        window.loadFirebaseSdkIfNeeded = function() {
+            return new Promise(function(resolve, reject) {
+                if (typeof firebase !== 'undefined' && firebase.app) return resolve(true);
+                var urls = [
+                    'https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js',
+                    'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js',
+                    'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js'
+                ];
+                var i = 0;
+                function next() {
+                    if (typeof firebase !== 'undefined' && i >= urls.length) return resolve(true);
+                    if (i >= urls.length) {
+                        if (typeof firebase !== 'undefined') return resolve(true);
+                        return reject(new Error('Firebase SDK load failed — internet / CDN block check করুন'));
+                    }
+                    var src = urls[i++];
+                    // skip if already present
+                    if (document.querySelector('script[src="' + src + '"]')) {
+                        return setTimeout(next, 50);
+                    }
+                    var s = document.createElement('script');
+                    s.src = src;
+                    s.async = false;
+                    s.onload = function() { next(); };
+                    s.onerror = function() { reject(new Error('Failed to load: ' + src)); };
+                    document.head.appendChild(s);
+                }
+                // if scripts in head still loading, wait a bit
+                if (document.querySelector('script[src*="firebase-app-compat"]')) {
+                    var tries = 0;
+                    (function wait() {
+                        if (typeof firebase !== 'undefined') return resolve(true);
+                        if (tries++ > 40) return next(); // force inject
+                        setTimeout(wait, 100);
+                    })();
+                } else {
+                    next();
+                }
+            });
+        };
+
         window.testFirebaseConnection = async function() {
             if ($('fbConfigStatus')) $('fbConfigStatus').textContent = 'Testing…';
             try {
-                if (typeof firebase === 'undefined') throw new Error('Firebase SDK not loaded (check internet)');
+                await loadFirebaseSdkIfNeeded();
+                if (typeof firebase === 'undefined') throw new Error('Firebase SDK not loaded (check internet / adblock)');
                 if (typeof initCloudSDK === 'function') initCloudSDK();
                 var cfg = (typeof loadFirebaseConfig === 'function') ? loadFirebaseConfig() : {};
                 if (!cfg.apiKey) throw new Error('No config');
