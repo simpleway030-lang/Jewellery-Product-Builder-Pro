@@ -5118,7 +5118,10 @@
                 <div class="chat-title">
                     <span>✨ AI Assistant</span>
                 </div>
-                <button onclick="closeModal('aiChatModal')">✕ Close</button>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button type="button" onclick="startNewChat()" title="Start a fresh conversation">🆕 New chat</button>
+                    <button onclick="closeModal('aiChatModal')">✕ Close</button>
+                </div>
             </div>
             <!-- Type area on TOP — clear large text, auto-grows -->
             <div class="chat-compose-top" id="chatComposeTop">
@@ -5144,6 +5147,35 @@
                 </div>
                 <button type="button" class="chat-send-btn" onclick="sendChatMessage()">Send ➤</button>
             </div>
+        </div>
+    </div>
+    <div id="appLockScreen" class="modal-backdrop" style="z-index:99999;">
+        <div class="modal-box dark" style="max-width:380px;text-align:center;">
+            <div style="font-size:40px;margin-bottom:8px;">🔒</div>
+            <h2 id="lockTitle" style="font-size:18px;margin:0 0 6px;">Unlock App</h2>
+            <div id="lockSubtitle" class="note" style="margin-bottom:16px;">Enter password to continue</div>
+            <div id="lockError" style="color:#dc2626;font-size:12.5px;font-weight:700;min-height:16px;margin-bottom:6px;"></div>
+
+            <div id="lockSetupBox" style="display:none;text-align:left;">
+                <label style="display:block;margin-bottom:10px;">Admin name
+                    <input id="lockSetupName" type="text" placeholder="আপনার নাম" style="margin-top:4px;width:100%;">
+                </label>
+                <label style="display:block;margin-bottom:10px;">Password (min 4 চার)
+                    <input id="lockSetupPass" type="password" placeholder="নতুন পাসওয়ার্ড" style="margin-top:4px;width:100%;">
+                </label>
+                <label style="display:block;margin-bottom:14px;">Confirm password
+                    <input id="lockSetupPass2" type="password" placeholder="পাসওয়ার্ড আবার লিখুন" style="margin-top:4px;width:100%;" onkeydown="if(event.key==='Enter')completeAdminSetup();">
+                </label>
+                <button style="width:100%;" onclick="completeAdminSetup()">✅ Create Admin</button>
+            </div>
+
+            <div id="lockLoginBox" style="display:none;text-align:left;">
+                <label style="display:block;margin-bottom:14px;">Password
+                    <input id="lockLoginPass" type="password" placeholder="পাসওয়ার্ড" style="margin-top:4px;width:100%;" onkeydown="if(event.key==='Enter')appUnlock();">
+                </label>
+                <button style="width:100%;" onclick="appUnlock()">🔓 Unlock</button>
+            </div>
+            <div id="lockSessionHint" class="note" style="margin-top:14px;font-size:11px;opacity:.7;"></div>
         </div>
     </div>
     <div class="toast-stack" id="toastStack"></div>
@@ -16112,6 +16144,36 @@ function saveV3Data() {
         function sj(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
         function money(v) { return '₹' + Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
 
+        // ---- Conversation memory so replies can continue a thread instead of resetting each turn ----
+        var MAX_HISTORY_TURNS = 12; // keep last 12 user+assistant messages (6 exchanges)
+        window.AI_CHAT_HISTORY = window.AI_CHAT_HISTORY || [];
+        window.aiChatHistoryPush = function(role, content) {
+            window.AI_CHAT_HISTORY.push({ role: role, content: String(content || '') });
+            if (window.AI_CHAT_HISTORY.length > MAX_HISTORY_TURNS) {
+                window.AI_CHAT_HISTORY = window.AI_CHAT_HISTORY.slice(-MAX_HISTORY_TURNS);
+            }
+        };
+        window.aiChatHistoryClear = function() { window.AI_CHAT_HISTORY = []; };
+
+        // Start a brand-new conversation: wipe memory + visible thread, show a fresh welcome bubble
+        window.startNewChat = function() {
+            aiChatHistoryClear();
+            var box = $('chatMessages') || document.querySelector('#aiChatModal .chat-messages, #aiChatModal .messages');
+            if (box) {
+                box.innerHTML = '';
+                var welcome = document.createElement('div');
+                welcome.className = 'chat-msg ai';
+                welcome.innerHTML = '<span class="ai-label">🤖 AI <span class="ai-online-badge online">● active</span></span>' +
+                    'New chat শুরু হলো — আগের কথোপকথন ভুলে গেছি। কী জানতে চান? 👋' +
+                    '<span class="timestamp">Just now</span>';
+                box.appendChild(welcome);
+                box.scrollTop = 0;
+            }
+            var input = $('chatInput');
+            if (input) { input.value = ''; input.focus(); }
+            if (typeof showToast === 'function') showToast('🆕 New chat started', 'ok');
+        };
+
         function defaultCloud() {
             return { provider: 'local', key: '', model: '', openrouterModel: 'google/gemma-2-9b-it:free' };
         }
@@ -16287,7 +16349,7 @@ function saveV3Data() {
             return '';
         }
 
-        window.callCloudAI = async function(userMsg) {
+        window.callCloudAI = async function(userMsg, history) {
             var cfg = getCloudAi();
             if (cfg.provider === 'local' || !cfg.key) {
                 throw new Error('NO_CLOUD');
@@ -16295,13 +16357,24 @@ function saveV3Data() {
             var ctx = buildFullAppContextForAI();
             var sys = systemPrompt(ctx);
             var model = defaultModel(cfg.provider, cfg);
+            // Use passed-in history if given, else fall back to the shared session history
+            var hist = Array.isArray(history) ? history : (window.AI_CHAT_HISTORY || []);
 
             if (cfg.provider === 'gemini') {
                 var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(cfg.key);
+                // First turn carries the full system context; later turns replay as plain user/model exchange
+                var contents = [
+                    { role: 'user', parts: [{ text: sys + '\n\nUser question:\n' + (hist.length ? hist[0].content : userMsg) }] }
+                ];
+                if (hist.length) {
+                    // hist[0] was already folded into the first turn above; replay the rest, then the new question
+                    for (var gi = 1; gi < hist.length; gi++) {
+                        contents.push({ role: hist[gi].role === 'assistant' ? 'model' : 'user', parts: [{ text: hist[gi].content }] });
+                    }
+                    contents.push({ role: 'user', parts: [{ text: userMsg }] });
+                }
                 var body = {
-                    contents: [
-                        { role: 'user', parts: [{ text: sys + '\n\nUser question:\n' + userMsg }] }
-                    ],
+                    contents: contents,
                     generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
                 };
                 var r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -16324,12 +16397,15 @@ function saveV3Data() {
                 headers['X-Title'] = 'Jewellery Manager Pro';
             } else throw new Error('Unknown provider');
 
+            var msgList = [{ role: 'system', content: sys }];
+            hist.forEach(function(h) {
+                msgList.push({ role: h.role === 'assistant' ? 'assistant' : 'user', content: h.content });
+            });
+            msgList.push({ role: 'user', content: userMsg });
+
             var payload = {
                 model: model,
-                messages: [
-                    { role: 'system', content: sys },
-                    { role: 'user', content: userMsg }
-                ],
+                messages: msgList,
                 temperature: 0.7,
                 max_tokens: 2048
             };
@@ -16388,7 +16464,10 @@ function saveV3Data() {
             try {
                 var reply;
                 if (cfg.provider !== 'local' && cfg.key) {
-                    reply = await callCloudAI(msg);
+                    reply = await callCloudAI(msg, window.AI_CHAT_HISTORY);
+                    // Remember this exchange so the next reply continues the same thread
+                    aiChatHistoryPush('user', msg);
+                    aiChatHistoryPush('assistant', reply);
                 } else {
                     reply = (typeof aiBusinessAgentReply === 'function')
                         ? aiBusinessAgentReply(msg)
@@ -16545,7 +16624,13 @@ function saveV3Data() {
         window.appLockNow = function() {
             sj(KEY_SESSION, {});
             window.JP_SESSION = null;
-            showLock('login');
+            var sec = getAppSecurity();
+            if (!sec.adminHash) {
+                // No admin password exists yet — first-time setup instead of a dead-end login
+                showLock('setup');
+            } else {
+                showLock('login');
+            }
             if (typeof showToast === 'function') showToast('App locked', 'info');
         };
 
