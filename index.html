@@ -7,279 +7,20 @@
     <meta name="description" content="Production jewellery ERP — inventory, billing, karigar, CRM, AI, multi-role security." />
     <meta name="application-name" content="Jewellery Manager Pro" />
     <meta name="app-version" content="4.0.0-production" />
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" id="jpManifestLink" href="#">
     <meta name="theme-color" content="#2563eb">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Jewellery Pro">
-    <link rel="icon" href="icon-192.png">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZjVkNzZlIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjYzlhMjI3Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIHJ4PSI0MCIgZmlsbD0iIzFjMWMxZSIvPjxwYXRoIGQ9Ik05NiAyOCBMMTYwIDcyIEw5NiAxNjQgTDMyIDcyIFoiIGZpbGw9InVybCgjZykiLz48Y2lyY2xlIGN4PSI5NiIgY3k9Ijg4IiByPSIxOCIgZmlsbD0iIzFjMWMxZSIgb3BhY2l0eT0iLjM1Ii8+PC9zdmc+">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZjVkNzZlIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjYzlhMjI3Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIHJ4PSI0MCIgZmlsbD0iIzFjMWMxZSIvPjxwYXRoIGQ9Ik05NiAyOCBMMTYwIDcyIEw5NiAxNjQgTDMyIDcyIFoiIGZpbGw9InVybCgjZykiLz48Y2lyY2xlIGN4PSI5NiIgY3k9Ijg4IiByPSIxOCIgZmlsbD0iIzFjMWMxZSIgb3BhY2l0eT0iLjM1Ii8+PC9zdmc+">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- V3_DEFERRED_SCRIPT
-        // ===== VERSION 3.0: JEWELLERY OPERATIONS STUDIO =====
-        var V3_STORAGE_KEY = 'jp_v3_operations_v1';
-        var v3Data = (function() {
-            try {
-                var saved = JSON.parse(localStorage.getItem(V3_STORAGE_KEY) || '{}');
-                return {
-                    rates: Object.assign({ gold24: 0, gold22: 0, gold18: 0, silver: 0, updatedAt: '' }, saved.rates || {}),
-                    jobs: Array.isArray(saved.jobs) ? saved.jobs : []
-                };
-            } catch (error) {
-                return { rates: { gold24: 0, gold22: 0, gold18: 0, silver: 0, updatedAt: '' }, jobs: [] };
-            }
-        })();
+    
 
-        function readV3ProductProfile() {
-            function value(id) { return $(id) ? $(id).value.trim() : ''; }
-            return { metal: value('prodMetal'), purity: value('prodPurity'), grossWeight: value('prodGrossWeight'),
-                netWeight: value('prodNetWeight'), stone: value('prodStone'), certificate: value('prodCertificate'),
-                engraving: value('prodEngraving') };
-        }
-
-        function writeV3ProductProfile(profile) {
-            profile = profile || {};
-            var fields = { prodMetal: profile.metal, prodPurity: profile.purity, prodGrossWeight: profile.grossWeight,
-                prodNetWeight: profile.netWeight, prodStone: profile.stone, prodCertificate: profile.certificate,
-                prodEngraving: profile.engraving };
-            Object.keys(fields).forEach(function(id) { if ($(id)) $(id).value = fields[id] || ''; });
-        }
-
-        function saveV3Data() {
-            localStorage.setItem(V3_STORAGE_KEY, JSON.stringify(v3Data));
-        }
-
-        function v3Money(value) { return 'INR ' + Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-
-        function v3Today() { return new Date().toISOString().slice(0, 10); }
-
-        function v3Date(value) {
-            if (!value) return 'No promised date';
-            return new Date(value + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-        }
-
-        function getV3Estimate() {
-            var gross = Math.max(0, parseFloat($('v3CalcGross').value) || 0);
-            var stone = Math.max(0, parseFloat($('v3CalcStone').value) || 0);
-            var net = Math.max(0, gross - stone);
-            var rateKey = $('v3CalcMetal').value;
-            var rate = Number(v3Data.rates[rateKey] || 0);
-            var material = net * rate;
-            var makingInput = Math.max(0, parseFloat($('v3Making').value) || 0);
-            var makingType = $('v3MakingType').value;
-            var making = makingType === 'gram' ? net * makingInput : makingType === 'percent' ? material * makingInput / 100 : makingInput;
-            var hallmark = Math.max(0, parseFloat($('v3Hallmark').value) || 0);
-            var subtotal = material + making + hallmark;
-            var tax = subtotal * Math.max(0, parseFloat($('v3Tax').value) || 0) / 100;
-            return { gross: gross, stone: stone, net: net, rate: rate, material: material, making: making, hallmark: hallmark,
-                subtotal: subtotal, tax: tax, total: subtotal + tax };
-        }
-
-        function renderV3Calculator() {
-            if (!$('v3CalcTotal')) return;
-            var quote = getV3Estimate();
-            $('v3CalcTotal').textContent = v3Money(quote.total);
-            $('v3CalcBreakdown').textContent = 'Net ' + quote.net.toFixed(3) + 'g x ' + v3Money(quote.rate) +
-                ' + making ' + v3Money(quote.making) + ' + hallmark ' + v3Money(quote.hallmark) + ' + GST ' + v3Money(quote.tax);
-        }
-
-        function saveV3Rates() {
-            v3Data.rates.gold24 = Math.max(0, parseFloat($('v3Gold24').value) || 0);
-            v3Data.rates.gold22 = Math.max(0, parseFloat($('v3Gold22').value) || 0);
-            v3Data.rates.gold18 = Math.max(0, parseFloat($('v3Gold18').value) || 0);
-            v3Data.rates.silver = Math.max(0, parseFloat($('v3Silver').value) || 0);
-            v3Data.rates.updatedAt = new Date().toISOString();
-            saveV3Data();
-            renderV3Calculator();
-            renderV3RateStamp();
-        }
-
-        function renderV3RateStamp() {
-            if (!$('v3RateUpdated')) return;
-            $('v3RateUpdated').textContent = v3Data.rates.updatedAt ? 'Rates updated ' + new Date(v3Data.rates.updatedAt).toLocaleString('en-IN') : 'Rates have not been set yet';
-        }
-
-        function prefillV3JobFromRate() {
-            var quote = getV3Estimate();
-            $('v3JobEstimate').value = quote.total.toFixed(2);
-            if (!$('v3JobItem').value.trim()) $('v3JobItem').value = $('v3CalcMetal').options[$('v3CalcMetal').selectedIndex].text + ' custom piece';
-            showToast('Rate estimate copied to the job card', 'ok');
-        }
-
-        function createV3Job() {
-            var customer = $('v3JobCustomer').value.trim();
-            var item = $('v3JobItem').value.trim();
-            if (!customer || !item) { showToast('Customer name and item/design are required', 'err'); return; }
-            var job = { id: 'JOB-' + Date.now().toString(36).toUpperCase(), customer: customer, phone: $('v3JobPhone').value.trim(),
-                item: item, dueDate: $('v3JobDue').value, estimate: Math.max(0, parseFloat($('v3JobEstimate').value) || 0),
-                advance: Math.max(0, parseFloat($('v3JobAdvance').value) || 0), notes: $('v3JobNotes').value.trim(),
-                status: 'received', createdAt: new Date().toISOString() };
-            v3Data.jobs.unshift(job);
-            ['v3JobCustomer', 'v3JobPhone', 'v3JobItem', 'v3JobDue', 'v3JobEstimate', 'v3JobAdvance', 'v3JobNotes'].forEach(function(id) { $(id).value = ''; });
-            saveV3Data();
-            renderV3Studio();
-            showToast('Job card ' + job.id + ' created', 'ok');
-        }
-
-        function updateV3JobStatus(id, status) {
-            var job = v3Data.jobs.find(function(entry) { return entry.id === id; });
-            if (!job) return;
-            job.status = status;
-            job.updatedAt = new Date().toISOString();
-            saveV3Data();
-            renderV3Studio();
-        }
-
-        function deleteV3Job(id) {
-            if (!confirm('Delete this job card?')) return;
-            v3Data.jobs = v3Data.jobs.filter(function(job) { return job.id !== id; });
-            saveV3Data();
-            renderV3Studio();
-            showToast('Job card deleted', 'ok');
-        }
-
-        function printV3Job(id) {
-            var job = v3Data.jobs.find(function(entry) { return entry.id === id; });
-            if (!job) return;
-            var safe = function(value) { return escapeHtml(value || '').replace(/\n/g, '<br>'); };
-            var due = Math.max(0, Number(job.estimate || 0) - Number(job.advance || 0));
-            var win = window.open('', '_blank', 'width=720,height=820');
-            if (!win) { showToast('Please allow pop-ups to print job cards', 'err'); return; }
-            win.document.write('<!doctype html><html><head><title>' + safe(job.id) + '</title><style>body{font-family:Arial,sans-serif;max-width:680px;margin:36px auto;color:#172033}.ticket{border:2px solid #172033;padding:28px;border-radius:12px}.row{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #ddd;padding:10px 0}.label{color:#657084;font-size:11px;text-transform:uppercase;font-weight:bold}.value{font-size:15px;font-weight:600}.total{font-size:22px;color:#0b65c2;font-weight:bold}@media print{body{margin:18px}}@media(max-width:700px){#moduleToggleGrid{grid-template-columns:1fr!important}}
-</style>
-    <script>
-      // Backend API base — empty = same origin when served by Node backend; set manually if needed
-      window.JP_PRODUCTION = true;
-      window.JP_VERSION = '4.0.0';
-      window.JP_API_BASE = window.JP_API_BASE || '';
-      window.JP_API = function(path) {
-        var base = (window.JP_API_BASE || '').replace(/\/$/, '');
-        return base + path;
-      };
-    </script>
-</head><body>
-
-<div id="appLockScreen" style="display:none;position:fixed;inset:0;z-index:99999;background:linear-gradient(160deg,#0f172a,#1e293b 50%,#0f172a);color:#e2e8f0;font-family:system-ui,sans-serif;align-items:center;justify-content:center;padding:20px">
-  <div style="width:100%;max-width:420px;background:rgba(15,23,42,0.95);border:1px solid rgba(148,163,184,0.25);border-radius:20px;padding:28px 24px;box-shadow:0 25px 60px rgba(0,0,0,.45)">
-    <div style="text-align:center;margin-bottom:18px">
-      <div style="font-size:28px;margin-bottom:6px">🔐</div>
-      <div id="lockTitle" style="font-size:20px;font-weight:700">Jewellery Manager Pro</div>
-      <div id="lockSubtitle" style="font-size:13px;opacity:.75;margin-top:6px">Secure access</div>
-    </div>
-    <div id="lockSetupBox" style="display:none">
-      <div style="font-size:13px;opacity:.85;margin-bottom:12px;line-height:1.45">প্রথম সেটআপ — আপনি <b>Admin</b> হবেন। এই পাসওয়ার্ড ছাড়া অ্যাপ খুলবে না।</div>
-      <label style="display:block;font-size:12px;margin:8px 0 4px">Admin name</label>
-      <input id="lockSetupName" placeholder="Your name" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e2e8f0">
-      <label style="display:block;font-size:12px;margin:8px 0 4px">Password (min 4)</label>
-      <input id="lockSetupPass" type="password" placeholder="Create password" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e2e8f0">
-      <label style="display:block;font-size:12px;margin:8px 0 4px">Confirm password</label>
-      <input id="lockSetupPass2" type="password" placeholder="Confirm" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e2e8f0">
-      <button onclick="completeAdminSetup()" style="width:100%;margin-top:16px;padding:12px;border:none;border-radius:12px;background:#c9a227;color:#111;font-weight:700;cursor:pointer">Create Admin & Enter</button>
-    </div>
-    <div id="lockLoginBox" style="display:none">
-      <label style="display:block;font-size:12px;margin:8px 0 4px">Password</label>
-      <input id="lockLoginPass" type="password" placeholder="Enter app password" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e2e8f0" onkeydown="if(event.key==='Enter')appUnlock()">
-      <button onclick="appUnlock()" style="width:100%;margin-top:16px;padding:12px;border:none;border-radius:12px;background:#c9a227;color:#111;font-weight:700;cursor:pointer">Unlock</button>
-      <div style="font-size:11px;opacity:.65;margin-top:12px;text-align:center">Session: <span id="lockSessionHint">Admin / Staff</span></div>
-    </div>
-    <div id="lockError" style="color:#f87171;font-size:12px;margin-top:10px;min-height:16px;text-align:center"></div>
-  </div>
-</div>
-<div class="ticket"><h1>Repair / Custom Job Card</h1><p class="label">' + safe(job.id) + ' · ' + safe(job.status) + '</p><div class="row"><div><div class="label">Customer</div><div class="value">' + safe(job.customer) + '</div></div><div><div class="label">Phone</div><div class="value">' + safe(job.phone || '—') + '</div></div></div><div class="row"><div><div class="label">Item / design</div><div class="value">' + safe(job.item) + '</div></div><div><div class="label">Promised date</div><div class="value">' + safe(v3Date(job.dueDate)) + '</div></div></div><div class="row"><div><div class="label">Work notes</div><div class="value">' + safe(job.notes || '—') + '</div></div></div><div class="row"><div><div class="label">Estimate</div><div class="value">' + v3Money(job.estimate) + '</div></div><div><div class="label">Advance</div><div class="value">' + v3Money(job.advance) + '</div></div><div><div class="label">Balance</div><div class="total">' + v3Money(due) + '</div></div></div><p style="margin-top:35px">Customer signature: ____________________</p></div><script>window.onload=function(){window.print()}<\/script></body></html>');
-            win.document.close();
-        }
-
-        function renderV3Jobs() {
-            var board = $('v3JobsBoard');
-            if (!board) return;
-            var lanes = [{ id: 'received', label: 'Received' }, { id: 'bench', label: 'At Bench' }, { id: 'ready', label: 'Ready for Pickup' }, { id: 'delivered', label: 'Delivered' }];
-            board.innerHTML = lanes.map(function(lane) {
-                var entries = v3Data.jobs.filter(function(job) { return job.status === lane.id; });
-                var cards = entries.map(function(job) {
-                    var balance = Math.max(0, Number(job.estimate || 0) - Number(job.advance || 0));
-                    var next = lane.id === 'received' ? 'bench' : lane.id === 'bench' ? 'ready' : lane.id === 'ready' ? 'delivered' : '';
-                    return '<div class="v3-job"><div class="v3-job-title">' + escapeHtml(job.item) + '</div><div class="v3-job-meta">' + escapeHtml(job.customer) + (job.phone ? ' · ' + escapeHtml(job.phone) : '') + '<br>' + escapeHtml(job.id) + '<br>Due: ' + escapeHtml(v3Date(job.dueDate)) + '<br>Balance: ' + v3Money(balance) + '</div><div class="v3-job-actions">' + (next ? '<button onclick="updateV3JobStatus(\'' + job.id + '\',\'' + next + '\')">Move forward</button>' : '') + '<button class="ghost" onclick="printV3Job(\'' + job.id + '\')">Print</button><button class="ghost" onclick="deleteV3Job(\'' + job.id + '\')">Delete</button></div></div>';
-                }).join('');
-                return '<div class="v3-lane"><div class="v3-lane-head"><span>' + lane.label + '</span><span>' + entries.length + '</span></div>' + (cards || '<div class="note" style="font-size:11px;">No jobs</div>') + '</div>';
-            }).join('');
-        }
-
-        function renderV3Summary() {
-            var active = v3Data.jobs.filter(function(job) { return job.status !== 'delivered'; });
-            var ready = v3Data.jobs.filter(function(job) { return job.status === 'ready'; });
-            var balance = active.reduce(function(sum, job) { return sum + Math.max(0, Number(job.estimate || 0) - Number(job.advance || 0)); }, 0);
-            if ($('v3Summary')) $('v3Summary').innerHTML = '<div><b>' + active.length + '</b><span>Open jobs</span></div><div><b>' + ready.length + '</b><span>Ready pickup</span></div><div><b>' + v3Money(balance) + '</b><span>Open balance</span></div>';
-        }
-
-        function renderV3ActionQueue() {
-            var queue = $('v3ActionQueue');
-            if (!queue) return;
-            var today = v3Today();
-            var actions = v3Data.jobs.filter(function(job) { return job.status === 'ready' || (job.status !== 'delivered' && job.dueDate && job.dueDate < today); }).sort(function(a, b) { return (a.dueDate || '9999').localeCompare(b.dueDate || '9999'); });
-            queue.innerHTML = actions.length ? actions.map(function(job) {
-                var overdue = job.status !== 'ready' && job.dueDate < today;
-                return '<div class="v3-queue-item"><div><b>' + escapeHtml(job.customer) + '</b><div class="muted" style="font-size:11px;">' + escapeHtml(job.item) + ' · ' + escapeHtml(v3Date(job.dueDate)) + '</div></div><span class="badge ' + (overdue ? 'badge-danger' : 'badge-success') + '">' + (overdue ? 'Overdue' : 'Ready') + '</span></div>';
-            }).join('') : '<div class="note" style="padding:18px 0;">No pickups or overdue jobs. You are all caught up.</div>';
-        }
-
-        function renderV3Studio() {
-            if (!$('studio')) return;
-            var rateInputs = { v3Gold24: 'gold24', v3Gold22: 'gold22', v3Gold18: 'gold18', v3Silver: 'silver' };
-            Object.keys(rateInputs).forEach(function(id) { if ($(id) && document.activeElement !== $(id)) $(id).value = v3Data.rates[rateInputs[id]] || ''; });
-            renderV3Calculator();
-            renderV3RateStamp();
-            renderV3Summary();
-            renderV3Jobs();
-            renderV3ActionQueue();
-        }
-
-        function openV3Studio() {
-            document.querySelectorAll('.tab').forEach(function(tab) { tab.classList.toggle('active', tab.dataset.tab === 'studio'); });
-            document.querySelectorAll('.mobile-drawer-link').forEach(function(link) { link.classList.toggle('active', link.dataset.tab === 'studio'); });
-            document.querySelectorAll('section.card').forEach(function(section) { section.style.display = 'none'; });
-            $('studio').style.display = 'block';
-            if (history.state && history.state.tab !== 'studio') history.pushState({ tab: 'studio' }, '', location.pathname + location.search + '#studio');
-            renderV3Studio();
-        }
-
-        function setupV3Navigation() {
-            var tabs = document.querySelector('.tabs');
-            if (tabs && !document.querySelector('.tab[data-tab="studio"]')) {
-                var tab = document.createElement('div');
-                tab.className = 'tab'; tab.dataset.tab = 'studio'; tab.innerHTML = '<span class="tab-icon">&#10024;</span> V3 Studio';
-                tab.onclick = openV3Studio;
-                tabs.appendChild(tab);
-            }
-            var drawerLinks = document.querySelector('.mobile-drawer-links');
-            if (drawerLinks && !document.querySelector('.mobile-drawer-link[data-tab="studio"]')) {
-                var link = document.createElement('div');
-                link.className = 'mobile-drawer-link'; link.dataset.tab = 'studio'; link.innerHTML = '<span class="tab-icon">&#10024;</span> V3 Studio';
-                link.onclick = function() { openV3Studio(); closeMobileDrawer(); };
-                drawerLinks.appendChild(link);
-            }
-            var heading = document.querySelector('header h1');
-            if (heading) heading.textContent = 'Jewellery Manager Pro';
-            document.title = 'Jewellery Manager Pro';
-            var footer = document.querySelector('footer');
-            if (footer) footer.textContent = 'Jewellery Manager Pro · product passports · rate costing · repair workflow · runs offline';
-            var baseQuickView = renderQuickView;
-            renderQuickView = function() {
-                baseQuickView();
-                var profile = qvProduct && qvProduct.profile;
-                if (!profile || !Object.keys(profile).some(function(key) { return profile[key]; })) return;
-                var target = $('qvMeta');
-                if (!target) return;
-                var details = [profile.metal, profile.purity, profile.netWeight ? profile.netWeight + 'g' : profile.grossWeight ? profile.grossWeight + 'g gross' : '', profile.stone, profile.certificate].filter(Boolean);
-                if (details.length) target.textContent += ' · ' + details.join(' · ');
-            };
-        }
-
-        setupV3Navigation();
-    V3_DEFERRED_SCRIPT -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js">
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
@@ -4015,10 +3756,7 @@
                             <input id="priceInput" type="number" step="0.01" placeholder="Purchase + making + margin" readonly class="price-input" title="Automatically calculated from purchase price, making charge and margin">
                         </div>
                         <div class="field-group">
-                            <label>Item Photo (optional)</label>
-                            <input id="itemPhotoInput" type="file" accept="image/*" style="margin-top:4px">
-                            <div id="itemPhotoPreview" style="margin-top:6px"></div>
-                            <div class="note" style="font-size:11px;margin-top:4px">Gallery বা Camera — দুটো থেকেই বেছে নিতে পারবেন (camera force নেই)</div>
+
                         </div>
                         <div class="field-group" style="grid-column: span 2;">
                             <button id="saveItemBtn" class="action-btn" style="padding:14px 24px;font-size:16px;font-weight:700;width:100%;">💾 Save Item</button>
@@ -4746,7 +4484,7 @@
                             <div id="tenantList" style="margin-top:10px;max-height:220px;overflow:auto"></div>
                         </div>
                         <div style="background:var(--border-soft);border-radius:14px;padding:14px">
-                            <div class="section-title" style="font-size:14px">💳 Subscription (local)</div>
+                            <div class="section-title" style="font-size:14px;display:none">💳 Subscription (local)</div>
                             <label>Active plan<select id="subPlan" onchange="setSubscriptionPlan(this.value)"><option>free</option><option>pro</option><option>business</option></select></label>
                             <div id="subStatus" class="note" style="margin-top:8px"></div>
                             <hr>
@@ -4780,12 +4518,12 @@
                             <label>Bill photo / scan<input id="billPhoto" type="file" accept="image/*"></label>
                             <div id="billPhotoPreview" style="margin-top:8px"></div>
                             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-                                <button onclick="readPurchaseBillAI()">🤖 AI Read bill</button>
+                                <button onclick="readPurchaseBillAI()">🤖 AI Read (optional)</button>
                                 <button class="ghost" onclick="addEmptyBillRow()">+ Empty row</button>
                             </div>
                             <div class="table-scroll" style="margin-top:12px;max-height:320px">
                                 <table id="billRowsTable">
-                                    <thead><tr><th>Category</th><th>Size</th><th>Name/Color</th><th>Qty</th><th>Rate</th><th>Amount</th><th></th></tr></thead>
+                                    <thead><tr><th>CATEGORY</th><th>SIZE</th><th>NAME</th><th>QTY</th><th>RATE</th><th>MAKING</th><th>MARGIN%</th><th>AMT</th><th></th></tr></thead>
                                     <tbody id="billRowsBody"></tbody>
                                 </table>
                             </div>
@@ -5289,17 +5027,10 @@
             </div>
             <aside class="right-panel">
                 <div class="card">
-                    <div class="section-title" style="font-size:15px">📊 Quick Actions</div>
-                    <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
-                        <button class="ghost" onclick="switchTab('builder'); startNewProduct();">➕ New Product</button>
-                        <button class="ghost" onclick="switchTab('itemdb');">📦 Manage Items</button>
-                        <button class="ghost" onclick="switchTab('ledger'); openWalkinLedger();">🚶 Walk-in Ledger</button>
-                        <button class="ghost" onclick="switchTab('billing');">🧾 Billing</button>
-                        <button class="ghost" onclick="switchTab('ledger');">📒 Ledger</button>
-                        <button class="ghost" onclick="switchTab('settings');">⚙ Settings</button>
-                        <button class="ghost" onclick="openAIChat();" style="background:rgba(var(--accent-rgb),0.08);color:var(--accent);">✨ Ask AI</button>
-                        <button class="ghost" onclick="window.open(location.href, '_blank', 'width=900,height=800')">🪟 Open in New Window</button>
+                    <div class="section-title" style="font-size:15px;display:flex;justify-content:space-between;align-items:center">📊 Quick Actions
+                        <button class="ghost small" onclick="openQuickActionsEditor()" title="Customize">⚙</button>
                     </div>
+                    <div id="quickActionsList" style="display:flex;flex-direction:column;gap:8px;margin-top:10px;"></div>
                 </div>
             </aside>
         </div>
@@ -7306,8 +7037,9 @@
                     '</span>' + (isActive ? '<span class="badge badge-primary">selected</span>' : '') +
                     '<span class="badge badge-success">Price: ₹' + stats.totalSell.toFixed(2) +
                     ' · Profit: ₹' + stats.profit.toFixed(2) +
-                    '</span></div><div><button class="small ghost" onclick="selectVariation(' + i +
-                    ')">Select</button><button class="small danger" onclick="removeVariation(' + i +
+                    '</span></div><div style="display:flex;gap:4px;flex-wrap:wrap"><button class="small ghost" onclick="selectVariation(' + i +
+                    ')">Select</button><button class="small ghost" onclick="editVariationInQueue(' + i +
+                    ')">✎ Edit</button><button class="small danger" onclick="removeVariation(' + i +
                     ')">✕</button></div></div>';
                 container.appendChild(div);
             });
@@ -9319,8 +9051,14 @@
                     }
                 });
             }
-            if (s && s.customer.id) { custLedger = custLedger.filter(function(
-                e) { return e.invoiceId !== s.id; }); }
+            // Remove ALL ledger rows tied to this invoice (id or invoiceNo)
+            if (s) {
+                custLedger = custLedger.filter(function(e) {
+                    if (e.invoiceId != null && String(e.invoiceId) === String(s.id)) return false;
+                    if (s.invoiceNo && e.invoiceNo && String(e.invoiceNo) === String(s.invoiceNo)) return false;
+                    return true;
+                });
+            }
             sales = sales.filter(function(s2) { return s2.id !== id; });
             logActivity('delete_sale', 'Deleted sale ' + (s && s.invoiceNo || id));
             saveAll(true);
@@ -9329,9 +9067,11 @@
             renderProductGrid();
             renderStockTable();
             renderWalkinLedger();
+            if (typeof renderCustomerLedger === 'function') renderCustomerLedger();
+            if (typeof populateCustomerSelect === 'function') populateCustomerSelect();
             if (qvProduct) renderQuickView();
             updateStats();
-            showToast('Deleted', 'ok');
+            showToast('Deleted + ledger updated', 'ok');
         }
 
         function editCurrentInvoice() {
@@ -9854,8 +9594,9 @@
                 '</div><div class="ls-lbl">' + (balance > 0 ? 'Due' : 'Credit') + '</div></div>';
             if (entries.length === 0) { $('custLedgerEntries').innerHTML =
                 '<div class="note">No entries.</div>'; return; }
-            $('custLedgerEntries').innerHTML = entries.slice().reverse().map(function(e, idx) {
-                return '<div class="ledger-entry"><div><div style="font-weight:600;">' + (e.type ===
+            $('custLedgerEntries').innerHTML = entries.slice().reverse().map(function(e) {
+                var eid = (e.id != null ? String(e.id) : '');
+                return '<div class="ledger-entry" data-entry-id="' + eid + '"><div><div style="font-weight:600;">' + (e.type ===
                     'sale' ? '🧾 Sale' : '💳 Payment') +
                     '</div><div class="muted" style="font-size:11px;">' + (e.invoiceNo || '') + ' ' + (e
                         .date ? new Date(e.date).toLocaleDateString() : '') +
@@ -9868,10 +9609,10 @@
                         '<div class="amt credit">− ₹' + Number(e.credit).toFixed(2) + '</div>' : '') +
                     '<div style="font-size:11px;color:var(--muted-2);">bal: ₹' + Number(e.balance ||
                         0).toFixed(2) +
-                    '</div></div><div class="ledger-actions"><button class="small ghost" onclick="editLedgerEntry(\'customer\',' +
-                    idx +
-                    ')">✎</button><button class="small danger" onclick="deleteLedgerEntry(\'customer\',' +
-                    idx + ')">Del</button></div></div>';
+                    '</div></div><div class="ledger-actions"><button class="small ghost" type="button" onclick="editLedgerEntry(\'customer\',\'' +
+                    eid +
+                    '\')">✎</button><button class="small danger" type="button" onclick="deleteLedgerEntry(\'customer\',\'' +
+                    eid + '\')">Del</button></div></div>';
             }).join('');
             renderLedgerPersonList('customer');
             renderWalkinLedger();
@@ -9951,24 +9692,16 @@
                 '</div><div class="ls-lbl">' + (balance > 0 ? 'Due' : 'Credit') + '</div></div>';
             if (entries.length === 0) { $('supLedgerEntries').innerHTML =
                 '<div class="note">No entries.</div>'; return; }
-            $('supLedgerEntries').innerHTML = entries.slice().reverse().map(function(e, idx) {
-                return '<div class="ledger-entry"><div><div style="font-weight:600;">' + (e.type ===
-                    'purchase' ? '📦 Purchase' : '💳 Payment') +
-                    '</div><div class="muted" style="font-size:11px;">' + (e.date ? new Date(e.date)
-                        .toLocaleDateString() : '') +
-                    '</div>' + (e.notes ?
-                        '<div style="font-size:11px;color:var(--muted-2);">' + escapeHtml(e.notes) +
-                        '</div>' : '') +
-                    '</div><div style="text-align:right;">' + (e.debit ?
-                        '<div class="amt credit">− ₹' + Number(e.debit).toFixed(2) + '</div>' : '') +
-                    (e.credit ?
-                        '<div class="amt debit">+ ₹' + Number(e.credit).toFixed(2) + '</div>' : '') +
-                    '<div style="font-size:11px;color:var(--muted-2);">bal: ₹' + Number(e.balance ||
-                        0).toFixed(2) +
-                    '</div></div><div class="ledger-actions"><button class="small ghost" onclick="editLedgerEntry(\'supplier\',' +
-                    idx +
-                    ')">✎</button><button class="small danger" onclick="deleteLedgerEntry(\'supplier\',' +
-                    idx + ')">Del</button></div></div>';
+            $('supLedgerEntries').innerHTML = entries.slice().reverse().map(function(e) {
+                var eid = (e.id != null ? String(e.id) : '');
+                return '<div class="ledger-entry" data-entry-id="' + eid + '"><div><div style="font-weight:600;">' + (e.type || 'Entry') +
+                    '</div><div class="muted" style="font-size:11px;">' + (e.invoiceNo || '') + ' ' + (e.date ? new Date(e.date).toLocaleDateString() : '') +
+                    '</div>' + (e.notes ? '<div style="font-size:11px;color:var(--muted-2);">' + escapeHtml(e.notes) + '</div>' : '') +
+                    '</div><div style="text-align:right;">' + (e.debit ? '<div class="amt debit">+ ₹' + Number(e.debit).toFixed(2) + '</div>' : '') +
+                    (e.credit ? '<div class="amt credit">− ₹' + Number(e.credit).toFixed(2) + '</div>' : '') +
+                    '<div style="font-size:11px;color:var(--muted-2);">bal: ₹' + Number(e.balance || 0).toFixed(2) +
+                    '</div></div><div class="ledger-actions"><button class="small ghost" type="button" onclick="editLedgerEntry(\'supplier\',\'' + eid +
+                    '\')">✎</button><button class="small danger" type="button" onclick="deleteLedgerEntry(\'supplier\',\'' + eid + '\')">Del</button></div></div>';
             }).join('');
             renderLedgerPersonList('supplier');
         }
@@ -12398,7 +12131,8 @@ var gapiRetry = setInterval(function() {
 // ===== PWA: register service worker (installable, works offline) =====
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js').then(function(reg) {
+        Promise.resolve(null).then(function(reg) { // external sw.js optional; embedded SW handles PWA
+        if (!reg) return; 
             console.log('✅ Service worker registered:', reg.scope);
         }).catch(function(err) {
             console.warn('⚠️ Service worker registration failed:', err);
@@ -16592,7 +16326,7 @@ function saveV3Data() {
         var KEY_SESSION = 'jp_app_session_v1';
         var OPTIONAL = ['hrm','accounts','team','crm','ops','integrations','security','admin','reports','tasks','tools','studio'];
         // Free plan default allows core business modules only
-        var FREE_DEFAULT = { hrm: true, accounts: true, team: true, crm: true, ops: true, integrations: false, security: false, admin: false, reports: true, tasks: true, tools: true, studio: true };
+        var FREE_DEFAULT = { hrm: true, accounts: true, team: true, crm: true, ops: true, integrations: true, security: true, admin: true, reports: true, tasks: true, tools: true, studio: true };
 
         function lj(k, f) { try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch (e) { return f; } }
         function sj(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
@@ -17183,7 +16917,7 @@ Flow in app:
         }
 
         window.addEmptyBillRow = function() {
-            billRows.push({ category: 'Stone', size: '', name: '', qty: 0, rate: 0, amount: 0 });
+            billRows.push({ category: 'Stone', size: '', name: '', qty: 0, rate: 0, amount: 0, making: 0, margin: 0 });
             renderBillRows();
         };
         window.addEmptyProdCostRow = function() {
@@ -17194,13 +16928,25 @@ Flow in app:
         window.renderBillRows = function() {
             var body = $('billRowsBody');
             if (!body) return;
+            // Ensure header has margin/making
+            var table = $('billRowsTable');
+            if (table) {
+                var thead = table.querySelector('thead tr');
+                if (thead && thead.innerHTML.indexOf('MARGIN') < 0) {
+                    thead.innerHTML = '<th>CATEGORY</th><th>SIZE</th><th>NAME</th><th>QTY</th><th>RATE</th><th>MAKING</th><th>MARGIN%</th><th>AMT</th><th></th>';
+                }
+            }
             body.innerHTML = billRows.map(function(r, i) {
+                if (r.making == null) r.making = 0;
+                if (r.margin == null) r.margin = 0;
                 return '<tr>' +
-                    '<td><input value="' + escapeH(r.category) + '" onchange="billRows[' + i + '].category=this.value" style="width:90px"></td>' +
-                    '<td><input value="' + escapeH(r.size) + '" onchange="billRows[' + i + '].size=this.value" style="width:70px"></td>' +
-                    '<td><input value="' + escapeH(r.name) + '" onchange="billRows[' + i + '].name=this.value" style="width:90px"></td>' +
-                    '<td><input type="number" step="0.001" value="' + r.qty + '" onchange="billRows[' + i + '].qty=parseFloat(this.value)||0;recalcBillRow(' + i + ')" style="width:70px"></td>' +
-                    '<td><input type="number" step="0.0001" value="' + r.rate + '" onchange="billRows[' + i + '].rate=parseFloat(this.value)||0;recalcBillRow(' + i + ')" style="width:70px"></td>' +
+                    '<td><input value="' + escapeH(r.category) + '" onchange="billRows[' + i + '].category=this.value" style="width:80px"></td>' +
+                    '<td><input value="' + escapeH(r.size) + '" onchange="billRows[' + i + '].size=this.value" style="width:60px"></td>' +
+                    '<td><input value="' + escapeH(r.name) + '" onchange="billRows[' + i + '].name=this.value" style="width:80px"></td>' +
+                    '<td><input type="number" step="0.001" value="' + r.qty + '" onchange="billRows[' + i + '].qty=parseFloat(this.value)||0;recalcBillRow(' + i + ')" style="width:60px"></td>' +
+                    '<td><input type="number" step="0.0001" value="' + r.rate + '" onchange="billRows[' + i + '].rate=parseFloat(this.value)||0;recalcBillRow(' + i + ')" style="width:60px"></td>' +
+                    '<td><input type="number" step="0.01" value="' + (r.making || 0) + '" onchange="billRows[' + i + '].making=parseFloat(this.value)||0" style="width:55px"></td>' +
+                    '<td><input type="number" step="0.1" value="' + (r.margin || 0) + '" onchange="billRows[' + i + '].margin=parseFloat(this.value)||0" style="width:55px" title="Margin %"></td>' +
                     '<td class="num" id="billAmt' + i + '">' + money(r.amount) + '</td>' +
                     '<td><button class="ghost small" onclick="billRows.splice(' + i + ',1);renderBillRows()">✕</button></td></tr>';
             }).join('');
@@ -17233,27 +16979,162 @@ Flow in app:
         };
 
         async function geminiVision(prompt, dataUrl) {
+            // Alias — any configured cloud AI provider
+            return visionAI(prompt, dataUrl);
+        }
+
+        async function visionAI(prompt, dataUrl) {
             var cfg = (typeof getCloudAi === 'function') ? getCloudAi() : {};
-            if (cfg.provider !== 'gemini' || !cfg.key) throw new Error('Set Gemini API key in Settings → Free Cloud AI');
-            var model = cfg.model || 'gemini-2.0-flash';
+            if (!cfg || !cfg.key) {
+                throw new Error('Settings → AI & Cloud এ যেকোনো API key দিন (Gemini / Groq / OpenRouter / DeepSeek)');
+            }
+            var provider = String(cfg.provider || 'gemini').toLowerCase();
             var b64 = String(dataUrl).split(',')[1] || '';
             var mime = (String(dataUrl).match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
-            var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(cfg.key);
-            var body = {
-                contents: [{ parts: [
-                    { text: prompt },
-                    { inline_data: { mime_type: mime, data: b64 } }
-                ]}],
-                generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
-            };
-            var r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-            var data = await r.json();
-            if (!r.ok) throw new Error((data.error && data.error.message) || ('HTTP ' + r.status));
-            var text = data.candidates && data.candidates[0] && data.candidates[0].content &&
-                data.candidates[0].content.parts && data.candidates[0].content.parts.map(function(p) { return p.text; }).join('');
-            if (!text) throw new Error('Empty AI response');
-            return text;
+            if (!b64) throw new Error('Image read failed');
+
+            // --- Gemini / Google ---
+            if (provider === 'gemini' || provider === 'google' || provider === 'local') {
+                // if local but key looks like gemini key, still try gemini
+                var model = cfg.model || 'gemini-2.0-flash';
+                var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(cfg.key);
+                var body = {
+                    contents: [{ parts: [
+                        { text: prompt },
+                        { inline_data: { mime_type: mime, data: b64 } }
+                    ]}],
+                    generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
+                };
+                var r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                var data = await r.json();
+                if (!r.ok) throw new Error((data.error && data.error.message) || ('Gemini HTTP ' + r.status));
+                var text = data.candidates && data.candidates[0] && data.candidates[0].content &&
+                    data.candidates[0].content.parts && data.candidates[0].content.parts.map(function(p) { return p.text; }).join('');
+                if (!text) throw new Error('Empty AI response');
+                return text;
+            }
+
+            // --- OpenRouter (vision models) ---
+            if (provider === 'openrouter') {
+                var orModel = cfg.openrouterModel || cfg.model || 'google/gemini-2.0-flash-exp:free';
+                var orUrl = 'https://openrouter.ai/api/v1/chat/completions';
+                var orBody = {
+                    model: orModel,
+                    messages: [{
+                        role: 'user',
+                        content: [
+                            { type: 'text', text: prompt },
+                            { type: 'image_url', image_url: { url: 'data:' + mime + ';base64,' + b64 } }
+                        ]
+                    }],
+                    temperature: 0.2,
+                    max_tokens: 4096
+                };
+                var orR = await fetch(orUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + cfg.key,
+                        'HTTP-Referer': location.origin || 'https://localhost',
+                        'X-Title': 'Jewellery Manager'
+                    },
+                    body: JSON.stringify(orBody)
+                });
+                var orData = await orR.json();
+                if (!orR.ok) throw new Error((orData.error && orData.error.message) || ('OpenRouter HTTP ' + orR.status));
+                var orText = orData.choices && orData.choices[0] && orData.choices[0].message && orData.choices[0].message.content;
+                if (!orText) throw new Error('Empty OpenRouter response');
+                return orText;
+            }
+
+            // --- Groq (try vision-capable model; fallback message) ---
+            if (provider === 'groq') {
+                var gModel = cfg.model || 'meta-llama/llama-4-scout-17b-16e-instruct';
+                var gUrl = 'https://api.groq.com/openai/v1/chat/completions';
+                var gBody = {
+                    model: gModel,
+                    messages: [{
+                        role: 'user',
+                        content: [
+                            { type: 'text', text: prompt },
+                            { type: 'image_url', image_url: { url: 'data:' + mime + ';base64,' + b64 } }
+                        ]
+                    }],
+                    temperature: 0.2,
+                    max_tokens: 4096
+                };
+                var gR = await fetch(gUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + cfg.key
+                    },
+                    body: JSON.stringify(gBody)
+                });
+                var gData = await gR.json();
+                if (!gR.ok) throw new Error((gData.error && gData.error.message) || ('Groq HTTP ' + gR.status + ' — vision model লাগতে পারে'));
+                var gText = gData.choices && gData.choices[0] && gData.choices[0].message && gData.choices[0].message.content;
+                if (!gText) throw new Error('Empty Groq response');
+                return gText;
+            }
+
+            // --- DeepSeek (OpenAI-compatible; image support limited — still try) ---
+            if (provider === 'deepseek') {
+                var dModel = cfg.model || 'deepseek-chat';
+                var dUrl = 'https://api.deepseek.com/chat/completions';
+                var dBody = {
+                    model: dModel,
+                    messages: [{
+                        role: 'user',
+                        content: prompt + '\n\n[Image attached as base64 length ' + b64.length + ' — if vision unsupported, reply with empty JSON array []]'
+                    }],
+                    temperature: 0.2,
+                    max_tokens: 2048
+                };
+                var dR = await fetch(dUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + cfg.key
+                    },
+                    body: JSON.stringify(dBody)
+                });
+                var dData = await dR.json();
+                if (!dR.ok) throw new Error((dData.error && dData.error.message) || ('DeepSeek HTTP ' + dR.status));
+                var dText = dData.choices && dData.choices[0] && dData.choices[0].message && dData.choices[0].message.content;
+                if (!dText) throw new Error('Empty DeepSeek response');
+                return dText;
+            }
+
+            // Generic OpenAI-compatible fallback
+            var anyUrl = 'https://api.openai.com/v1/chat/completions';
+            if (provider === 'openai') {
+                var oR = await fetch(anyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.key },
+                    body: JSON.stringify({
+                        model: cfg.model || 'gpt-4o-mini',
+                        messages: [{
+                            role: 'user',
+                            content: [
+                                { type: 'text', text: prompt },
+                                { type: 'image_url', image_url: { url: 'data:' + mime + ';base64,' + b64 } }
+                            ]
+                        }],
+                        max_tokens: 4096
+                    })
+                });
+                var oData = await oR.json();
+                if (!oR.ok) throw new Error((oData.error && oData.error.message) || ('OpenAI HTTP ' + oR.status));
+                var oText = oData.choices && oData.choices[0] && oData.choices[0].message && oData.choices[0].message.content;
+                if (!oText) throw new Error('Empty response');
+                return oText;
+            }
+
+            throw new Error('Unknown provider: ' + provider + ' — Settings এ Gemini/Groq/OpenRouter বেছে নিন');
         }
+        window.visionAI = visionAI;
+        window.geminiVision = geminiVision;
 
         function extractJsonArray(text) {
             var m = String(text).match(/\[[\s\S]*\]/);
@@ -17265,22 +17146,24 @@ Flow in app:
             if (!billImageDataUrl) { showToast('First choose bill photo', 'err'); return; }
             showToast('Reading bill…', 'info');
             try {
-                var prompt = 'This is a jewellery/stone purchase bill (India). Extract EVERY line item as JSON array only, no markdown. Fields: category (Emerald/Stone/Round/Brass/etc), size (e.g. 4x6, 1.40MM), name (color or description like Rose/Green/PS/OCT), qty (number), rate (number), amount (number). Example: {"category":"Emerald","size":"4x6","name":"OCT P+M","qty":40,"rate":1.30,"amount":52}. Return pure JSON array.';
+                var prompt = 'This is a jewellery/stone purchase bill (India). Extract EVERY line item as JSON array only, no markdown. Fields: category, size, name, qty, rate, amount, making (optional number), margin (optional % or number). Example: {"category":"Emerald","size":"4x6","name":"OCT","qty":40,"rate":1.30,"amount":52,"making":0,"margin":10}. Return pure JSON array only.';
                 var text = await geminiVision(prompt, billImageDataUrl);
                 var arr = extractJsonArray(text);
                 billRows = arr.map(function(r) {
                     var qty = Number(r.qty || r.quantity || 0);
-                    var rate = Number(r.rate || r.price || 0);
+                    var rate = Number(r.rate || r.price || r.purchase_price || 0);
                     var amt = Number(r.amount || (qty * rate) || 0);
                     var size = String(r.size || '');
                     var name = String(r.name || r.description || r.particulars || '');
                     var cat = String(r.category || guessCategory(size + ' ' + name));
-                    return { category: cat, size: size, name: name, qty: qty, rate: rate, amount: amt };
+                    var making = Number(r.making || r.making_charge || 0);
+                    var margin = Number(r.margin || r.margin_pct || 0);
+                    return { category: cat, size: size, name: name, qty: qty, rate: rate, amount: amt, making: making, margin: margin };
                 });
                 renderBillRows();
                 showToast('Bill read — review table then Save', 'ok');
             } catch (e) {
-                showToast('AI read failed: ' + e.message + ' — add rows manually', 'err');
+                showToast((e && e.message) ? e.message : 'AI skip — + Empty row দিয়ে ম্যানুয়াল যোগ করুন', 'info');
                 if (!billRows.length) addEmptyBillRow();
             }
         };
@@ -17307,7 +17190,18 @@ Flow in app:
                 if (existing) {
                     existing.stock = Number(existing.stock || 0) + qty;
                     existing.purchase_price = rate;
+                    if (r.making != null) existing.making = Number(r.making || 0);
+                    if (r.margin != null) {
+                        existing.margin = Number(r.margin || 0);
+                        existing.margin_mode = 'percent';
+                        var c2 = rate + Number(existing.making || 0);
+                        existing.selling_price = existing.margin > 0 ? Math.round(c2 * (1 + existing.margin / 100) * 100) / 100 : c2;
+                    }
                 } else {
+                    var making = Number(r.making || 0);
+                    var margin = Number(r.margin || 0);
+                    var cost = rate + making;
+                    var sell = margin > 0 ? (cost * (1 + margin / 100)) : cost;
                     items.push({
                         id: uid('IT'),
                         category: r.category || 'Stone',
@@ -17315,8 +17209,10 @@ Flow in app:
                         size: r.size || '',
                         stock: qty,
                         purchase_price: rate,
-                        selling_price: rate,
-                        making: 0,
+                        selling_price: Math.round(sell * 100) / 100,
+                        making: making,
+                        margin: margin,
+                        margin_mode: 'percent',
                         reorderLevel: 5,
                         unit: 'pcs'
                     });
@@ -17664,7 +17560,8 @@ Flow in app:
 
   function buildSettingsAccordion() {
     var sec = $('settings');
-    if (!sec || sec.dataset.accordionDone) return;
+    if (!sec) return;
+    if (sec.querySelector('.settings-accordion')) { sec.dataset.accordionDone = '1'; return; }
     sec.dataset.accordionDone = '1';
 
     // Collect existing children (except first title/note)
@@ -17738,13 +17635,6 @@ Flow in app:
     sec.appendChild(note);
     sec.appendChild(acc);
 
-    // Expand/collapse all controls
-    var ctrl = document.createElement('div');
-    ctrl.style.cssText = 'display:flex;gap:8px;margin:10px 0;flex-wrap:wrap';
-    ctrl.innerHTML = '<button class="ghost small" type="button">সব খুলুন</button><button class="ghost small" type="button">সব বন্ধ</button>';
-    ctrl.children[0].onclick = function() { qsa('.sa-item', acc).forEach(function(i) { i.classList.add('open'); }); };
-    ctrl.children[1].onclick = function() { qsa('.sa-item', acc).forEach(function(i) { i.classList.remove('open'); }); };
-    sec.insertBefore(ctrl, acc);
   }
 
   function fillTutorial(box) {
@@ -17816,7 +17706,7 @@ Flow in app:
       var sec = (typeof getAppSecurity === 'function') ? getAppSecurity() : { plan: 'free', freeModules: {} };
       var plan = sec.plan || 'free';
       if (plan === 'pro') return false;
-      var FREE = { hrm: true, accounts: true, team: true, crm: true, ops: true, integrations: false, security: false, admin: false, reports: true, tasks: true, tools: true, studio: true };
+      var FREE = { hrm: true, accounts: true, team: true, crm: true, ops: true, integrations: true, security: true, admin: true, reports: true, tasks: true, tools: true, studio: true };
       var freeMap = Object.assign({}, FREE, sec.freeModules || {});
       var mods = {};
       try { mods = JSON.parse(localStorage.getItem('jp_modules_enabled_v1') || '{}'); } catch (e) {}
@@ -18316,66 +18206,6 @@ Flow in app:
 })();
 </script>
 
-<script>
-(function(){
-  var itemPhotoDataUrl = '';
-  function bindItemPhoto() {
-    var inp = document.getElementById('itemPhotoInput');
-    if (!inp || inp.dataset.bound) return;
-    inp.dataset.bound = '1';
-    inp.removeAttribute('capture');
-    inp.accept = 'image/*';
-    inp.addEventListener('change', function(e) {
-      var f = e.target.files && e.target.files[0];
-      if (!f) return;
-      var r = new FileReader();
-      r.onload = function() {
-        itemPhotoDataUrl = r.result;
-        window.itemPhotoDataUrl = itemPhotoDataUrl;
-        var prev = document.getElementById('itemPhotoPreview');
-        if (prev) prev.innerHTML = '<img src="'+itemPhotoDataUrl+'" style="max-width:120px;max-height:120px;border-radius:10px;object-fit:cover;border:1px solid var(--border-soft)">';
-      };
-      r.readAsDataURL(f);
-    });
-  }
-  var tries = 0;
-  var t = setInterval(function() {
-    bindItemPhoto();
-    tries++;
-    if (tries > 25) clearInterval(t);
-  }, 400);
-  Object.defineProperty(window, 'itemPhotoDataUrl', {
-    get: function() { return itemPhotoDataUrl; },
-    set: function(v) { itemPhotoDataUrl = v || ''; },
-    configurable: true
-  });
-  var _clear = window.clearItemForm;
-  if (typeof _clear === 'function') {
-    window.clearItemForm = function() {
-      _clear.apply(this, arguments);
-      itemPhotoDataUrl = '';
-      var prev = document.getElementById('itemPhotoPreview');
-      if (prev) prev.innerHTML = '';
-      var inp = document.getElementById('itemPhotoInput');
-      if (inp) inp.value = '';
-    };
-  }
-  console.log('✅ Item photo gallery upload ready');
-})();
-</script>
-
-
-
-
-
-
-
-
-
-
-
-
-
 <style id="karigar-mobile-fix">
 /* Karigar mobile + layout fixes */
 #studio { max-width: 100%; overflow-x: hidden; }
@@ -18626,8 +18456,6 @@ Flow in app:
 </script>
 
 
-
-
 <style id="karigar-nav-force">
 /* Always show Karigar entry points */
 .tab[data-tab="studio"],
@@ -18650,35 +18478,6 @@ Flow in app:
   display: flex !important;
 }
 </style>
-
-
-<script>
-// Force Karigar (studio) module always available — linked to dashboard & mobile
-(function() {
-  function forceShow() {
-    document.querySelectorAll('[data-tab="studio"]').forEach(function(n) {
-      n.style.setProperty('display', 'flex', 'important');
-      n.style.visibility = 'visible';
-      n.removeAttribute('hidden');
-      n.classList.remove('hidden', 'tab-locked', 'plan-locked');
-    });
-  }
-  function hookPlan() {
-    if (typeof window.applyRoleAndPlan === 'function' && !window.applyRoleAndPlan._kgForce) {
-      var _ap = window.applyRoleAndPlan;
-      window.applyRoleAndPlan = function() {
-        var r = _ap.apply(this, arguments);
-        forceShow();
-        return r;
-      };
-      window.applyRoleAndPlan._kgForce = true;
-    }
-  }
-  forceShow();
-  hookPlan();
-  setInterval(function() { forceShow(); hookPlan(); }, 2000);
-})();
-</script>
 
 
 <style id="jp-final-mobile-forms">
@@ -19240,6 +19039,924 @@ body.dark .chat-modal #chatInput {
   };
 
   console.log('✅ Product save helpers + Drive Sync push fix');
+})();
+</script>
+
+
+<script>
+// ===== UX FEATURES: cust/sup, ledger edit-del, variation edit, custom quick actions =====
+(function() {
+  var QA_KEY = 'jp_quick_actions_v1';
+  var QA_CATALOG = [
+    { id: 'new_product', label: '➕ New Product', run: "switchTab('builder'); if(typeof startNewProduct==='function')startNewProduct();" },
+    { id: 'items', label: '📦 Manage Items', run: "switchTab('itemdb');" },
+    { id: 'billing', label: '🧾 Billing', run: "switchTab('billing');" },
+    { id: 'ledger', label: '📒 Ledger', run: "switchTab('ledger');" },
+    { id: 'walkin', label: '🚶 Walk-in Ledger', run: "switchTab('ledger'); if(typeof openWalkinLedger==='function')openWalkinLedger();" },
+    { id: 'karigar', label: '🔧 Karigar', run: "if(typeof openKarigarStudio==='function')openKarigarStudio();" },
+    { id: 'products', label: '💍 Products', run: "switchTab('products');" },
+    { id: 'reports', label: '📊 Reports', run: "switchTab('reports');" },
+    { id: 'settings', label: '⚙ Settings', run: "switchTab('settings');" },
+    { id: 'ai', label: '✨ Ask AI', run: "if(typeof openAIChat==='function')openAIChat();" },
+    { id: 'customers', label: '👥 Customers', run: "if(typeof openCustomerManager==='function')openCustomerManager();" },
+    { id: 'import', label: '📷 Import Bill', run: "switchTab('billimport');" },
+    { id: 'split', label: '⧉ Split Screen', run: "if(typeof toggleSplitScreen==='function')toggleSplitScreen();" }
+  ];
+
+  function defaultQA() {
+    return ['new_product', 'items', 'walkin', 'billing', 'ledger', 'settings', 'ai', 'new_window'];
+  }
+  function loadQA() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(QA_KEY) || 'null');
+      if (Array.isArray(raw) && raw.length) return raw;
+    } catch (e) {}
+    return defaultQA();
+  }
+  function saveQA(ids) {
+    localStorage.setItem(QA_KEY, JSON.stringify(ids));
+  }
+
+  window.renderQuickActionsList = function() {
+    var host = document.getElementById('quickActionsList');
+    if (!host) return;
+    var ids = loadQA();
+    var map = {};
+    QA_CATALOG.forEach(function(a) { map[a.id] = a; });
+    host.innerHTML = ids.map(function(id) {
+      var a = map[id];
+      if (!a) return '';
+      return '<button class="ghost" data-qa="' + a.id + '" style="text-align:left">' + a.label + '</button>';
+    }).join('') || '<div class="note">No quick actions. Click ⚙ to add.</div>';
+    host.querySelectorAll('[data-qa]').forEach(function(btn) {
+      btn.onclick = function() {
+        var a = map[btn.getAttribute('data-qa')];
+        if (!a) return;
+        try { (new Function(a.run))(); } catch (e) { console.warn(e); }
+      };
+    });
+  };
+
+  window.openQuickActionsEditor = function() {
+    var ids = loadQA();
+    var html = '<div style="max-width:420px;margin:0 auto;padding:8px"><div class="section-title">Customize Quick Actions</div><div class="note">যেগুলো রাখতে চান টিক দিন। অর্ডার উপর থেকে নিচে।</div>';
+    html += '<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">';
+    QA_CATALOG.forEach(function(a) {
+      var on = ids.indexOf(a.id) >= 0;
+      html += '<label style="display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--border-soft);cursor:pointer"><input type="checkbox" data-qaid="' + a.id + '" ' + (on ? 'checked' : '') + '> <span>' + a.label + '</span></label>';
+    });
+    html += '</div><div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end"><button class="ghost" id="qaCancel">Cancel</button><button id="qaSave">💾 Save</button></div></div>';
+    var backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.style.display = 'flex';
+    backdrop.innerHTML = '<div class="modal-box dark" style="max-width:480px">' + html + '</div>';
+    document.body.appendChild(backdrop);
+    backdrop.querySelector('#qaCancel').onclick = function() { document.body.removeChild(backdrop); };
+    backdrop.querySelector('#qaSave').onclick = function() {
+      var next = [];
+      backdrop.querySelectorAll('[data-qaid]').forEach(function(cb) {
+        if (cb.checked) next.push(cb.getAttribute('data-qaid'));
+      });
+      saveQA(next);
+      document.body.removeChild(backdrop);
+      window.renderQuickActionsList();
+      if (typeof showToast === 'function') showToast('Quick Actions saved', 'ok');
+    };
+  };
+
+  // --- Variation queue edit ---
+  window.editVariationInQueue = function(idx) {
+    if (typeof variations === 'undefined' || !variations[idx]) return;
+    var v = variations[idx];
+    var name = prompt('Variation name / category', v.category || v.name || '');
+    if (name === null) return;
+    name = String(name).trim();
+    if (!name) { if (typeof showToast === 'function') showToast('Name required', 'err'); return; }
+    var stockStr = prompt('Stock quantity', String(v.stock != null ? v.stock : 0));
+    if (stockStr === null) return;
+    var stock = Math.max(0, parseFloat(stockStr) || 0);
+    var color = prompt('Color (optional)', v.color || '') ;
+    if (color === null) color = v.color || '';
+    v.name = name;
+    v.category = name;
+    v.stock = stock;
+    v.color = color || '';
+    if (typeof selectedVarIdx !== 'undefined') selectedVarIdx = idx;
+    if (typeof renderVariations === 'function') renderVariations();
+    if (typeof renderVariationQueue === 'function') renderVariationQueue();
+    if (typeof autosaveDraft === 'function') autosaveDraft();
+    if (typeof showToast === 'function') showToast('Variation updated', 'ok');
+  };
+
+  // --- Ledger entry edit / delete ---
+  window.deleteLedgerEntry = function(kind, entryId) {
+    if (!confirm('Delete this ledger entry?')) return;
+    if (kind === 'customer') {
+      if (typeof custLedger === 'undefined') return;
+      custLedger = custLedger.filter(function(e) { return String(e.id) !== String(entryId); });
+    } else if (kind === 'supplier') {
+      if (typeof supLedger === 'undefined') return;
+      supLedger = supLedger.filter(function(e) { return String(e.id) !== String(entryId); });
+    }
+    if (typeof saveAll === 'function') saveAll(true);
+    if (kind === 'customer' && typeof renderCustomerLedger === 'function') renderCustomerLedger();
+    if (kind === 'supplier' && typeof renderSupplierLedger === 'function') renderSupplierLedger();
+    if (typeof renderWalkinLedger === 'function') renderWalkinLedger();
+    if (typeof showToast === 'function') showToast('Ledger entry deleted', 'ok');
+  };
+
+  window.editLedgerEntry = function(kind, entryId) {
+    var list = kind === 'supplier' ? (typeof supLedger !== 'undefined' ? supLedger : []) : (typeof custLedger !== 'undefined' ? custLedger : []);
+    var e = list.find(function(x) { return String(x.id) === String(entryId); });
+    if (!e) { if (typeof showToast === 'function') showToast('Entry not found', 'err'); return; }
+    var debit = prompt('Debit (bill) amount', String(e.debit || 0));
+    if (debit === null) return;
+    var credit = prompt('Credit (paid) amount', String(e.credit || 0));
+    if (credit === null) return;
+    var notes = prompt('Notes', e.notes || e.invoiceNo || '');
+    if (notes === null) notes = e.notes || '';
+    e.debit = Math.max(0, parseFloat(debit) || 0);
+    e.credit = Math.max(0, parseFloat(credit) || 0);
+    e.notes = notes;
+    e.balance = Number(e.debit || 0) - Number(e.credit || 0);
+    if (typeof saveAll === 'function') saveAll(true);
+    if (kind === 'customer' && typeof renderCustomerLedger === 'function') renderCustomerLedger();
+    if (kind === 'supplier' && typeof renderSupplierLedger === 'function') renderSupplierLedger();
+    if (typeof showToast === 'function') showToast('Ledger entry updated', 'ok');
+  };
+
+  function enhanceLedgerRows() {
+    // Patch renderCustomerLedger to inject action buttons once
+    if (typeof window.renderCustomerLedger === 'function' && !window.renderCustomerLedger._ux) {
+      var _rc = window.renderCustomerLedger;
+      window.renderCustomerLedger = function() {
+        var r = _rc.apply(this, arguments);
+        setTimeout(function() {
+          var box = document.getElementById('custLedgerList') || document.querySelector('#ledger .wl-list, #customerLedgerEntries, #custLedgerEntries');
+          // Try common containers
+          ['custLedgerEntries', 'customerLedgerBox', 'custLedgerList', 'ledgerCustEntries'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.querySelectorAll('[data-ledger-id]').forEach(function() {});
+          });
+          // Add buttons beside entries that have data attributes if present
+          document.querySelectorAll('#ledger [data-entry-id], #ledger .wl-entry').forEach(function(row, i) {
+            if (row.querySelector('.led-act')) return;
+            var id = row.getAttribute('data-entry-id');
+            if (!id && typeof custLedger !== 'undefined' && custLedger[i]) id = custLedger[i].id;
+            if (!id) return;
+            var act = document.createElement('span');
+            act.className = 'led-act';
+            act.style.cssText = 'margin-left:8px;white-space:nowrap';
+            act.innerHTML = '<button class="ghost small" type="button">✎</button> <button class="danger small" type="button">Del</button>';
+            act.querySelectorAll('button')[0].onclick = function(ev) { ev.stopPropagation(); editLedgerEntry('customer', id); };
+            act.querySelectorAll('button')[1].onclick = function(ev) { ev.stopPropagation(); deleteLedgerEntry('customer', id); };
+            row.appendChild(act);
+          });
+        }, 30);
+        return r;
+      };
+      window.renderCustomerLedger._ux = true;
+    }
+  }
+
+  // Rebuild customer ledger HTML with edit/delete (override render body if we can find container pattern)
+  function patchLedgerRenderFull() {
+    if (typeof window.renderCustomerLedger !== 'function') return;
+    if (window.renderCustomerLedger._fullPatch) return;
+    var _orig = window.renderCustomerLedger;
+    window.renderCustomerLedger = function(id) {
+      // Call original first
+      try { _orig.apply(this, arguments); } catch (e) { console.warn(e); }
+      setTimeout(function() {
+        // After original render, attach actions using reverse-order of filtered entries is hard.
+        // Re-render a known container if present with explicit ids.
+        var container = document.getElementById('custLedgerEntries') ||
+          document.querySelector('#ledger .ledger-entries') ||
+          document.getElementById('customerLedgerList');
+        if (!container || typeof custLedger === 'undefined') return;
+        // If original already filled with wl-entry without ids, rebuild with actions
+        var sel = document.getElementById('ledgerCustSelect');
+        var custId = id || (sel && sel.value);
+        if (!custId) return;
+        var entries = custLedger.filter(function(e) {
+          return String(e.customerId) === String(custId) || String(e.customerId) === String(Number(custId));
+        });
+        if (!entries.length) return;
+        // Only rebuild if no action buttons yet
+        if (container.querySelector('.led-act')) return;
+        var html = entries.slice().reverse().map(function(e) {
+          return '<div class="wl-entry" data-entry-id="' + e.id + '"><span><span class="wl-invoice">' +
+            (e.invoiceNo || e.notes || 'Entry') + '</span> — ' +
+            (e.date ? new Date(e.date).toLocaleDateString() : '') +
+            '</span><span><span class="wl-amt debit">₹' + Number(e.debit || 0).toFixed(2) +
+            '</span> / <span class="wl-amt credit">₹' + Number(e.credit || 0).toFixed(2) +
+            '</span> <span class="led-act">' +
+            '<button class="ghost small" type="button" onclick="editLedgerEntry(\'customer\',\'' + e.id + '\')">✎</button> ' +
+            '<button class="danger small" type="button" onclick="deleteLedgerEntry(\'customer\',\'' + e.id + '\')">Del</button>' +
+            '</span></span></div>';
+        }).join('');
+        // Prefer append actions only; if structure matches wl-entry count, replace
+        if (container.querySelectorAll('.wl-entry').length === entries.length || container.children.length === 0) {
+          container.innerHTML = html;
+        }
+      }, 40);
+    };
+    window.renderCustomerLedger._fullPatch = true;
+  }
+
+  // Supplier manager shortcuts from ledger
+  window.openSupplierManager = window.openSupplierManager || function() {
+    if (typeof switchTab === 'function') switchTab('inventory');
+    if (typeof showToast === 'function') showToast('Supplier list — use ✎ / Del on each row', 'info');
+  };
+
+  // Ensure customer/supplier edit from selects near ledger
+  function addLedgerPersonTools() {
+    var custSel = document.getElementById('ledgerCustSelect');
+    if (custSel && !document.getElementById('ledgerCustEditBtn')) {
+      var wrap = custSel.parentElement;
+      if (wrap) {
+        var b1 = document.createElement('button');
+        b1.id = 'ledgerCustEditBtn';
+        b1.className = 'ghost small';
+        b1.type = 'button';
+        b1.textContent = '✎ Edit';
+        b1.onclick = function() {
+          var id = custSel.value;
+          if (!id || typeof customers === 'undefined') return;
+          var i = customers.findIndex(function(c) { return String(c.id) === String(id); });
+          if (i < 0) { if (typeof showToast === 'function') showToast('Select a customer', 'err'); return; }
+          if (typeof editCustomer === 'function') editCustomer(i);
+        };
+        var b2 = document.createElement('button');
+        b2.className = 'danger small';
+        b2.type = 'button';
+        b2.textContent = 'Del';
+        b2.onclick = function() {
+          var id = custSel.value;
+          if (!id || typeof customers === 'undefined') return;
+          var i = customers.findIndex(function(c) { return String(c.id) === String(id); });
+          if (i < 0) return;
+          if (typeof deleteCustomer === 'function') deleteCustomer(i);
+        };
+        var b3 = document.createElement('button');
+        b3.className = 'ghost small';
+        b3.type = 'button';
+        b3.textContent = '👥 All';
+        b3.onclick = function() { if (typeof openCustomerManager === 'function') openCustomerManager(); };
+        wrap.appendChild(b1);
+        wrap.appendChild(b2);
+        wrap.appendChild(b3);
+      }
+    }
+    var supSel = document.getElementById('ledgerSupSelect');
+    if (supSel && !document.getElementById('ledgerSupEditBtn')) {
+      var wrap2 = supSel.parentElement;
+      if (wrap2) {
+        var s1 = document.createElement('button');
+        s1.id = 'ledgerSupEditBtn';
+        s1.className = 'ghost small';
+        s1.type = 'button';
+        s1.textContent = '✎ Edit';
+        s1.onclick = function() {
+          var id = supSel.value;
+          if (!id || typeof suppliers === 'undefined') return;
+          var i = suppliers.findIndex(function(s) { return String(s.id) === String(id); });
+          if (i < 0) return;
+          if (typeof editSupplier === 'function') editSupplier(i);
+        };
+        var s2 = document.createElement('button');
+        s2.className = 'danger small';
+        s2.type = 'button';
+        s2.textContent = 'Del';
+        s2.onclick = function() {
+          var id = supSel.value;
+          if (!id || typeof suppliers === 'undefined') return;
+          var i = suppliers.findIndex(function(s) { return String(s.id) === String(id); });
+          if (i < 0) return;
+          if (typeof deleteSupplier === 'function') deleteSupplier(i);
+        };
+        wrap2.appendChild(s1);
+        wrap2.appendChild(s2);
+      }
+    }
+  }
+
+  // Also patch deleteSale if still missing ledger refresh (runtime)
+  function wrapDeleteSale() {
+    if (typeof window.deleteSale !== 'function' || window.deleteSale._ledFix) return;
+    var _d = window.deleteSale;
+    window.deleteSale = function(id) {
+      var r = _d.apply(this, arguments);
+      setTimeout(function() {
+        try {
+          if (typeof renderCustomerLedger === 'function') renderCustomerLedger();
+          if (typeof renderWalkinLedger === 'function') renderWalkinLedger();
+        } catch (e) {}
+      }, 50);
+      return r;
+    };
+    window.deleteSale._ledFix = true;
+  }
+
+  function boot() {
+    renderQuickActionsList();
+    enhanceLedgerRows();
+    patchLedgerRenderFull();
+    addLedgerPersonTools();
+    wrapDeleteSale();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 600);
+  setTimeout(boot, 2000);
+  console.log('✅ Cust/Sup + Ledger + Variation edit + Quick Actions customize');
+})();
+</script>
+
+
+
+<style id="jp-split-real">
+/* ===== Real dual-module split screen ===== */
+#splitBar {
+  display: none;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  margin: 8px 0 12px;
+  background: rgba(var(--accent-rgb), 0.08);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+}
+body.split-on #splitBar { display: flex; }
+body.split-on .tabs { opacity: 0.55; pointer-events: none; }
+body.split-on .wrap > section.card,
+body.split-on main section.card,
+body.split-on #app section.card {
+  /* hide default single sections when split — panes own the view */
+}
+#splitWorkspace {
+  display: none;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+  min-height: 70vh;
+}
+body.split-on #splitWorkspace { display: grid; }
+@media (max-width: 800px) {
+  #splitWorkspace { grid-template-columns: 1fr !important; }
+}
+.split-pane {
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  background: var(--card-solid, var(--bg));
+  display: flex;
+  flex-direction: column;
+  min-height: 60vh;
+  max-height: calc(100vh - 140px);
+  overflow: hidden;
+}
+.split-pane-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(var(--accent-rgb), 0.06);
+  flex-shrink: 0;
+}
+.split-pane-head select {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  min-height: 40px;
+}
+.split-pane-body {
+  flex: 1;
+  overflow: auto;
+  padding: 10px;
+  position: relative;
+}
+.split-pane-body .card,
+.split-pane-body section {
+  display: block !important;
+  box-shadow: none !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+/* Settings accordion */
+.settings-accordion { margin-top: 10px; }
+.settings-accordion .sa-item {
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  background: var(--card-solid, transparent);
+}
+.settings-accordion .sa-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  font-weight: 700;
+  user-select: none;
+  background: rgba(var(--accent-rgb), 0.07);
+}
+.settings-accordion .sa-head:active { opacity: 0.85; }
+.settings-accordion .sa-chevron { margin-left: auto; transition: transform .2s; opacity: .7; }
+.settings-accordion .sa-item.open .sa-chevron { transform: rotate(180deg); }
+.settings-accordion .sa-body {
+  display: none;
+  padding: 12px 14px 16px;
+  border-top: 1px solid var(--border-soft);
+}
+.settings-accordion .sa-item.open .sa-body { display: block; }
+#settingsAccControls { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+</style>
+<script>
+// ===== REAL SPLIT SCREEN + SETTINGS ACCORDION =====
+(function() {
+  var MODULES = [
+    { id: 'dashboard', label: '📊 Dashboard' },
+    { id: 'builder', label: '🛠 Product Builder' },
+    { id: 'itemdb', label: '📦 Add Items' },
+    { id: 'products', label: '💍 Products' },
+    { id: 'billing', label: '🧾 Billing' },
+    { id: 'ledger', label: '📒 Ledger' },
+    { id: 'studio', label: '🔧 Karigar' },
+    { id: 'billimport', label: '📷 Import Bill' },
+    { id: 'reports', label: '📈 Reports' },
+    { id: 'settings', label: '⚙ Settings' },
+    { id: 'integrations', label: '🔌 Integrations' },
+    { id: 'security', label: '🔐 Security' }
+  ];
+
+  function $(id) { return document.getElementById(id); }
+  function qs(s, r) { return (r || document).querySelector(s); }
+  function qsa(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+
+  function findSection(id) {
+    return document.getElementById(id) || qs('section[data-tab="' + id + '"]') || qs('[data-section="' + id + '"]');
+  }
+
+  function ensureChrome() {
+    if ($('splitBar')) return;
+    var bar = document.createElement('div');
+    bar.id = 'splitBar';
+    bar.innerHTML =
+      '<strong style="font-size:13px">⧉ Split Screen</strong>' +
+      '<span class="note" style="margin:0;font-size:12px">প্রতি পাশে আলাদা মডিউল</span>' +
+      '<button type="button" class="ghost small" id="splitExitBtn">✕ Exit Split</button>';
+
+    var ws = document.createElement('div');
+    ws.id = 'splitWorkspace';
+    ws.innerHTML =
+      '<div class="split-pane" id="splitLeft">' +
+        '<div class="split-pane-head"><select id="splitLeftMod"></select></div>' +
+        '<div class="split-pane-body" id="splitLeftBody"></div>' +
+      '</div>' +
+      '<div class="split-pane" id="splitRight">' +
+        '<div class="split-pane-head"><select id="splitRightMod"></select></div>' +
+        '<div class="split-pane-body" id="splitRightBody"></div>' +
+      '</div>';
+
+    // Insert after tabs or at top of main content
+    var tabs = qs('.tabs');
+    var host = tabs && tabs.parentNode;
+    if (tabs && host) {
+      host.insertBefore(bar, tabs.nextSibling);
+      host.insertBefore(ws, bar.nextSibling);
+    } else {
+      document.body.insertBefore(bar, document.body.firstChild);
+      document.body.insertBefore(ws, bar.nextSibling);
+    }
+
+    var opts = MODULES.map(function(m) {
+      return '<option value="' + m.id + '">' + m.label + '</option>';
+    }).join('');
+    $('splitLeftMod').innerHTML = opts;
+    $('splitRightMod').innerHTML = opts;
+    $('splitLeftMod').value = localStorage.getItem('jp_split_left') || 'builder';
+    $('splitRightMod').value = localStorage.getItem('jp_split_right') || 'itemdb';
+
+    $('splitLeftMod').onchange = function() {
+      localStorage.setItem('jp_split_left', this.value);
+      loadPane('left', this.value);
+    };
+    $('splitRightMod').onchange = function() {
+      localStorage.setItem('jp_split_right', this.value);
+      loadPane('right', this.value);
+    };
+    $('splitExitBtn').onclick = function() { setSplit(false); };
+
+    // Header toggle button
+    if (!$('splitToggleBtn')) {
+      var btn = document.createElement('button');
+      btn.id = 'splitToggleBtn';
+      btn.type = 'button';
+      btn.className = 'ghost small';
+      btn.textContent = '⧉ Split';
+      btn.title = 'Split Screen — দুই মডিউল একসাথে';
+      btn.onclick = function() { setSplit(!document.body.classList.contains('split-on')); };
+      var header = qs('header .header-actions') || qs('header') || qs('.mobile-topbar');
+      if (header) header.appendChild(btn);
+      else bar.appendChild(btn);
+    }
+  }
+
+  // Keep original section homes so we can move back
+  var homes = {};
+  function rememberHome(sec) {
+    if (!sec || !sec.id || homes[sec.id]) return;
+    homes[sec.id] = { parent: sec.parentNode, next: sec.nextSibling };
+  }
+
+  function returnHome(sec) {
+    if (!sec || !sec.id || !homes[sec.id]) return;
+    var h = homes[sec.id];
+    if (!h.parent) return;
+    if (h.next && h.next.parentNode === h.parent) h.parent.insertBefore(sec, h.next);
+    else h.parent.appendChild(sec);
+    sec.style.display = 'none';
+  }
+
+  function loadPane(side, modId) {
+    var body = $(side === 'left' ? 'splitLeftBody' : 'splitRightBody');
+    if (!body) return;
+    // Return any section currently in this pane
+    qsa('section.card, section[id]', body).forEach(function(sec) {
+      returnHome(sec);
+    });
+    body.innerHTML = '';
+    var sec = findSection(modId);
+    if (!sec) {
+      body.innerHTML = '<div class="note">Module "' + modId + '" পাওয়া যায়নি। ট্যাব থেকে একবার খুলে নিন।</div>';
+      return;
+    }
+    rememberHome(sec);
+    sec.style.display = 'block';
+    body.appendChild(sec);
+    // Trigger module-specific init
+    try {
+      if (modId === 'settings') setTimeout(buildSettingsAccordion, 50);
+      if (modId === 'studio' && typeof openKarigarStudio === 'function') {
+        // already visible
+      }
+      if (typeof renderStockTable === 'function' && modId === 'itemdb') renderStockTable();
+      if (typeof renderProductGrid === 'function' && modId === 'products') renderProductGrid();
+      if (typeof renderDashboard === 'function' && modId === 'dashboard') renderDashboard();
+    } catch (e) { console.warn(e); }
+  }
+
+  function setSplit(on) {
+    ensureChrome();
+    document.body.classList.toggle('split-on', !!on);
+    localStorage.setItem('jp_split_screen', on ? '1' : '0');
+    if (on) {
+      // Hide normal sections that are not in panes
+      loadPane('left', $('splitLeftMod').value);
+      loadPane('right', $('splitRightMod').value);
+      // Hide other sections still in main flow
+      qsa('section.card').forEach(function(sec) {
+        if (sec.closest('#splitWorkspace')) return;
+        if (sec.id && (sec.id === $('splitLeftMod').value || sec.id === $('splitRightMod').value)) return;
+        sec.style.display = 'none';
+      });
+      if (typeof showToast === 'function') showToast('Split ON — বাম/ডান মডিউল বেছে নিন', 'ok');
+    } else {
+      // Return all sections home
+      ['splitLeftBody', 'splitRightBody'].forEach(function(id) {
+        var body = $(id);
+        if (!body) return;
+        qsa('section', body).forEach(returnHome);
+        body.innerHTML = '';
+      });
+      // Show active tab section
+      var active = qs('.tab.active');
+      var tabId = active && active.getAttribute('data-tab');
+      if (tabId && typeof switchTab === 'function') switchTab(tabId);
+      else if (tabId) {
+        var s = findSection(tabId);
+        if (s) s.style.display = 'block';
+      }
+      if (typeof showToast === 'function') showToast('Split OFF', 'info');
+    }
+  }
+  window.toggleSplitScreen = function() {
+    setSplit(!document.body.classList.contains('split-on'));
+  };
+  window.setSplitScreen = setSplit;
+
+  // ---------- Settings accordion ----------
+  function buildSettingsAccordion() {
+    var sec = $('settings');
+    if (!sec) return;
+    // Already accordion?
+    if (sec.querySelector('.settings-accordion')) {
+      ensureAccControls(sec);
+      return;
+    }
+
+    var children = Array.from(sec.childNodes).filter(function(n) {
+      return n.nodeType === 1;
+    });
+    if (!children.length) return;
+
+    var mainTitle = null;
+    var blocks = [];
+    var cur = null;
+
+    children.forEach(function(el) {
+      var isMain = el.classList && el.classList.contains('section-title') &&
+        (!el.getAttribute('style') || String(el.getAttribute('style')).indexOf('font-size') < 0) &&
+        /setting/i.test(el.textContent || '');
+      if (isMain && !mainTitle) {
+        mainTitle = el;
+        return;
+      }
+      if (el.tagName === 'HR') {
+        if (cur && cur.nodes.length) blocks.push(cur);
+        cur = null;
+        return;
+      }
+      if (el.classList && el.classList.contains('section-title')) {
+        if (cur && cur.nodes.length) blocks.push(cur);
+        cur = { title: (el.textContent || '').trim(), nodes: [] };
+        return;
+      }
+      if (!cur) cur = { title: 'General', nodes: [] };
+      cur.nodes.push(el);
+    });
+    if (cur && cur.nodes.length) blocks.push(cur);
+
+    if (!blocks.length) {
+      // fallback: single open block with everything
+      blocks = [{ title: 'All settings', nodes: children.filter(function(c) { return c !== mainTitle; }) }];
+    }
+
+    var acc = document.createElement('div');
+    acc.className = 'settings-accordion';
+    acc.id = 'settingsAccordion';
+
+    blocks.forEach(function(b, i) {
+      var item = document.createElement('div');
+      item.className = 'sa-item' + (i === 0 ? ' open' : '');
+      var head = document.createElement('div');
+      head.className = 'sa-head';
+      head.innerHTML = '<span>▸</span><span></span><span class="sa-chevron">▼</span>';
+      head.children[1].textContent = b.title || ('Section ' + (i + 1));
+      head.onclick = function() { item.classList.toggle('open'); };
+      var body = document.createElement('div');
+      body.className = 'sa-body';
+      b.nodes.forEach(function(n) {
+        if (n.classList && n.classList.contains('section-title')) n.style.display = 'none';
+        body.appendChild(n);
+      });
+      item.appendChild(head);
+      item.appendChild(body);
+      acc.appendChild(item);
+    });
+
+    // rebuild settings content
+    sec.innerHTML = '';
+    if (mainTitle) sec.appendChild(mainTitle);
+    var note = document.createElement('div');
+    note.className = 'note';
+    note.textContent = 'প্রতিটি হেডারে ক্লিক করলে খুলবে/বন্ধ হবে। নিচে «সব খুলুন / সব বন্ধ»।';
+    sec.appendChild(note);
+    sec.appendChild(acc);
+    ensureAccControls(sec);
+    sec.dataset.accordionDone = '1';
+  }
+  window.buildSettingsAccordion = buildSettingsAccordion;
+
+  function ensureAccControls(sec) {
+    var acc = sec.querySelector('.settings-accordion');
+    if (!acc) return;
+    // Remove ANY previous expand/collapse control rows (duplicates)
+    Array.prototype.slice.call(sec.querySelectorAll('div')).forEach(function(div) {
+      if (div.id === 'settingsAccControls') { div.remove(); return; }
+      var t = (div.textContent || '');
+      if (div.children.length <= 3 && /সব খুলুন/.test(t) && /সব বন্ধ/.test(t) && !div.querySelector('.sa-item')) {
+        div.remove();
+      }
+    });
+    var ctrl = document.createElement('div');
+    ctrl.id = 'settingsAccControls';
+    ctrl.innerHTML =
+      '<button type="button" class="ghost small" id="saExpandAll">📂 সব খুলুন</button>' +
+      '<button type="button" class="ghost small" id="saCollapseAll">📁 সব বন্ধ</button>';
+    sec.insertBefore(ctrl, acc);
+    $('saExpandAll').onclick = function() {
+      qsa('.sa-item', acc).forEach(function(i) { i.classList.add('open'); });
+    };
+    $('saCollapseAll').onclick = function() {
+      qsa('.sa-item', acc).forEach(function(i) { i.classList.remove('open'); });
+    };
+  }
+
+  // Hook switchTab
+  function hookTabs() {
+    if (typeof window.switchTab === 'function' && !window.switchTab._splitHook) {
+      var _sw = window.switchTab;
+      window.switchTab = function(id) {
+        if (document.body.classList.contains('split-on')) {
+          // In split mode, changing tab loads into LEFT pane by default
+          if ($('splitLeftMod')) {
+            $('splitLeftMod').value = id;
+            localStorage.setItem('jp_split_left', id);
+            loadPane('left', id);
+          }
+          return;
+        }
+        var r = _sw.apply(this, arguments);
+        if (id === 'settings') setTimeout(buildSettingsAccordion, 80);
+        return r;
+      };
+      window.switchTab._splitHook = true;
+    }
+    // Also click handlers on .tab
+    document.addEventListener('click', function(ev) {
+      var t = ev.target.closest && ev.target.closest('.tab[data-tab]');
+      if (!t) return;
+      var id = t.getAttribute('data-tab');
+      if (id === 'settings') setTimeout(buildSettingsAccordion, 100);
+    }, true);
+  }
+
+  function boot() {
+    ensureChrome();
+    hookTabs();
+    if (localStorage.getItem('jp_split_screen') === '1') {
+      setSplit(true);
+    }
+    // If settings already visible
+    var sec = $('settings');
+    if (sec && sec.style.display !== 'none') buildSettingsAccordion();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 400);
+  setTimeout(boot, 1500);
+  console.log('✅ Split screen (dual module) + Settings accordion');
+})();
+</script>
+
+
+<script>
+// unlock modules + durable local save (slim)
+(function() {
+  function unlock() {
+    try {
+      if (typeof FREE_DEFAULT !== 'undefined') {
+        ['integrations','security','admin'].forEach(function(k){ FREE_DEFAULT[k]=true; });
+      }
+    } catch(e){}
+    document.querySelectorAll('.tab,.mobile-drawer-link').forEach(function(n){
+      n.classList.remove('plan-locked','tab-locked','hidden');
+      n.style.opacity='1'; n.style.pointerEvents='auto';
+    });
+  }
+  function hookSave() {
+    if (typeof window.saveAll !== 'function' || window.saveAll._slim) return;
+    var _s = window.saveAll;
+    window.saveAll = function(silent) {
+      var r = _s.apply(this, arguments);
+      try {
+        if (typeof products !== 'undefined') localStorage.setItem('jp_products_v4', JSON.stringify(products));
+        if (typeof items !== 'undefined') localStorage.setItem('jp_items_v2', JSON.stringify(items));
+      } catch(e){}
+      return r;
+    };
+    window.saveAll._slim = true;
+  }
+  function boot(){ unlock(); hookSave(); }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 800);
+  console.log('FREE_DEFAULT unlocked runtime');
+})();
+</script>
+
+
+<script>
+// ===== RUN AS APP (PWA install + App-mode + embedded manifest/SW) =====
+(function() {
+  var ICON = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
+
+  // 1) Embedded Web App Manifest (no external manifest.json needed)
+  try {
+    var manifest = {
+      name: 'Jewellery Manager Pro',
+      short_name: 'Jewellery Pro',
+      description: 'Jewellery inventory, billing, karigar — offline app',
+      start_url: './',
+      scope: './',
+      display: 'standalone',
+      orientation: 'any',
+      background_color: '#1c1c1e',
+      theme_color: '#2563eb',
+      lang: 'bn',
+      icons: [
+        { src: ICON || '', sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+        { src: ICON || '', sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+      ]
+    };
+    var blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var link = document.getElementById('jpManifestLink') || document.querySelector('link[rel="manifest"]');
+    if (link) link.href = url;
+  } catch (e) { console.warn('manifest', e); }
+
+  // 2) Embedded Service Worker (works on https / localhost, not file://)
+  function registerSW() {
+    if (!('serviceWorker' in navigator)) return;
+    if (location.protocol === 'file:') return; // browser blocks SW on file://
+    var swCode = [
+      "const CACHE='jp-app-v1';",
+      "self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./']).catch(()=>{})).then(()=>self.skipWaiting()));});",
+      "self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});",
+      "self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>{try{c.put(e.request,copy);}catch(err){}});return res;}).catch(()=>caches.match('./'))));});"
+    ].join('');
+    try {
+      var swBlob = new Blob([swCode], { type: 'text/javascript' });
+      var swUrl = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swUrl).then(function(reg) {
+        console.log('SW registered', reg.scope);
+      }).catch(function(err) {
+        // blob SW may fail on some browsers — ignore
+        console.warn('SW register skip', err);
+      });
+    } catch (e) { console.warn(e); }
+  }
+
+  // 3) Install prompt
+  var deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    var btn = document.getElementById('installAppBtn');
+    if (btn) btn.style.display = '';
+  });
+
+  window.installJewelleryApp = async function() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      try { await deferredPrompt.userChoice; } catch (e) {}
+      deferredPrompt = null;
+      return;
+    }
+    // Fallback instructions
+    var isFile = location.protocol === 'file:';
+    var msg = isFile
+      ? 'ফাইল থেকে খুলেছেন। অ্যাপ মোডে চালাতে:\n\n1) Chrome/Edge এ খুলুন\n2) ঠিকানা বারে ⋮ মেনু → "Cast, save, and share" বা "Install App"\n   অথবা\n3) artifacts ফোল্ডারের "Start-Jewellery-App.bat" (Windows) / start-app.sh (Mac/Linux) ডাবল-ক্লিক করুন\n\nঅথবা একটি লোকাল সার্ভার চালিয়ে Install করুন।'
+      : 'Chrome/Edge: ঠিকানা বারের Install আইকন (⊕) চাপুন।\nAndroid: মেনু → Add to Home screen / Install app।\niPhone: Share → Add to Home Screen।';
+    alert(msg);
+  };
+
+  // 4) Detect standalone (already running as app)
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true ||
+      document.referrer.indexOf('android-app://') === 0;
+  }
+
+  function addInstallButton() {
+    if (document.getElementById('installAppBtn')) return;
+    var btn = document.createElement('button');
+    btn.id = 'installAppBtn';
+    btn.type = 'button';
+    btn.className = 'ghost small';
+    btn.textContent = isStandalone() ? '📱 App mode' : '⬇ Install App';
+    btn.title = 'Install / run like a normal app';
+    btn.onclick = function() { installJewelleryApp(); };
+    if (isStandalone()) {
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+    }
+    var header = document.querySelector('header .header-actions') || document.querySelector('header') || document.querySelector('.mobile-topbar');
+    if (header) header.appendChild(btn);
+  }
+
+  function boot() {
+    registerSW();
+    addInstallButton();
+    if (isStandalone()) {
+      document.body.classList.add('jp-standalone');
+      console.log('Running as installed app');
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 600);
+  console.log('✅ App-mode / PWA helpers ready');
 })();
 </script>
 
