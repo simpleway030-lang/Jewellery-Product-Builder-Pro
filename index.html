@@ -437,6 +437,148 @@
         .tab .tab-icon {
             font-size: 16px;
         }
+
+        /* ===== Floating Quick Actions window ===== */
+        #qaFloatWin {
+            position: fixed;
+            z-index: 12000;
+            min-width: 220px;
+            max-width: min(340px, 92vw);
+            background: var(--card-solid);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        body.dark #qaFloatWin {
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            border-color: rgba(255,255,255,0.12);
+        }
+        #qaFloatWin .qa-float-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            background: rgba(var(--accent-rgb), 0.1);
+            cursor: move;
+            user-select: none;
+            touch-action: none;
+        }
+        #qaFloatWin .qa-float-title {
+            flex: 1;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        #qaFloatWin .qa-float-head button {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border-radius: 8px;
+            border: none;
+            background: var(--border-soft);
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+        }
+        #qaFloatWin .qa-float-body {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: min(60vh, 420px);
+            overflow-y: auto;
+        }
+        #qaFloatWin.qa-collapsed .qa-float-body { display: none; }
+        #qaFloatWin #quickActionsList {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+            margin: 0 !important;
+        }
+        #qaFloatWin #quickActionsList button {
+            text-align: left !important;
+            width: 100%;
+            border-radius: 10px !important;
+            padding: 9px 12px !important;
+            font-size: 13px !important;
+        }
+        #qaFloatFab {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 11999;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            font-size: 22px;
+            box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.4);
+            cursor: pointer;
+            display: none;
+        }
+        #qaFloatFab:hover { transform: scale(1.06); }
+        @media (max-width: 700px) {
+            #qaFloatWin {
+                max-width: calc(100vw - 24px);
+            }
+        }
+
+
+        /* Menu customizer + hierarchical tabs */
+        #menuCustomList { list-style: none; padding: 0; margin: 10px 0 0; }
+        #menuCustomList li.menu-drag-item {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+            padding: 10px 12px; margin-bottom: 6px;
+            background: var(--border-soft); border-radius: 12px;
+            border: 1px solid var(--border-soft); cursor: grab;
+            user-select: none;
+        }
+        #menuCustomList li.menu-drag-item.dragging { opacity: 0.55; border-style: dashed; }
+        #menuCustomList li.menu-drag-item.level-1 { margin-left: 22px; background: rgba(var(--accent-rgb), 0.06); }
+        #menuCustomList li.menu-drag-item.level-2 { margin-left: 44px; background: rgba(var(--accent-rgb), 0.12); }
+        #menuCustomList .menu-handle { cursor: grab; font-size: 16px; opacity: 0.7; }
+        #menuCustomList select.menu-level, #menuCustomList select.menu-parent {
+            width: auto; min-width: 110px; margin: 0; font-size: 12px; padding: 6px 8px;
+        }
+        .tabs .tab-group { position: relative; display: inline-flex; align-items: center; }
+        .tabs .tab-group > .tab-group-btn {
+            padding: 10px 14px; border-radius: 12px; border: none; background: transparent;
+            color: var(--muted); font-weight: 600; font-size: 13px; cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .tabs .tab-group > .tab-group-btn:hover, .tabs .tab-group.open > .tab-group-btn {
+            color: var(--text); background: var(--card-solid); box-shadow: 0 1px 4px rgba(0,0,0,.1);
+        }
+        .tabs .tab-group-menu {
+            display: none; position: absolute; top: 100%; left: 0; min-width: 180px; z-index: 80;
+            background: var(--card-solid); border: 1px solid var(--border-soft);
+            border-radius: 12px; box-shadow: var(--shadow-md); padding: 6px; margin-top: 4px;
+        }
+        .tabs .tab-group.open > .tab-group-menu { display: block; }
+        .tabs .tab-group-menu .tab-sub {
+            display: block; width: 100%; text-align: left; padding: 10px 12px;
+            border: none; background: transparent; border-radius: 8px; cursor: pointer;
+            font-weight: 600; font-size: 13px; color: var(--text);
+        }
+        .tabs .tab-group-menu .tab-sub:hover { background: var(--border-soft); }
+        .tabs .tab-group-menu .tab-nested {
+            margin-left: 12px; font-size: 12px; color: var(--muted); font-weight: 500;
+        }
+        .mobile-drawer-group { margin-bottom: 4px; }
+        .mobile-drawer-group-title {
+            display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+            border-radius: 13px; font-weight: 700; font-size: 14px; cursor: pointer;
+        }
+        .mobile-drawer-group-title:hover { background: var(--border-soft); }
+        .mobile-drawer-group-links { display: none; padding-left: 12px; }
+        .mobile-drawer-group.open .mobile-drawer-group-links { display: block; }
+        .mobile-drawer-group-links .mobile-drawer-link { font-size: 13.5px; padding: 10px 14px; }
+        .mobile-drawer-group-links .nested { margin-left: 12px; opacity: 0.92; font-size: 13px; }
+
         @media(max-width:700px) {
             .tabs {
                 flex-wrap: nowrap;
@@ -3342,7 +3484,83 @@
         .v3-profile-grid input, .v3-profile-grid select { margin-top:3px; padding:8px 9px; font-size:12px; }
         @media(max-width:800px) { .v3-grid { grid-template-columns:1fr; } .v3-jobs { grid-template-columns:repeat(4,220px); } }
         @media(max-width:480px) { .v3-rate-grid, .v3-form-grid, .v3-profile-grid { grid-template-columns:1fr; } .v3-summary { grid-template-columns:1fr 1fr 1fr; } }
-    </style>
+    
+        /* FORCE full width — kill split body forever */
+        #splitWorkspace, #splitBar, #splitDivider {
+            display: none !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+            pointer-events: none !important;
+        }
+        body.split-on #splitWorkspace,
+        body.split-on #splitBar { display: none !important; }
+        body.split-on .grid,
+        body.split-on .wrap > .grid {
+            display: block !important;
+            width: 100% !important;
+        }
+        body.split-on .tabs { opacity: 1 !important; pointer-events: auto !important; }
+        .grid {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .grid > div { width: 100% !important; max-width: 100% !important; }
+        aside.right-panel { display: none !important; }
+        section.card {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        /* Employee ledger redesigned */
+        .emp-ledger-panel {
+            margin-top: 16px;
+            background: var(--card-solid);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+        .emp-ledger-head {
+            display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start;
+            justify-content: space-between; margin-bottom: 14px;
+        }
+        .emp-ledger-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px; margin-bottom: 14px;
+        }
+        .emp-ledger-stats .box {
+            background: var(--border-soft);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+        .emp-ledger-stats .box .v { font-size: 18px; font-weight: 800; }
+        .emp-ledger-stats .box .l { font-size: 11px; color: var(--muted); margin-top: 4px; }
+        .emp-ledger-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .emp-ledger-table th {
+            text-align: left; padding: 10px 8px; border-bottom: 2px solid var(--border-soft);
+            color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .emp-ledger-table td {
+            padding: 10px 8px; border-bottom: 1px solid var(--border-soft); vertical-align: middle;
+        }
+        .emp-ledger-table tr:hover td { background: rgba(var(--accent-rgb), 0.04); }
+        .emp-chip {
+            display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
+        }
+        .emp-chip.credit { background: rgba(52,199,89,0.15); color: #1a7f37; }
+        .emp-chip.debit { background: rgba(255,59,48,0.12); color: #c41e16; }
+        .emp-list-card {
+            display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+            justify-content: space-between; padding: 12px 14px; margin-bottom: 8px;
+            background: var(--card-solid); border: 1px solid var(--border-soft);
+            border-radius: 14px;
+        }
+        .emp-list-card .meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+</style>
 </head>
 <body>
     <div class="wrap">
@@ -3385,6 +3603,7 @@
                 <div class="mobile-drawer-link" data-tab="tools" onclick="mobileDrawerNav('tools')"><span class="tab-icon">🧰</span> Tools</div>
                 <div class="mobile-drawer-link" data-tab="hrm" onclick="mobileDrawerNav('hrm')"><span class="tab-icon">👥</span> HRM</div>
                 <div class="mobile-drawer-link" data-tab="accounts" onclick="mobileDrawerNav('accounts')"><span class="tab-icon">📒</span> Accounts</div>
+                <div class="mobile-drawer-link" data-tab="expenses" onclick="mobileDrawerNav('expenses')"><span class="tab-icon">💸</span> Expenses</div>
                 <div class="mobile-drawer-link" data-tab="team" onclick="mobileDrawerNav('team')"><span class="tab-icon">🏢</span> Team</div>
                 <div class="mobile-drawer-link" data-tab="crm" onclick="mobileDrawerNav('crm')"><span class="tab-icon">🤝</span> CRM</div>
                 <div class="mobile-drawer-link" data-tab="ops" onclick="mobileDrawerNav('ops')"><span class="tab-icon">🔁</span> Ops</div>
@@ -3414,6 +3633,7 @@
             <div class="tab" data-tab="studio"><span class="tab-icon">🔧</span> Karigar</div>
             <div class="tab" data-tab="hrm"><span class="tab-icon">👥</span> HRM</div>
             <div class="tab" data-tab="accounts"><span class="tab-icon">📒</span> Accounts</div>
+            <div class="tab" data-tab="expenses"><span class="tab-icon">💸</span> Expenses</div>
             <div class="tab" data-tab="team"><span class="tab-icon">🏢</span> Team</div>
             <div class="tab" data-tab="crm"><span class="tab-icon">🤝</span> CRM</div>
             <div class="tab" data-tab="ops"><span class="tab-icon">🔁</span> Ops</div>
@@ -3504,8 +3724,9 @@
                         <input id="searchProd" class="grow" placeholder="Search by name, code or category…" oninput="onProductFilterChange()" style="margin-top:0">
                         <button class="ghost" onclick="toggleProdFilters()" id="prodFilterToggleBtn">⚙ Filters</button>
                     </div>
-                    <div class="toolbar" id="prodFilterPanel" style="display:none;">
+                    <div class="toolbar" id="prodFilterPanel" style="display:none;flex-wrap:wrap;gap:8px;">
                         <select id="filterProdCategory" onchange="onProductFilterChange()" style="margin-top:0;width:auto"><option value="">All categories</option></select>
+                        <select id="filterProdTag" onchange="onProductFilterChange()" style="margin-top:0;width:auto"><option value="">All tags</option></select>
                         <select id="sortProd" onchange="onProductFilterChange()" style="margin-top:0;width:auto">
                             <option value="new">Newest first</option>
                             <option value="old">Oldest first</option>
@@ -3513,10 +3734,15 @@
                             <option value="za">Name Z–A</option>
                             <option value="high">Price: High–Low</option>
                             <option value="low">Price: Low–High</option>
+                            <option value="profit_high">Profit: High–Low</option>
+                            <option value="profit_low">Profit: Low–High</option>
+                            <option value="bestseller">Best sellers</option>
+                            <option value="category">Category-wise</option>
                         </select>
                         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;margin-top:0;color:var(--muted)">
                             <input type="checkbox" id="favOnly" style="width:auto;margin:0" onchange="onProductFilterChange()"> ★ Favourites
                         </label>
+                        
                         <button onclick="loadProductList()" class="ghost">↻ Refresh</button>
                     </div>
                     <div class="toolbar" id="prodFilterPanel2" style="display:none;margin-top:8px">
@@ -3524,7 +3750,7 @@
                         <button class="ghost small" onclick="clearProductFilters()">✕ Clear filters</button>
                     </div>
                     <div class="toolbar" style="margin-top:8px">
-                        <button class="ghost small" id="prodSelectModeBtn" onclick="toggleProductSelectMode()">☑ Select to Share</button>
+                        
                     </div>
                     <div id="productGrid" class="product-grid"></div>
                     <div id="productEmpty" class="empty-state" style="display:none"><div class="glyph">💎</div><div>No products yet — build your first piece.</div></div>
@@ -4114,6 +4340,8 @@
                         </div>
                     </div>
                     <div class="dash-stats" id="hrmSummary" style="margin-top:12px"></div>
+                    <div id="empLedgerPanel" class="emp-ledger-panel" style="display:none"></div>
+                    <div id="empListCards" style="margin-top:14px"></div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
                         <div style="background:var(--border-soft);border-radius:14px;padding:16px">
                             <div class="section-title" style="font-size:14px">Add employee</div>
@@ -4533,7 +4761,71 @@
                         </div>
                     </div>
                 </section>
+
+                <section id="expenses" class="card" style="display:none">
+                    <div class="section-head">
+                        <div>
+                            <div class="section-title">💸 Daily Expenses</div>
+                            <div class="note">খরচ এন্ট্রি · বিল ফটো · এডিট/ডিলিট · মোট হিসাব Accounts-এও</div>
+                        </div>
+                        <button type="button" onclick="startNewExpense()">+ New Expense</button>
+                    </div>
+                    <div class="dash-stats" id="expenseSummaryCards" style="margin-bottom:14px"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                        <div style="background:var(--border-soft);border-radius:14px;padding:14px">
+                            <div class="section-title" style="font-size:14px" id="expenseFormTitle">Add expense</div>
+                            <label>Date<input type="date" id="expDate"></label>
+                            <label>Category
+                                <select id="expCategory">
+                                    <option>Rent</option><option>Electricity</option><option>Transport</option>
+                                    <option>Food</option><option>Packaging</option><option>Marketing</option>
+                                    <option>Karigar payment</option><option>Salary / Staff</option>
+                                    <option>Tools</option><option>Misc</option>
+                                </select>
+                            </label>
+                            <label>Title / Note<input id="expTitle" placeholder="e.g. Auto fare, Shop rent"></label>
+                            <label>Amount ₹<input type="number" id="expAmount" step="0.01" min="0"></label>
+                            <label>Paid to (optional)<input id="expPayee" placeholder="Name"></label>
+                            <label>Bill photo<input type="file" id="expPhoto" accept="image/*"></label>
+                            <div id="expPhotoPreview" style="margin-top:8px"></div>
+                            <div class="actions" style="margin-top:10px">
+                                <button type="button" onclick="saveExpenseEntry()">💾 Save</button>
+                                <button type="button" class="ghost" onclick="startNewExpense()">Clear</button>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="toolbar" style="margin-bottom:8px">
+                                <input type="date" id="expFrom" onchange="renderExpenseList()">
+                                <input type="date" id="expTo" onchange="renderExpenseList()">
+                                <button class="ghost small" onclick="renderExpenseList()">Filter</button>
+                            </div>
+                            <div class="table-scroll" style="max-height:420px">
+                                <table>
+                                    <thead><tr><th>Date</th><th>Category</th><th>Note</th><th>Amount</th><th>Photo</th><th></th></tr></thead>
+                                    <tbody id="expenseTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="section-title" style="font-size:14px">Karigar &amp; Employee payments (live totals)</div>
+                    <div id="payTotalsPanel" class="note" style="margin-top:8px"></div>
+                </section>
                 <section id="settings" class="card" style="display:none">
+                    <hr>
+                    <div class="section-title" style="font-size:15px">📑 Main Menu Layout</div>
+                    <div class="note">
+                        ড্র্যাগ করে সাজাও। <b>Main</b> = উপরে ট্যাব বার। <b>Sub</b> = Main-এর নিচে ড্রপডাউন।
+                        <b>Sub → Sub</b> = সাবমেনুর ভিতরে নেস্টেড। Save করলে সব ডিভাইস লেআউট মনে রাখবে (এই ব্রাউজারে)।
+                    </div>
+                    <div class="actions" style="margin-top:10px;flex-wrap:wrap">
+                        <button type="button" onclick="saveMenuLayout()">💾 Save menu</button>
+                        <button type="button" class="ghost" onclick="resetMenuLayout()">Reset default</button>
+                        <button type="button" class="ghost" onclick="renderMenuCustomizer()">↻ Reload list</button>
+                    </div>
+                    <ul id="menuCustomList"></ul>
+                    <div class="note" style="margin-top:8px">Tip: Level বদলালে Parent বেছে নাও (Sub / Nested-এর জন্য)।</div>
+
                     <div class="section-title">⚙ Settings</div>
                     <div class="note">Company profile, appearance, customization, export/import, plugins and more.</div>
                     <div class="section-title" style="font-size:15px;margin-top:18px;">Company Profile</div>
@@ -5005,14 +5297,8 @@
                     </div>
                 </section>
             </div>
-            <aside class="right-panel">
-                <div class="card">
-                    <div class="section-title" style="font-size:15px;display:flex;justify-content:space-between;align-items:center">📊 Quick Actions
-                        <button class="ghost small" onclick="openQuickActionsEditor()" title="Customize">⚙</button>
-                    </div>
-                    <div id="quickActionsList" style="display:flex;flex-direction:column;gap:8px;margin-top:10px;"></div>
-                </div>
-            </aside>
+            <aside class="right-panel" style="display:none" aria-hidden="true"></aside>
+            <!-- Floating Quick Actions injected by script: #qaFloatWin -->
         </div>
         <footer>Jewellery Product Builder Pro · full business management · runs offline</footer>
     </div>
@@ -6450,6 +6736,7 @@
                 if (id === 'tools') { fillAdjItemSelect(); renderAdjHistory(); renderActivityLog(); updateLangStatus(); }
                 if (id === 'hrm') renderHRM();
                 if (id === 'accounts') renderAccounts();
+                if (id === 'expenses') { if(typeof renderExpenseList==='function')renderExpenseList(); if(typeof renderPayTotals==='function')renderPayTotals(); }
                 if (id === 'team') renderTeam();
                 if (id === 'crm') renderCRM();
                 if (id === 'ops') renderOps();
@@ -6777,7 +7064,8 @@
                         Number(it.margin || 0).toFixed(2) : Number(it.margin || 0).toFixed(1) + '%') +
                     '</td><td class="num">₹' + Number(it.price || 0).toFixed(
                         2) + '</td><td><button onclick="editItem(' + idx +
-                    ')" class="small ghost">Edit</button> <button onclick="deleteItem(' + idx +
+                    ')" class="small ghost">Edit</button> <button onclick="duplicateItem(' + idx +
+                    ')" class="small ghost">Duplicate</button> <button onclick="deleteItem(' + idx +
                     ')" class="small danger">Delete</button></td>';
                 tbody.appendChild(tr);
             });
@@ -8896,6 +9184,18 @@
                     .phone || '', address: billCustomer.address || '' } : { id: 'walkin',
                 name: 'Walk-in Customer',
                 phone: '', address: '' };
+            var prevDueAtBill = 0;
+            try {
+                if (typeof getCustomerDueAsOf === 'function') prevDueAtBill = getCustomerDueAsOf(custSnapshot.id, new Date().toISOString());
+                else if (typeof getCustomerBalance === 'function') prevDueAtBill = Math.max(0, Number(getCustomerBalance(custSnapshot.id) || 0));
+                else if (typeof custLedger !== 'undefined') {
+                    custLedger.forEach(function(e) {
+                        if (String(e.customerId) !== String(custSnapshot.id)) return;
+                        prevDueAtBill += Number(e.debit || 0) - Number(e.credit || 0);
+                    });
+                    prevDueAtBill = Math.max(0, prevDueAtBill);
+                }
+            } catch (e) { prevDueAtBill = 0; }
             var sale = {
                 id: Date.now(),
                 invoiceNo: consumeInvoiceNumber(),
@@ -8909,11 +9209,13 @@
                 grandTotal: t.grand,
                 paid: t.paid,
                 due: t.due,
+                previousDue: prevDueAtBill,
                 status: t.due <= 0 ? 'Paid' : (t.paid > 0 ? 'Partial' : 'Due'),
                 profit: t.profit,
                 notes: ''
             };
             sales.push(sale);
+            try { if (typeof window.sales !== 'undefined') window.sales = sales; } catch (e) {}
             logActivity('create_sale', 'Created invoice ' + sale.invoiceNo + ' for ' + sale.customer.name + ' — ₹' +
                 sale.grandTotal.toFixed(2));
             billQueue.forEach(function(item) {
@@ -8950,10 +9252,13 @@
             renderSalesHistory();
             renderProductGrid();
             renderStockTable();
+            try { if (typeof saveAll === 'function') saveAll(true); } catch (e) {}
             renderDashboard();
+            if (typeof updateStats === 'function') updateStats();
             renderWalkinLedger();
             if (qvProduct) renderQuickView();
-            var msg = '✅ Invoice ' + sale.invoiceNo + ' generated successfully!';
+            var msg = '✅ Invoice ' + sale.invoiceNo + ' generated · Total invoices: ' + (sales && sales.length) + ' · Prev due: ₹' + Number(sale.previousDue || 0).toFixed(0);
+
             showToast(msg, 'ok', 3000);
             openInvoiceModal(sale, 'sale');
         }
@@ -20859,6 +21164,1279 @@ body.split-on #splitWorkspace { display: grid; }
   setTimeout(boot, 400);
   setTimeout(boot, 1500);
   console.log('✅ Security optional + config save + ledger clean');
+})();
+</script>
+
+
+<script>
+// ===== Daily Expense + Pay totals + Prev due + Duplicate item + Product tags/filters + Invoice count fix =====
+(function() {
+  var KEY_EXP = 'jp_daily_expenses_v1';
+  var editingExpId = null;
+
+  function lj(k, f) { try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch (e) { return f; } }
+  function sj(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function money(n) { return '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
+  function uid(p) { return (p || 'X') + '-' + Date.now().toString(36).toUpperCase(); }
+  function $(id) { return document.getElementById(id); }
+
+  function getExpenses() { return lj(KEY_EXP, []); }
+  function setExpenses(arr) { sj(KEY_EXP, arr); }
+
+  // ---- Customer due as of a timestamp (for previous due on invoices) ----
+  window.getCustomerDueAsOf = function(customerId, asOfIso) {
+    var due = 0;
+    var t = asOfIso ? new Date(asOfIso).getTime() : Date.now();
+    if (typeof custLedger === 'undefined' || !Array.isArray(custLedger)) return 0;
+    custLedger.forEach(function(e) {
+      if (String(e.customerId) !== String(customerId)) return;
+      var et = new Date(e.date || 0).getTime();
+      if (et > t) return; // only entries at or before bill time
+      // exclude the exact sale entry if same second later - caller uses before push
+      due += Number(e.debit || 0) - Number(e.credit || 0);
+    });
+    return Math.max(0, due);
+  };
+
+  window.getCustomerDueBeforeSale = function(sale) {
+    if (!sale) return 0;
+    if (sale.previousDue != null && sale.previousDue !== '') return Number(sale.previousDue) || 0;
+    // reconstruct: ledger entries before this invoice
+    var due = 0;
+    var saleT = new Date(sale.date || 0).getTime();
+    var invId = sale.id;
+    if (typeof custLedger !== 'undefined') {
+      custLedger.forEach(function(e) {
+        if (String(e.customerId) !== String((sale.customer && sale.customer.id) || '')) return;
+        if (e.invoiceId && String(e.invoiceId) === String(invId)) return;
+        var et = new Date(e.date || 0).getTime();
+        if (et > saleT) return;
+        if (et === saleT && e.invoiceNo === sale.invoiceNo) return;
+        due += Number(e.debit || 0) - Number(e.credit || 0);
+      });
+    }
+    return Math.max(0, due);
+  };
+
+  // Patch invoice render to show previous due
+  function patchInvoiceRender() {
+    if (typeof window.renderSalesInvoice !== 'function' || window.renderSalesInvoice._prevDue) return;
+    var _r = window.renderSalesInvoice;
+    window.renderSalesInvoice = function(sale) {
+      _r.apply(this, arguments);
+      try {
+        var el = $('invoiceContent');
+        if (!el || !sale) return;
+        var prev = getCustomerDueBeforeSale(sale);
+        var block = el.querySelector('.jp-prev-due');
+        if (!block) {
+          block = document.createElement('div');
+          block.className = 'jp-prev-due note';
+          block.style.cssText = 'margin:10px 0;padding:10px 12px;border-radius:10px;background:rgba(255,149,0,0.12);font-weight:600';
+          var host = el.querySelector('table') || el.firstChild;
+          if (host && host.parentNode) host.parentNode.insertBefore(block, host);
+          else el.insertBefore(block, el.firstChild);
+        }
+        var thisDue = Number(sale.due || 0);
+        var totalAfter = prev + thisDue;
+        block.innerHTML = 'Previous due (as of this bill): <b>' + money(prev) + '</b>' +
+          ' · This bill due: <b>' + money(thisDue) + '</b>' +
+          ' · After bill: <b>' + money(prev + Number(sale.grandTotal || 0) - Number(sale.paid || 0)) + '</b>';
+      } catch (e) { console.warn(e); }
+    };
+    window.renderSalesInvoice._prevDue = true;
+  }
+
+  // ---- Expenses CRUD ----
+  window.startNewExpense = function() {
+    editingExpId = null;
+    if ($('expenseFormTitle')) $('expenseFormTitle').textContent = 'Add expense';
+    if ($('expDate')) $('expDate').value = new Date().toISOString().slice(0, 10);
+    if ($('expTitle')) $('expTitle').value = '';
+    if ($('expAmount')) $('expAmount').value = '';
+    if ($('expPayee')) $('expPayee').value = '';
+    if ($('expPhoto')) $('expPhoto').value = '';
+    if ($('expPhotoPreview')) $('expPhotoPreview').innerHTML = '';
+    window._expPhotoData = '';
+  };
+
+  window.saveExpenseEntry = function() {
+    var amount = Number(($('expAmount') && $('expAmount').value) || 0);
+    if (!(amount > 0)) { showToast('Enter amount', 'err'); return; }
+    var entry = {
+      id: editingExpId || uid('EX'),
+      date: ($('expDate') && $('expDate').value) || new Date().toISOString().slice(0, 10),
+      category: ($('expCategory') && $('expCategory').value) || 'Misc',
+      title: ($('expTitle') && $('expTitle').value.trim()) || '',
+      amount: amount,
+      payee: ($('expPayee') && $('expPayee').value.trim()) || '',
+      photo: window._expPhotoData || '',
+      updatedAt: new Date().toISOString()
+    };
+    var list = getExpenses();
+    var ix = list.findIndex(function(e) { return String(e.id) === String(entry.id); });
+    if (ix >= 0) list[ix] = entry; else list.unshift(entry);
+    setExpenses(list);
+    // mirror to journal for accounts
+    try {
+      var KEY_JOURNAL = 'jp_journal_v1';
+      var journal = lj(KEY_JOURNAL, []);
+      journal = journal.filter(function(j) { return j.expenseId !== entry.id; });
+      journal.push({
+        id: 'JE-' + entry.id,
+        expenseId: entry.id,
+        date: entry.date,
+        account: entry.category,
+        type: 'debit',
+        amount: entry.amount,
+        note: entry.title || entry.payee || 'Daily expense'
+      });
+      sj(KEY_JOURNAL, journal);
+    } catch (e) {}
+    if (typeof showToast === 'function') showToast('Expense saved', 'ok');
+    startNewExpense();
+    renderExpenseList();
+    if (typeof renderAccounts === 'function') renderAccounts();
+  };
+
+  window.editExpense = function(id) {
+    var e = getExpenses().find(function(x) { return String(x.id) === String(id); });
+    if (!e) return;
+    editingExpId = e.id;
+    if ($('expenseFormTitle')) $('expenseFormTitle').textContent = 'Edit expense';
+    if ($('expDate')) $('expDate').value = (e.date || '').slice(0, 10);
+    if ($('expCategory')) $('expCategory').value = e.category || 'Misc';
+    if ($('expTitle')) $('expTitle').value = e.title || '';
+    if ($('expAmount')) $('expAmount').value = e.amount || '';
+    if ($('expPayee')) $('expPayee').value = e.payee || '';
+    window._expPhotoData = e.photo || '';
+    if ($('expPhotoPreview')) {
+      $('expPhotoPreview').innerHTML = e.photo ? '<img src="' + e.photo + '" style="max-width:160px;border-radius:10px">' : '';
+    }
+  };
+
+  window.deleteExpense = function(id) {
+    if (!confirm('Delete this expense?')) return;
+    setExpenses(getExpenses().filter(function(e) { return String(e.id) !== String(id); }));
+    try {
+      var journal = lj('jp_journal_v1', []).filter(function(j) { return j.expenseId !== id; });
+      sj('jp_journal_v1', journal);
+    } catch (e) {}
+    renderExpenseList();
+    if (typeof showToast === 'function') showToast('Deleted', 'ok');
+  };
+
+  window.renderExpenseList = function() {
+    var body = $('expenseTableBody');
+    if (!body) return;
+    var from = ($('expFrom') && $('expFrom').value) || '';
+    var to = ($('expTo') && $('expTo').value) || '';
+    var list = getExpenses().filter(function(e) {
+      var d = (e.date || '').slice(0, 10);
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      return true;
+    });
+    var total = list.reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+    body.innerHTML = list.map(function(e) {
+      return '<tr><td>' + (e.date || '').slice(0, 10) + '</td><td>' + (e.category || '') + '</td><td>' +
+        (e.title || e.payee || '') + '</td><td class="num">' + money(e.amount) + '</td><td>' +
+        (e.photo ? '<a href="' + e.photo + '" target="_blank">📷</a>' : '—') +
+        '</td><td><button class="ghost small" onclick="editExpense(\'' + e.id + '\')">Edit</button> ' +
+        '<button class="ghost small" style="color:var(--danger)" onclick="deleteExpense(\'' + e.id + '\')">Del</button></td></tr>';
+    }).join('') || '<tr><td colspan="6" class="note">No expenses</td></tr>';
+    var cards = $('expenseSummaryCards');
+    if (cards) {
+      var all = getExpenses();
+      var today = new Date().toISOString().slice(0, 10);
+      var todaySum = all.filter(function(e) { return (e.date || '').slice(0, 10) === today; }).reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+      var month = today.slice(0, 7);
+      var monthSum = all.filter(function(e) { return (e.date || '').slice(0, 7) === month; }).reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+      var allSum = all.reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+      cards.innerHTML =
+        '<div class="dash-stat"><div class="val">' + money(todaySum) + '</div><div class="lbl">Today</div></div>' +
+        '<div class="dash-stat"><div class="val">' + money(monthSum) + '</div><div class="lbl">This month</div></div>' +
+        '<div class="dash-stat"><div class="val">' + money(allSum) + '</div><div class="lbl">All expenses</div></div>' +
+        '<div class="dash-stat"><div class="val">' + money(total) + '</div><div class="lbl">Filtered</div></div>';
+    }
+    renderPayTotals();
+  };
+
+  // photo
+  document.addEventListener('change', function(ev) {
+    if (ev.target && ev.target.id === 'expPhoto' && ev.target.files && ev.target.files[0]) {
+      var r = new FileReader();
+      r.onload = function() {
+        window._expPhotoData = r.result;
+        if ($('expPhotoPreview')) $('expPhotoPreview').innerHTML = '<img src="' + r.result + '" style="max-width:180px;border-radius:10px">';
+      };
+      r.readAsDataURL(ev.target.files[0]);
+    }
+  });
+
+  // ---- Karigar + Employee payment totals ----
+  window.renderPayTotals = function() {
+    var el = $('payTotalsPanel');
+    if (!el) return;
+    var lines = [];
+    // Karigar V3 jobs/payments if present
+    try {
+      var kPay = 0, kDue = 0;
+      var jobs = lj('jp_karigar_jobs_v3', lj('jp_v3_jobs', []));
+      if (!jobs.length && typeof window.karigarJobs !== 'undefined') jobs = window.karigarJobs || [];
+      (jobs || []).forEach(function(j) {
+        kPay += Number(j.paid || j.payment || 0);
+        kDue += Math.max(0, Number(j.total || j.amount || 0) - Number(j.paid || j.payment || 0));
+      });
+      // also ledger style
+      var kLed = lj('jp_karigar_ledger_v1', []);
+      kLed.forEach(function(e) {
+        kPay += Number(e.credit || e.paid || 0);
+        kDue += Number(e.debit || 0) - Number(e.credit || 0);
+      });
+      lines.push('<b>Karigar</b>: Paid ' + money(kPay) + ' · Due remaining ' + money(Math.max(0, kDue)));
+    } catch (e) {
+      lines.push('<b>Karigar</b>: open Karigar tab for job-wise dues');
+    }
+    try {
+      var empPay = 0, empDue = 0;
+      var pays = lj('jp_hrm_payments_v1', lj('jp_payroll_v1', []));
+      (pays || []).forEach(function(p) {
+        empPay += Number(p.paid || p.amount || 0);
+        empDue += Math.max(0, Number(p.salary || p.due || 0) - Number(p.paid || p.amount || 0));
+      });
+      var emps = lj('jp_employees_v1', []);
+      (emps || []).forEach(function(emp) {
+        if (emp.salaryDue) empDue += Number(emp.salaryDue || 0);
+      });
+      lines.push('<b>Employees</b>: Paid ' + money(empPay) + ' · Due remaining ' + money(Math.max(0, empDue)));
+    } catch (e) {
+      lines.push('<b>Employees</b>: see HRM for salary ledger');
+    }
+    var expAll = getExpenses().reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+    lines.push('<b>Daily expenses (all)</b>: ' + money(expAll));
+    el.innerHTML = lines.join('<br>');
+  };
+
+  // Enhance Accounts with expense total
+  var _ra = window.renderAccounts;
+  if (typeof _ra === 'function' && !_ra._exp) {
+    window.renderAccounts = function() {
+      _ra.apply(this, arguments);
+      try {
+        var exp = getExpenses().reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+        var host = $('pnlTable') || $('accountsSummary');
+        if (host && exp > 0) {
+          var note = document.getElementById('expInAccountsNote');
+          if (!note) {
+            note = document.createElement('div');
+            note.id = 'expInAccountsNote';
+            note.className = 'note';
+            note.style.marginTop = '10px';
+            if ($('pnlTable') && $('pnlTable').parentNode) $('pnlTable').parentNode.appendChild(note);
+            else if ($('accounts')) $('accounts').appendChild(note);
+          }
+          note.innerHTML = '💸 Daily expenses (all-time): <b>' + money(exp) + '</b> · open <a href="#" onclick="switchTab(\'expenses\');return false">Expenses</a> tab for full report';
+        }
+        renderPayTotals();
+      } catch (e) {}
+    };
+    window.renderAccounts._exp = true;
+  }
+
+  // ---- Duplicate item ----
+  window.duplicateItem = function(idx) {
+    if (typeof items === 'undefined' || !items[idx]) return;
+    var src = items[idx];
+    var base = String(src.name || 'Item').replace(/\s+\d+$/, '');
+    var n = 1;
+    var names = items.map(function(it) { return String(it.name || ''); });
+    while (names.indexOf(base + ' ' + n) >= 0 || names.indexOf(base + n) >= 0) n++;
+    var copy = JSON.parse(JSON.stringify(src));
+    copy.id = Date.now() + Math.floor(Math.random() * 1000);
+    copy.name = base + ' ' + n;
+    copy.stock = Number(src.stock || 0);
+    items.push(copy);
+    if (typeof saveAll === 'function') saveAll(true);
+    if (typeof renderItemTable === 'function') renderItemTable();
+    if (typeof showToast === 'function') showToast('Duplicated as "' + copy.name + '"', 'ok');
+  };
+
+  // ---- Product tags + filter/sort ----
+  function productProfit(p) {
+    var cost = Number(p.cost || p.purchase_price || 0);
+    var price = Number(p.price || p.selling_price || 0);
+    if (p.bom && p.bom.length) {
+      cost = p.bom.reduce(function(s, b) { return s + Number(b.qty || 0) * Number(b.price || 0) + Number(b.making || 0); }, 0);
+    }
+    return price - cost;
+  }
+  function soldCount(productId) {
+    var n = 0;
+    if (typeof sales === 'undefined') return 0;
+    sales.forEach(function(s) {
+      (s.lines || []).forEach(function(l) {
+        if (String(l.productId) === String(productId)) n += Number(l.qty || 0);
+      });
+    });
+    return n;
+  }
+
+  function refreshTagFilterOptions() {
+    var sel = $('filterProdTag');
+    if (!sel || typeof products === 'undefined') return;
+    var tags = {};
+    products.forEach(function(p) {
+      (p.tags || []).forEach(function(t) {
+        t = String(t).trim();
+        if (t) tags[t] = 1;
+      });
+    });
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">All tags</option>' + Object.keys(tags).sort().map(function(t) {
+      return '<option value="' + t.replace(/"/g, '') + '">' + t + '</option>';
+    }).join('');
+    sel.value = cur;
+  }
+
+  // Hook product grid filtering
+  var _rpg = window.renderProductGrid;
+  if (typeof _rpg === 'function' && !_rpg._tagsort) {
+    window.renderProductGrid = function() {
+      // pre-filter tag via temporary monkeypatch of products array order is hard;
+      // call original then re-sort DOM is messy. Instead filter list before original uses search.
+      refreshTagFilterOptions();
+      _rpg.apply(this, arguments);
+      // After render, apply tag hide + bestseller badge
+      try {
+        var tag = ($('filterProdTag') && $('filterProdTag').value) || '';
+        var sort = ($('sortProd') && $('sortProd').value) || '';
+        var grid = document.querySelector('#productGrid, .product-grid');
+        if (grid && tag) {
+          grid.querySelectorAll('.p-card').forEach(function(card) {
+            var id = card.getAttribute('data-id') || card.dataset.id;
+            var p = products.find(function(x) { return String(x.id) === String(id); });
+            var ok = p && (p.tags || []).map(String).some(function(t) { return t === tag; });
+            if (!ok) card.style.display = 'none';
+          });
+        }
+      } catch (e) {}
+    };
+    window.renderProductGrid._tagsort = true;
+  }
+
+  // Enhance onProductFilterChange for profit/bestseller sorts
+  var _opf = window.onProductFilterChange;
+  window.onProductFilterChange = function() {
+    var sort = ($('sortProd') && $('sortProd').value) || '';
+    if (typeof products !== 'undefined' && (sort === 'profit_high' || sort === 'profit_low' || sort === 'bestseller' || sort === 'category')) {
+      products.sort(function(a, b) {
+        if (sort === 'profit_high') return productProfit(b) - productProfit(a);
+        if (sort === 'profit_low') return productProfit(a) - productProfit(b);
+        if (sort === 'bestseller') return soldCount(b.id) - soldCount(a.id);
+        if (sort === 'category') return String(a.category || '').localeCompare(String(b.category || ''));
+        return 0;
+      });
+    }
+    if (typeof _opf === 'function') _opf.apply(this, arguments);
+    else if (typeof renderProductGrid === 'function') renderProductGrid();
+  };
+
+  // Tag editor on product quick actions — inject into builder if possible
+  window.setProductTags = function(productId, tagsStr) {
+    var p = products.find(function(x) { return String(x.id) === String(productId); });
+    if (!p) return;
+    p.tags = String(tagsStr || '').split(/[,;]+/).map(function(t) { return t.trim(); }).filter(Boolean);
+    if (typeof saveAll === 'function') saveAll(true);
+    refreshTagFilterOptions();
+    if (typeof showToast === 'function') showToast('Tags saved', 'ok');
+  };
+
+  // Add tags field prompt from product card long-press alternative: global helper
+  window.editProductTagsPrompt = function(id) {
+    var p = products.find(function(x) { return String(x.id) === String(id); });
+    if (!p) return;
+    var cur = (p.tags || []).join(', ');
+    var v = prompt('Tags (comma separated)', cur);
+    if (v === null) return;
+    setProductTags(id, v);
+    if (typeof renderProductGrid === 'function') renderProductGrid();
+  };
+
+  // Patch product cards to show tag button after grid render
+  var _rpg2 = window.renderProductGrid;
+  window.renderProductGrid = function() {
+    _rpg2.apply(this, arguments);
+    try {
+      document.querySelectorAll('.p-card').forEach(function(card) {
+        if (card.querySelector('.tag-edit-btn')) return;
+        var id = card.getAttribute('data-id') || (card.onclick && '') || card.dataset.pid;
+        // try extract from onclick
+        if (!id) {
+          var oc = card.getAttribute('onclick') || '';
+          var m = oc.match(/(\d{5,})/);
+          if (m) id = m[1];
+        }
+        if (!id) return;
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ghost small tag-edit-btn';
+        btn.textContent = '🏷';
+        btn.title = 'Edit tags';
+        btn.style.cssText = 'position:absolute;top:8px;left:8px;z-index:5;padding:4px 8px';
+        btn.onclick = function(e) { e.stopPropagation(); editProductTagsPrompt(id); };
+        card.style.position = 'relative';
+        card.appendChild(btn);
+        var p = products.find(function(x) { return String(x.id) === String(id); });
+        if (p && p.tags && p.tags.length) {
+          var tg = document.createElement('div');
+          tg.style.cssText = 'position:absolute;bottom:36px;left:8px;right:8px;font-size:10px;z-index:4;';
+          tg.innerHTML = p.tags.map(function(t) {
+            return '<span class="chip" style="margin:2px">' + String(t).replace(/</g, '') + '</span>';
+          }).join('');
+          card.appendChild(tg);
+        }
+      });
+    } catch (e) {}
+  };
+
+  // ---- Dashboard invoice count: show ALL invoices number in Total Sales label context ----
+  var _rd = window.renderDashboard;
+  if (typeof _rd === 'function' && !_rd._invCount) {
+    window.renderDashboard = function() {
+      _rd.apply(this, arguments);
+      try {
+        var n = (typeof sales !== 'undefined' && sales) ? sales.length : 0;
+        var el = $('dTotalSales');
+        if (el) {
+          // units sold stays; add title with invoice count
+          el.title = 'Invoices in system: ' + n + ' (period may filter units)';
+        }
+        var chip = $('dashInvoiceCount');
+        if (!chip) {
+          var head = document.querySelector('#dashboard .section-title');
+          if (head) {
+            chip = document.createElement('span');
+            chip.id = 'dashInvoiceCount';
+            chip.className = 'code-chip';
+            chip.style.marginLeft = '8px';
+            head.appendChild(chip);
+          }
+        }
+        if (chip) chip.textContent = n + ' invoices';
+      } catch (e) {}
+    };
+    window.renderDashboard._invCount = true;
+  }
+
+  function boot() {
+    patchInvoiceRender();
+    if ($('expDate') && !$('expDate').value) startNewExpense();
+    renderExpenseList();
+    renderPayTotals();
+    refreshTagFilterOptions();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 600);
+  setTimeout(patchInvoiceRender, 1200);
+  console.log('✅ Expenses + prev due + duplicate item + tags/filters');
+})();
+</script>
+
+
+<script>
+// ===== MAIN / SUB / NESTED MENU — drag, save, apply =====
+(function() {
+  var KEY = 'jp_menu_layout_v1';
+  var dragEl = null;
+
+  function $(id) { return document.getElementById(id); }
+
+  function collectDefaultTabs() {
+    var list = [];
+    document.querySelectorAll('.tabs > .tab[data-tab]').forEach(function(t) {
+      var id = t.getAttribute('data-tab');
+      if (!id) return;
+      var icon = (t.querySelector('.tab-icon') && t.querySelector('.tab-icon').textContent) || '';
+      var label = t.textContent.replace(icon, '').replace(/\s+/g, ' ').trim();
+      list.push({ id: id, icon: icon, label: label, level: 0, parent: null });
+    });
+    // also tabs that might only be in drawer
+    document.querySelectorAll('.mobile-drawer-link[data-tab]').forEach(function(t) {
+      var id = t.getAttribute('data-tab');
+      if (!id || list.some(function(x) { return x.id === id; })) return;
+      var icon = (t.querySelector('.tab-icon') && t.querySelector('.tab-icon').textContent) || '';
+      var label = t.textContent.replace(icon, '').replace(/\s+/g, ' ').trim();
+      list.push({ id: id, icon: icon, label: label, level: 0, parent: null });
+    });
+    return list;
+  }
+
+  function loadLayout() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (Array.isArray(raw) && raw.length) {
+        // merge any new tabs not in saved layout
+        var def = collectDefaultTabs();
+        var map = {};
+        raw.forEach(function(x) { map[x.id] = x; });
+        def.forEach(function(d) {
+          if (!map[d.id]) raw.push({ id: d.id, icon: d.icon, label: d.label, level: 0, parent: null });
+        });
+        return raw;
+      }
+    } catch (e) {}
+    return collectDefaultTabs();
+  }
+
+  function saveLayout(arr) {
+    localStorage.setItem(KEY, JSON.stringify(arr));
+  }
+
+  function labelOf(id, layout) {
+    var x = layout.find(function(i) { return i.id === id; });
+    return x ? ((x.icon ? x.icon + ' ' : '') + x.label) : id;
+  }
+
+  window.renderMenuCustomizer = function() {
+    var host = $('menuCustomList');
+    if (!host) return;
+    var layout = loadLayout();
+    host.innerHTML = '';
+    layout.forEach(function(item, idx) {
+      var li = document.createElement('li');
+      li.className = 'menu-drag-item level-' + (item.level || 0);
+      li.draggable = true;
+      li.dataset.idx = String(idx);
+      li.dataset.id = item.id;
+
+      var parents = layout.filter(function(x) {
+        return x.id !== item.id && (item.level === 1 ? x.level === 0 : item.level === 2 ? x.level <= 1 : false);
+      });
+
+      var parentOpts = '<option value="">— parent —</option>' + parents.map(function(p) {
+        return '<option value="' + p.id + '"' + (item.parent === p.id ? ' selected' : '') + '>' +
+          (p.icon || '') + ' ' + p.label + '</option>';
+      }).join('');
+
+      li.innerHTML =
+        '<span class="menu-handle" title="Drag">⠿</span>' +
+        '<span style="flex:1;min-width:120px;font-weight:600">' + (item.icon || '') + ' ' + item.label +
+        ' <span class="muted" style="font-weight:500">(' + item.id + ')</span></span>' +
+        '<select class="menu-level" data-idx="' + idx + '">' +
+          '<option value="0"' + (item.level === 0 ? ' selected' : '') + '>Main menu</option>' +
+          '<option value="1"' + (item.level === 1 ? ' selected' : '') + '>Sub menu</option>' +
+          '<option value="2"' + (item.level === 2 ? ' selected' : '') + '>Sub → Sub</option>' +
+        '</select>' +
+        '<select class="menu-parent" data-idx="' + idx + '"' + (item.level === 0 ? ' disabled' : '') + '>' +
+          parentOpts +
+        '</select>';
+
+      li.addEventListener('dragstart', function(e) {
+        dragEl = li;
+        li.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', item.id); } catch (err) {}
+      });
+      li.addEventListener('dragend', function() {
+        li.classList.remove('dragging');
+        dragEl = null;
+        // rebuild order from DOM
+        syncOrderFromDom();
+      });
+      li.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (!dragEl || dragEl === li) return;
+        var rect = li.getBoundingClientRect();
+        var before = (e.clientY - rect.top) < rect.height / 2;
+        host.insertBefore(dragEl, before ? li : li.nextSibling);
+      });
+
+      host.appendChild(li);
+    });
+
+    host.querySelectorAll('.menu-level').forEach(function(sel) {
+      sel.onchange = function() {
+        var layout = loadLayout();
+        var i = Number(sel.getAttribute('data-idx'));
+        if (!layout[i]) return;
+        layout[i].level = Number(sel.value) || 0;
+        if (layout[i].level === 0) layout[i].parent = null;
+        saveLayout(layout);
+        renderMenuCustomizer();
+      };
+    });
+    host.querySelectorAll('.menu-parent').forEach(function(sel) {
+      sel.onchange = function() {
+        var layout = loadLayout();
+        var i = Number(sel.getAttribute('data-idx'));
+        if (!layout[i]) return;
+        layout[i].parent = sel.value || null;
+        saveLayout(layout);
+      };
+    });
+  };
+
+  function syncOrderFromDom() {
+    var host = $('menuCustomList');
+    if (!host) return;
+    var layout = loadLayout();
+    var map = {};
+    layout.forEach(function(x) { map[x.id] = x; });
+    var next = [];
+    host.querySelectorAll('li.menu-drag-item').forEach(function(li) {
+      var id = li.dataset.id;
+      if (map[id]) next.push(map[id]);
+    });
+    // keep any missing
+    layout.forEach(function(x) {
+      if (!next.some(function(n) { return n.id === x.id; })) next.push(x);
+    });
+    saveLayout(next);
+    renderMenuCustomizer();
+  }
+
+  window.saveMenuLayout = function() {
+    syncOrderFromDom();
+    // read levels from DOM again
+    var host = $('menuCustomList');
+    var layout = loadLayout();
+    if (host) {
+      host.querySelectorAll('li.menu-drag-item').forEach(function(li) {
+        var id = li.dataset.id;
+        var item = layout.find(function(x) { return x.id === id; });
+        if (!item) return;
+        var lv = li.querySelector('.menu-level');
+        var pr = li.querySelector('.menu-parent');
+        if (lv) item.level = Number(lv.value) || 0;
+        if (pr) item.parent = item.level === 0 ? null : (pr.value || null);
+      });
+      // reorder
+      var order = [];
+      host.querySelectorAll('li.menu-drag-item').forEach(function(li) {
+        var item = layout.find(function(x) { return x.id === li.dataset.id; });
+        if (item) order.push(item);
+      });
+      layout.forEach(function(x) {
+        if (!order.some(function(o) { return o.id === x.id; })) order.push(x);
+      });
+      saveLayout(order);
+    }
+    applyMenuLayout();
+    if (typeof showToast === 'function') showToast('Menu layout saved', 'ok');
+  };
+
+  window.resetMenuLayout = function() {
+    localStorage.removeItem(KEY);
+    renderMenuCustomizer();
+    applyMenuLayout();
+    if (typeof showToast === 'function') showToast('Menu reset to default', 'info');
+  };
+
+  function tabElById(id) {
+    return document.querySelector('.tabs .tab[data-tab="' + id + '"]');
+  }
+
+  function switchTo(id) {
+    if (typeof switchTab === 'function') switchTab(id);
+    else {
+      var t = document.querySelector('.tab[data-tab="' + id + '"]');
+      if (t) t.click();
+    }
+    document.querySelectorAll('.tabs .tab-group.open').forEach(function(g) { g.classList.remove('open'); });
+  }
+
+  window.applyMenuLayout = function() {
+    var layout = loadLayout();
+    var tabsBar = document.querySelector('.tabs');
+    if (!tabsBar) return;
+
+    // cache original tab nodes
+    if (!window._jpTabNodes) {
+      window._jpTabNodes = {};
+      document.querySelectorAll('.tabs .tab[data-tab]').forEach(function(t) {
+        window._jpTabNodes[t.getAttribute('data-tab')] = t;
+      });
+    }
+    var nodes = window._jpTabNodes;
+
+    // clear bar
+    tabsBar.innerHTML = '';
+
+    var mains = layout.filter(function(x) { return (x.level || 0) === 0; });
+    var subs = layout.filter(function(x) { return x.level === 1; });
+    var nests = layout.filter(function(x) { return x.level === 2; });
+
+    function kids(parentId, level) {
+      return layout.filter(function(x) { return x.level === level && x.parent === parentId; });
+    }
+
+    mains.forEach(function(m) {
+      var children = kids(m.id, 1);
+      // also subs without parent → put under a synthetic More later
+      if (!children.length) {
+        var node = nodes[m.id];
+        if (node) {
+          tabsBar.appendChild(node);
+          node.style.display = '';
+        } else {
+          var d = document.createElement('div');
+          d.className = 'tab';
+          d.setAttribute('data-tab', m.id);
+          d.innerHTML = '<span class="tab-icon">' + (m.icon || '') + '</span> ' + m.label;
+          d.onclick = function() { switchTo(m.id); };
+          tabsBar.appendChild(d);
+        }
+        return;
+      }
+      // group with dropdown
+      var g = document.createElement('div');
+      g.className = 'tab-group';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tab-group-btn';
+      btn.innerHTML = '<span class="tab-icon">' + (m.icon || '📁') + '</span> ' + m.label + ' ▾';
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        var open = g.classList.contains('open');
+        document.querySelectorAll('.tabs .tab-group.open').forEach(function(x) { x.classList.remove('open'); });
+        if (!open) g.classList.add('open');
+      };
+      // click label area also can open main if wanted — double: first item
+      var menu = document.createElement('div');
+      menu.className = 'tab-group-menu';
+      // parent itself as first entry
+      var selfBtn = document.createElement('button');
+      selfBtn.type = 'button';
+      selfBtn.className = 'tab-sub';
+      selfBtn.textContent = (m.icon || '') + ' ' + m.label;
+      selfBtn.onclick = function() { switchTo(m.id); };
+      menu.appendChild(selfBtn);
+
+      children.forEach(function(ch) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tab-sub';
+        b.textContent = (ch.icon || '') + ' ' + ch.label;
+        b.onclick = function() { switchTo(ch.id); };
+        menu.appendChild(b);
+        kids(ch.id, 2).forEach(function(n) {
+          var nb = document.createElement('button');
+          nb.type = 'button';
+          nb.className = 'tab-sub tab-nested';
+          nb.textContent = '↳ ' + (n.icon || '') + ' ' + n.label;
+          nb.onclick = function() { switchTo(n.id); };
+          menu.appendChild(nb);
+        });
+      });
+      // nests under main directly
+      kids(m.id, 2).forEach(function(n) {
+        var nb = document.createElement('button');
+        nb.type = 'button';
+        nb.className = 'tab-sub tab-nested';
+        nb.textContent = '↳ ' + (n.icon || '') + ' ' + n.label;
+        nb.onclick = function() { switchTo(n.id); };
+        menu.appendChild(nb);
+      });
+
+      g.appendChild(btn);
+      g.appendChild(menu);
+      tabsBar.appendChild(g);
+    });
+
+    // Orphan subs (level 1 without valid parent) → More group
+    var orphans = subs.filter(function(s) {
+      return !s.parent || !mains.some(function(m) { return m.id === s.parent; });
+    });
+    if (orphans.length) {
+      var g = document.createElement('div');
+      g.className = 'tab-group';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tab-group-btn';
+      btn.innerHTML = '📁 More ▾';
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        var open = g.classList.contains('open');
+        document.querySelectorAll('.tabs .tab-group.open').forEach(function(x) { x.classList.remove('open'); });
+        if (!open) g.classList.add('open');
+      };
+      var menu = document.createElement('div');
+      menu.className = 'tab-group-menu';
+      orphans.forEach(function(ch) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tab-sub';
+        b.textContent = (ch.icon || '') + ' ' + ch.label;
+        b.onclick = function() { switchTo(ch.id); };
+        menu.appendChild(b);
+      });
+      g.appendChild(btn);
+      g.appendChild(menu);
+      tabsBar.appendChild(g);
+    }
+
+    // Mobile drawer
+    applyDrawerLayout(layout, mains, kids);
+
+    // Re-bind original tab click handlers if nodes moved — tabs use event delegation often
+    // Ensure click on restored .tab works
+    tabsBar.querySelectorAll('.tab[data-tab]').forEach(function(t) {
+      if (t._menuBound) return;
+      t._menuBound = true;
+      t.addEventListener('click', function() {
+        var id = t.getAttribute('data-tab');
+        // original code listens on .tab click via parent — trigger section show
+        if (typeof window._jpOrigTabClick === 'function') return;
+      });
+    });
+  };
+
+  function applyDrawerLayout(layout, mains, kids) {
+    var links = document.querySelector('.mobile-drawer-links');
+    if (!links) return;
+    if (!window._jpDrawerNodes) {
+      window._jpDrawerNodes = {};
+      links.querySelectorAll('.mobile-drawer-link[data-tab]').forEach(function(a) {
+        window._jpDrawerNodes[a.getAttribute('data-tab')] = a;
+      });
+    }
+    var nodes = window._jpDrawerNodes;
+    links.innerHTML = '';
+
+    mains.forEach(function(m) {
+      var children = kids(m.id, 1);
+      if (!children.length) {
+        var n = nodes[m.id];
+        if (n) { links.appendChild(n); n.style.display = ''; }
+        return;
+      }
+      var g = document.createElement('div');
+      g.className = 'mobile-drawer-group';
+      var title = document.createElement('div');
+      title.className = 'mobile-drawer-group-title';
+      title.innerHTML = '<span class="tab-icon">' + (m.icon || '📁') + '</span> ' + m.label + ' ▾';
+      title.onclick = function() { g.classList.toggle('open'); };
+      var box = document.createElement('div');
+      box.className = 'mobile-drawer-group-links';
+      var self = nodes[m.id];
+      if (self) {
+        box.appendChild(self);
+      } else {
+        var a = document.createElement('div');
+        a.className = 'mobile-drawer-link';
+        a.setAttribute('data-tab', m.id);
+        a.textContent = m.label;
+        a.onclick = function() { if (typeof mobileDrawerNav === 'function') mobileDrawerNav(m.id); };
+        box.appendChild(a);
+      }
+      children.forEach(function(ch) {
+        var n = nodes[ch.id];
+        if (n) box.appendChild(n);
+        else {
+          var a = document.createElement('div');
+          a.className = 'mobile-drawer-link';
+          a.setAttribute('data-tab', ch.id);
+          a.innerHTML = '<span class="tab-icon">' + (ch.icon || '') + '</span> ' + ch.label;
+          a.onclick = function() { if (typeof mobileDrawerNav === 'function') mobileDrawerNav(ch.id); };
+          box.appendChild(a);
+        }
+        kids(ch.id, 2).forEach(function(nest) {
+          var nn = nodes[nest.id];
+          if (nn) { nn.classList.add('nested'); box.appendChild(nn); }
+        });
+      });
+      g.appendChild(title);
+      g.appendChild(box);
+      links.appendChild(g);
+    });
+    // orphans
+    layout.filter(function(x) { return x.level === 1 && (!x.parent || !mains.some(function(m) { return m.id === x.parent; })); }).forEach(function(ch) {
+      var n = nodes[ch.id];
+      if (n) links.appendChild(n);
+    });
+  }
+
+  // close dropdowns on outside click
+  document.addEventListener('click', function() {
+    document.querySelectorAll('.tabs .tab-group.open').forEach(function(g) { g.classList.remove('open'); });
+  });
+
+  // when opening settings, render customizer
+  var _st = window.switchTab;
+  if (typeof _st === 'function') {
+    window.switchTab = function(id) {
+      var r = _st.apply(this, arguments);
+      if (id === 'settings') setTimeout(function() { renderMenuCustomizer(); }, 50);
+      return r;
+    };
+  }
+  document.addEventListener('click', function(ev) {
+    var t = ev.target.closest && ev.target.closest('.tab[data-tab="settings"], .mobile-drawer-link[data-tab="settings"]');
+    if (t) setTimeout(function() { renderMenuCustomizer(); }, 80);
+  }, true);
+
+  function boot() {
+    // wait for tabs to exist
+    if (!document.querySelector('.tabs .tab[data-tab]')) {
+      setTimeout(boot, 200);
+      return;
+    }
+    window._jpTabNodes = window._jpTabNodes || null;
+    applyMenuLayout();
+    renderMenuCustomizer();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 500);
+  setTimeout(boot, 1500);
+  console.log('✅ Menu layout customizer (drag + main/sub/nested)');
+})();
+</script>
+
+
+<script>
+// ===== Floating Quick Actions window (draggable) =====
+(function() {
+  var POS_KEY = 'jp_qa_float_pos_v1';
+  var COL_KEY = 'jp_qa_float_collapsed_v1';
+  var HIDE_KEY = 'jp_qa_float_hidden_v1';
+
+  function $(id) { return document.getElementById(id); }
+
+  function loadPos() {
+    try {
+      var p = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
+      if (p && typeof p.left === 'number' && typeof p.top === 'number') return p;
+    } catch (e) {}
+    return { left: null, top: null }; // null → default bottom-right
+  }
+
+  function savePos(left, top) {
+    localStorage.setItem(POS_KEY, JSON.stringify({ left: left, top: top }));
+  }
+
+  function ensureFloat() {
+    if ($('qaFloatWin')) return $('qaFloatWin');
+
+    var win = document.createElement('div');
+    win.id = 'qaFloatWin';
+    win.innerHTML =
+      '<div class="qa-float-head" id="qaFloatHead">' +
+        '<span class="qa-float-title">📊 Quick Actions</span>' +
+        '<button type="button" title="Customize" id="qaFloatGear">⚙</button>' +
+        '<button type="button" title="Minimize" id="qaFloatMin">—</button>' +
+        '<button type="button" title="Hide" id="qaFloatClose">✕</button>' +
+      '</div>' +
+      '<div class="qa-float-body"><div id="quickActionsList"></div></div>';
+    document.body.appendChild(win);
+
+    var fab = document.createElement('button');
+    fab.id = 'qaFloatFab';
+    fab.type = 'button';
+    fab.title = 'Show Quick Actions';
+    fab.textContent = '⚡';
+    document.body.appendChild(fab);
+
+    // position
+    var pos = loadPos();
+    if (pos.left != null && pos.top != null) {
+      win.style.left = pos.left + 'px';
+      win.style.top = pos.top + 'px';
+      win.style.right = 'auto';
+      win.style.bottom = 'auto';
+    } else {
+      win.style.right = '16px';
+      win.style.bottom = '16px';
+      win.style.left = 'auto';
+      win.style.top = 'auto';
+    }
+
+    if (localStorage.getItem(COL_KEY) === '1') win.classList.add('qa-collapsed');
+    if (localStorage.getItem(HIDE_KEY) === '1') {
+      win.style.display = 'none';
+      fab.style.display = 'block';
+    }
+
+    $('qaFloatGear').onclick = function(e) {
+      e.stopPropagation();
+      if (typeof openQuickActionsEditor === 'function') openQuickActionsEditor();
+    };
+    $('qaFloatMin').onclick = function(e) {
+      e.stopPropagation();
+      win.classList.toggle('qa-collapsed');
+      localStorage.setItem(COL_KEY, win.classList.contains('qa-collapsed') ? '1' : '0');
+    };
+    $('qaFloatClose').onclick = function(e) {
+      e.stopPropagation();
+      win.style.display = 'none';
+      fab.style.display = 'block';
+      localStorage.setItem(HIDE_KEY, '1');
+    };
+    fab.onclick = function() {
+      win.style.display = '';
+      fab.style.display = 'none';
+      localStorage.setItem(HIDE_KEY, '0');
+      if (typeof renderQuickActionsList === 'function') renderQuickActionsList();
+    };
+
+    // drag
+    var head = $('qaFloatHead');
+    var dragging = false, sx = 0, sy = 0, ol = 0, ot = 0;
+
+    function pointerDown(e) {
+      if (e.target.closest('button')) return;
+      dragging = true;
+      var rect = win.getBoundingClientRect();
+      ol = rect.left;
+      ot = rect.top;
+      var pt = e.touches ? e.touches[0] : e;
+      sx = pt.clientX;
+      sy = pt.clientY;
+      win.style.left = ol + 'px';
+      win.style.top = ot + 'px';
+      win.style.right = 'auto';
+      win.style.bottom = 'auto';
+      e.preventDefault();
+    }
+    function pointerMove(e) {
+      if (!dragging) return;
+      var pt = e.touches ? e.touches[0] : e;
+      var nl = ol + (pt.clientX - sx);
+      var nt = ot + (pt.clientY - sy);
+      // clamp
+      nl = Math.max(4, Math.min(window.innerWidth - 80, nl));
+      nt = Math.max(4, Math.min(window.innerHeight - 40, nt));
+      win.style.left = nl + 'px';
+      win.style.top = nt + 'px';
+    }
+    function pointerUp() {
+      if (!dragging) return;
+      dragging = false;
+      var rect = win.getBoundingClientRect();
+      savePos(rect.left, rect.top);
+    }
+    head.addEventListener('mousedown', pointerDown);
+    head.addEventListener('touchstart', pointerDown, { passive: false });
+    window.addEventListener('mousemove', pointerMove);
+    window.addEventListener('touchmove', pointerMove, { passive: false });
+    window.addEventListener('mouseup', pointerUp);
+    window.addEventListener('touchend', pointerUp);
+
+    return win;
+  }
+
+  function boot() {
+    ensureFloat();
+    if (typeof renderQuickActionsList === 'function') {
+      try { renderQuickActionsList(); } catch (e) {}
+    }
+  }
+
+  // Re-render into float after original QA render
+  var tries = 0;
+  function hookRender() {
+    if (typeof window.renderQuickActionsList !== 'function') {
+      if (tries++ < 20) setTimeout(hookRender, 200);
+      return;
+    }
+    if (window.renderQuickActionsList._float) return;
+    var _r = window.renderQuickActionsList;
+    window.renderQuickActionsList = function() {
+      ensureFloat();
+      return _r.apply(this, arguments);
+    };
+    window.renderQuickActionsList._float = true;
+    boot();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookRender);
+  else hookRender();
+  setTimeout(hookRender, 400);
+  setTimeout(boot, 800);
+  setTimeout(boot, 1600);
+  console.log('✅ Floating Quick Actions window');
+})();
+</script>
+
+
+<script>
+// ===== Kill split 2-column body + redesign Employee ledger =====
+(function() {
+  function killSplitHard() {
+    try {
+      document.body.classList.remove('split-on');
+      localStorage.setItem('jp_split_on', '0');
+      ['splitWorkspace', 'splitBar', 'splitDivider'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+          el.style.display = 'none';
+          try { el.remove(); } catch (e) {}
+        }
+      });
+      document.querySelectorAll('[id^="split"]').forEach(function(el) {
+        if (el.id === 'splitToggleBtn' || /split/i.test(el.id)) {
+          if (el.id === 'splitToggleBtn') el.remove();
+        }
+      });
+      document.querySelectorAll('header button, .header-actions button').forEach(function(b) {
+        var t = (b.textContent || '').replace(/\s+/g, ' ').trim();
+        if (/^⧉?\s*Split$/i.test(t) || t === 'Split') b.remove();
+      });
+      // restore main grid visibility
+      var grid = document.querySelector('.wrap > .grid, .grid');
+      if (grid) {
+        grid.style.display = 'block';
+        grid.style.width = '100%';
+        grid.style.maxWidth = '100%';
+      }
+      document.querySelectorAll('section.card').forEach(function(s) {
+        s.style.maxWidth = '100%';
+        s.style.width = '100%';
+      });
+    } catch (e) { console.warn(e); }
+  }
+
+  window.toggleSplitScreen = function() {
+    killSplitHard();
+    if (typeof showToast === 'function') showToast('Split screen বন্ধ — ফুল স্ক্রিন মোড', 'info');
+  };
+  window.setSplit = function() { killSplitHard(); };
+
+  function money(n) {
+    return '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  }
+  function lj(k, f) {
+    try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch (e) { return f; }
+  }
+
+  // Override viewEmployeeLedger with polished UI
+  window.viewEmployeeLedger = function(empId) {
+    var emps = lj('jp_employees_v1', []);
+    var pays = lj('jp_hrm_payments_v1', lj('jp_payroll_v1', []));
+    var emp = emps.find(function(e) { return String(e.id) === String(empId); });
+    if (!emp) {
+      if (typeof showToast === 'function') showToast('Employee not found', 'err');
+      return;
+    }
+    var rows = pays.filter(function(p) { return String(p.empId) === String(empId); })
+      .sort(function(a, b) { return new Date(a.date || 0) - new Date(b.date || 0); });
+
+    var paid = 0, advance = 0, salaryMarked = 0;
+    rows.forEach(function(p) {
+      var amt = Number(p.amount || 0);
+      var typ = String(p.type || 'payment').toLowerCase();
+      if (typ.indexOf('advance') >= 0) advance += amt;
+      else if (typ.indexOf('salary') >= 0 || typ.indexOf('pay') >= 0) paid += amt;
+      else paid += amt;
+      if (typ.indexOf('salary') >= 0) salaryMarked += amt;
+    });
+    var monthly = Number(emp.salary || 0);
+    // rough due: monthly - this month paid (simple)
+    var now = new Date();
+    var ym = now.toISOString().slice(0, 7);
+    var monthPaid = rows.filter(function(p) { return String(p.date || '').slice(0, 7) === ym; })
+      .reduce(function(s, p) { return s + Number(p.amount || 0); }, 0);
+    var due = Math.max(0, monthly - monthPaid);
+
+    var panel = document.getElementById('empLedgerPanel');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'empLedgerPanel';
+      panel.className = 'emp-ledger-panel';
+      var host = document.getElementById('hrm');
+      if (host) host.appendChild(panel);
+    }
+    panel.style.display = 'block';
+
+    var tableRows = rows.length ? rows.slice().reverse().map(function(p) {
+      var typ = String(p.type || 'Payment');
+      var chipClass = /advance|deduct|debit/i.test(typ) ? 'debit' : 'credit';
+      return '<tr>' +
+        '<td>' + escapeHtml(String(p.date || '').slice(0, 10)) + '</td>' +
+        '<td><span class="emp-chip ' + chipClass + '">' + escapeHtml(typ) + '</span></td>' +
+        '<td class="num" style="font-weight:700">' + money(p.amount) + '</td>' +
+        '<td>' + escapeHtml(p.note || '—') + '</td>' +
+        '<td><button type="button" class="ghost small" onclick="deleteEmployeePayment(\'' + p.id + '\');viewEmployeeLedger(\'' + empId + '\')">✕</button></td>' +
+        '</tr>';
+    }).join('') : '<tr><td colspan="5" class="note" style="text-align:center;padding:20px">এখনো কোনো পেমেন্ট নেই</td></tr>';
+
+    panel.innerHTML =
+      '<div class="emp-ledger-head">' +
+        '<div>' +
+          '<div style="font-size:18px;font-weight:800">' + escapeHtml(emp.name) + '</div>' +
+          '<div class="muted" style="margin-top:4px">' + escapeHtml(emp.role || '') +
+            (emp.phone ? ' · ' + escapeHtml(emp.phone) : '') +
+            ' · Salary ' + money(monthly) + '/mo</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<button type="button" class="ghost small" onclick="document.getElementById(\'payEmp\').value=\'' + empId + '\';document.getElementById(\'payAmt\').focus()">+ Payment</button>' +
+          '<button type="button" class="ghost small" onclick="editEmployee(\'' + empId + '\')">Edit</button>' +
+          '<button type="button" class="ghost small" onclick="document.getElementById(\'empLedgerPanel\').style.display=\'none\'">Close</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="emp-ledger-stats">' +
+        '<div class="box"><div class="v">' + money(paid + advance) + '</div><div class="l">Total paid</div></div>' +
+        '<div class="box"><div class="v">' + money(monthPaid) + '</div><div class="l">This month</div></div>' +
+        '<div class="box"><div class="v">' + money(due) + '</div><div class="l">Due (this month)</div></div>' +
+        '<div class="box"><div class="v">' + money(monthly) + '</div><div class="l">Monthly salary</div></div>' +
+      '</div>' +
+      '<div class="table-scroll">' +
+        '<table class="emp-ledger-table"><thead><tr>' +
+          '<th>Date</th><th>Type</th><th>Amount</th><th>Note</th><th></th>' +
+        '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
+      '</div>';
+
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  // Card-style employee list overlay on empList
+  var _rh = window.renderHrm;
+  if (typeof _rh === 'function' && !_rh._cards) {
+    window.renderHrm = function() {
+      _rh.apply(this, arguments);
+      try {
+        var emps = lj('jp_employees_v1', []);
+        var pays = lj('jp_hrm_payments_v1', lj('jp_payroll_v1', []));
+        var host = document.getElementById('empListCards');
+        if (!host) return;
+        host.innerHTML = '<div class="section-title" style="font-size:14px;margin-bottom:10px">Employee directory</div>' +
+          (emps.length ? emps.map(function(e) {
+            var total = pays.filter(function(p) { return String(p.empId) === String(e.id); })
+              .reduce(function(s, p) { return s + Number(p.amount || 0); }, 0);
+            var ym = new Date().toISOString().slice(0, 7);
+            var monthPaid = pays.filter(function(p) {
+              return String(p.empId) === String(e.id) && String(p.date || '').slice(0, 7) === ym;
+            }).reduce(function(s, p) { return s + Number(p.amount || 0); }, 0);
+            var due = Math.max(0, Number(e.salary || 0) - monthPaid);
+            return '<div class="emp-list-card">' +
+              '<div><div style="font-weight:700">' + escapeHtml(e.name) + '</div>' +
+              '<div class="meta">' + escapeHtml(e.role || '') + ' · ' + money(e.salary) + '/mo · Paid total ' + money(total) +
+              ' · Due ' + money(due) + '</div></div>' +
+              '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+              '<button type="button" class="ghost small" onclick="viewEmployeeLedger(\'' + e.id + '\')">📒 Ledger</button>' +
+              '<button type="button" class="ghost small" onclick="editEmployee(\'' + e.id + '\')">Edit</button>' +
+              '</div></div>';
+          }).join('') : '<div class="note">No employees yet — add on the left.</div>');
+      } catch (e) {}
+    };
+    window.renderHrm._cards = true;
+  }
+
+  function boot() {
+    killSplitHard();
+    setTimeout(killSplitHard, 300);
+    setTimeout(killSplitHard, 1000);
+    setTimeout(killSplitHard, 2500);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  console.log('✅ Split killed + Employee ledger redesign');
 })();
 </script>
 
