@@ -4785,7 +4785,10 @@
                             </label>
                             <label>Title / Note<input id="expTitle" placeholder="e.g. Auto fare, Shop rent"></label>
                             <label>Amount ₹<input type="number" id="expAmount" step="0.01" min="0"></label>
-                            <label>Paid to (optional)<input id="expPayee" placeholder="Name"></label>
+                            <label>Paid by (কে পেমেন্ট করেছে)<input id="expPaidBy" placeholder="Staff / your name" list="expPaidByList"></label>
+                            <label>Paid to (কাকে দেওয়া হয়েছে)<input id="expPayee" placeholder="Person / shop name" list="expPayeeList"></label>
+                            <datalist id="expPaidByList"></datalist>
+                            <datalist id="expPayeeList"></datalist>
                             <label>Bill photo<input type="file" id="expPhoto" accept="image/*"></label>
                             <div id="expPhotoPreview" style="margin-top:8px"></div>
                             <div class="actions" style="margin-top:10px">
@@ -4794,14 +4797,25 @@
                             </div>
                         </div>
                         <div>
-                            <div class="toolbar" style="margin-bottom:8px">
+                            <div class="toolbar" style="margin-bottom:8px;flex-wrap:wrap;gap:8px">
                                 <input type="date" id="expFrom" onchange="renderExpenseList()">
                                 <input type="date" id="expTo" onchange="renderExpenseList()">
+                                <select id="expFilterCategory" onchange="renderExpenseList()" style="min-width:120px">
+                                    <option value="">All categories</option>
+                                </select>
+                                <select id="expFilterPaidBy" onchange="renderExpenseList()" style="min-width:120px">
+                                    <option value="">Paid by: All</option>
+                                </select>
+                                <select id="expFilterPayee" onchange="renderExpenseList()" style="min-width:120px">
+                                    <option value="">Paid to: All</option>
+                                </select>
                                 <button class="ghost small" onclick="renderExpenseList()">Filter</button>
+                                <button class="ghost small" onclick="clearExpenseFilters()">Clear</button>
                             </div>
+                            <div id="expFilterTotals" style="margin-bottom:10px;padding:10px 12px;border-radius:12px;background:var(--border-soft);font-size:13px;font-weight:600"></div>
                             <div class="table-scroll" style="max-height:420px">
                                 <table>
-                                    <thead><tr><th>Date</th><th>Category</th><th>Note</th><th>Amount</th><th>Photo</th><th></th></tr></thead>
+                                    <thead><tr><th>Date</th><th>Category</th><th>Note</th><th>Paid by</th><th>Paid to</th><th>Amount</th><th>Photo</th><th></th></tr></thead>
                                     <tbody id="expenseTableBody"></tbody>
                                 </table>
                             </div>
@@ -23065,6 +23079,322 @@ body.split-on #splitWorkspace { display: grid; }
   setTimeout(boot, 600);
   setTimeout(boot, 1500);
   console.log('✅ Expense QV photo + Employee quick edit');
+})();
+</script>
+
+
+<script>
+// ===== Expense: Paid by / Paid to + name filters + totals =====
+(function() {
+  function $(id) { return document.getElementById(id); }
+  function lj(k, f) {
+    try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch (e) { return f; }
+  }
+  function sj(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function money(n) {
+    return '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  }
+  function uid(p) { return (p || 'EX') + '-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6); }
+  var KEY_EXP = 'jp_daily_expenses_v1';
+  function getExpenses() { return lj(KEY_EXP, []); }
+  function setExpenses(list) { sj(KEY_EXP, list); }
+
+  function uniqueNames(field) {
+    var map = {};
+    getExpenses().forEach(function(e) {
+      var v = String(e[field] || '').trim();
+      if (v) map[v] = true;
+    });
+    return Object.keys(map).sort(function(a, b) { return a.localeCompare(b); });
+  }
+  function uniqueCats() {
+    var map = {};
+    getExpenses().forEach(function(e) {
+      var v = String(e.category || '').trim();
+      if (v) map[v] = true;
+    });
+    ['Rent','Electricity','Transport','Food','Packaging','Marketing','Karigar payment','Salary / Staff','Tools','Misc'].forEach(function(c){ map[c]=true; });
+    return Object.keys(map).sort();
+  }
+
+  function fillDatalists() {
+    var byList = $('expPaidByList');
+    var toList = $('expPayeeList');
+    if (byList) {
+      byList.innerHTML = uniqueNames('paidBy').map(function(n) {
+        return '<option value="' + escapeHtml(n) + '">';
+      }).join('');
+    }
+    if (toList) {
+      toList.innerHTML = uniqueNames('payee').map(function(n) {
+        return '<option value="' + escapeHtml(n) + '">';
+      }).join('');
+    }
+  }
+
+  function fillFilterSelects() {
+    function fill(selId, names, allLabel) {
+      var sel = $(selId);
+      if (!sel) return;
+      var cur = sel.value;
+      sel.innerHTML = '<option value="">' + allLabel + '</option>' +
+        names.map(function(n) {
+          return '<option value="' + escapeHtml(n) + '"' + (cur === n ? ' selected' : '') + '>' + escapeHtml(n) + '</option>';
+        }).join('');
+      if (cur) sel.value = cur;
+    }
+    fill('expFilterPaidBy', uniqueNames('paidBy'), 'Paid by: All');
+    fill('expFilterPayee', uniqueNames('payee'), 'Paid to: All');
+    fill('expFilterCategory', uniqueCats(), 'All categories');
+  }
+
+  window.clearExpenseFilters = function() {
+    if ($('expFrom')) $('expFrom').value = '';
+    if ($('expTo')) $('expTo').value = '';
+    if ($('expFilterCategory')) $('expFilterCategory').value = '';
+    if ($('expFilterPaidBy')) $('expFilterPaidBy').value = '';
+    if ($('expFilterPayee')) $('expFilterPayee').value = '';
+    renderExpenseList();
+  };
+
+  var _start = window.startNewExpense;
+  window.startNewExpense = function() {
+    if (typeof _start === 'function') _start.apply(this, arguments);
+    if ($('expPaidBy')) $('expPaidBy').value = '';
+    if ($('expPayee')) $('expPayee').value = '';
+    fillDatalists();
+  };
+
+  window.saveExpenseEntry = function() {
+    var amount = Number(($('expAmount') && $('expAmount').value) || 0);
+    if (!(amount > 0)) {
+      if (typeof showToast === 'function') showToast('Enter amount', 'err');
+      return;
+    }
+    var editingExpId = window.editingExpId || null;
+    // try local var from closure - also check global
+    try {
+      if (typeof editingExpId === 'undefined' || !editingExpId) {
+        // may be closure var only - scan form title
+        if ($('expenseFormTitle') && /Edit/i.test($('expenseFormTitle').textContent || '')) {
+          // keep existing by reading from a data attr if set
+        }
+      }
+    } catch (e) {}
+    var id = (window._editingExpId || window.editingExpId) || null;
+    var entry = {
+      id: id || uid('EX'),
+      date: ($('expDate') && $('expDate').value) || new Date().toISOString().slice(0, 10),
+      category: ($('expCategory') && $('expCategory').value) || 'Misc',
+      title: ($('expTitle') && $('expTitle').value.trim()) || '',
+      amount: amount,
+      paidBy: ($('expPaidBy') && $('expPaidBy').value.trim()) || '',
+      payee: ($('expPayee') && $('expPayee').value.trim()) || '',
+      photo: window._expPhotoData || '',
+      updatedAt: new Date().toISOString()
+    };
+    if (!id) entry.createdAt = entry.updatedAt;
+
+    var list = getExpenses();
+    if (id) {
+      var idx = list.findIndex(function(x) { return String(x.id) === String(id); });
+      if (idx >= 0) {
+        // preserve photo if not re-uploaded
+        if (!entry.photo && list[idx].photo) entry.photo = list[idx].photo;
+        list[idx] = Object.assign({}, list[idx], entry);
+      } else list.unshift(entry);
+    } else {
+      list.unshift(entry);
+    }
+    setExpenses(list);
+
+    // journal link
+    try {
+      var journal = lj('jp_journal_v1', []);
+      journal = journal.filter(function(j) { return j.expenseId !== entry.id; });
+      journal.unshift({
+        id: uid('JE'),
+        expenseId: entry.id,
+        account: entry.category || 'Expense',
+        type: 'debit',
+        amount: entry.amount,
+        note: (entry.title || entry.payee || 'Daily expense') +
+          (entry.paidBy ? ' · by ' + entry.paidBy : '') +
+          (entry.payee ? ' · to ' + entry.payee : ''),
+        at: new Date().toISOString(),
+        date: entry.date
+      });
+      sj('jp_journal_v1', journal);
+    } catch (e) {}
+
+    window._editingExpId = null;
+    window.editingExpId = null;
+    if (typeof startNewExpense === 'function') startNewExpense();
+    renderExpenseList();
+    if (typeof showToast === 'function') showToast('Expense saved', 'ok');
+  };
+
+  window.editExpense = function(id) {
+    var e = getExpenses().find(function(x) { return String(x.id) === String(id); });
+    if (!e) return;
+    window._editingExpId = e.id;
+    window.editingExpId = e.id;
+    if ($('expenseFormTitle')) $('expenseFormTitle').textContent = 'Edit expense';
+    if ($('expDate')) $('expDate').value = (e.date || '').slice(0, 10);
+    if ($('expCategory')) $('expCategory').value = e.category || 'Misc';
+    if ($('expTitle')) $('expTitle').value = e.title || '';
+    if ($('expAmount')) $('expAmount').value = e.amount != null ? e.amount : '';
+    if ($('expPaidBy')) $('expPaidBy').value = e.paidBy || '';
+    if ($('expPayee')) $('expPayee').value = e.payee || '';
+    window._expPhotoData = e.photo || '';
+    if ($('expPhotoPreview')) {
+      $('expPhotoPreview').innerHTML = e.photo
+        ? '<img src="' + e.photo + '" style="max-width:160px;border-radius:10px">'
+        : '';
+    }
+    if ($('expPhoto')) $('expPhoto').value = '';
+    fillDatalists();
+    var form = $('expenseFormTitle');
+    if (form && form.scrollIntoView) form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  function filteredExpenses() {
+    var from = ($('expFrom') && $('expFrom').value) || '';
+    var to = ($('expTo') && $('expTo').value) || '';
+    var cat = ($('expFilterCategory') && $('expFilterCategory').value) || '';
+    var by = ($('expFilterPaidBy') && $('expFilterPaidBy').value) || '';
+    var toName = ($('expFilterPayee') && $('expFilterPayee').value) || '';
+    return getExpenses().filter(function(e) {
+      var d = (e.date || '').slice(0, 10);
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      if (cat && String(e.category || '') !== cat) return false;
+      if (by && String(e.paidBy || '').trim() !== by) return false;
+      if (toName && String(e.payee || '').trim() !== toName) return false;
+      return true;
+    });
+  }
+
+  window.renderExpenseList = function() {
+    fillFilterSelects();
+    fillDatalists();
+    var body = $('expenseTableBody');
+    if (!body) return;
+    var list = filteredExpenses();
+    var total = list.reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+
+    // breakdown by paidBy / payee for filter summary
+    var byMap = {}, toMap = {}, catMap = {};
+    list.forEach(function(e) {
+      var a = Number(e.amount || 0);
+      var pb = String(e.paidBy || '').trim() || '(not set)';
+      var pe = String(e.payee || '').trim() || '(not set)';
+      var c = String(e.category || '').trim() || 'Misc';
+      byMap[pb] = (byMap[pb] || 0) + a;
+      toMap[pe] = (toMap[pe] || 0) + a;
+      catMap[c] = (catMap[c] || 0) + a;
+    });
+
+    var totEl = $('expFilterTotals');
+    if (totEl) {
+      var selBy = ($('expFilterPaidBy') && $('expFilterPaidBy').value) || '';
+      var selTo = ($('expFilterPayee') && $('expFilterPayee').value) || '';
+      var selCat = ($('expFilterCategory') && $('expFilterCategory').value) || '';
+      var parts = [];
+      parts.push('<span>Filtered total: <b style="color:var(--accent)">' + money(total) + '</b> · ' + list.length + ' entry</span>');
+      if (selBy) parts.push('<span> · <b>' + escapeHtml(selBy) + '</b> দিয়েছে: <b>' + money(byMap[selBy] || total) + '</b></span>');
+      if (selTo) parts.push('<span> · <b>' + escapeHtml(selTo) + '</b> কে দেওয়া: <b>' + money(toMap[selTo] || total) + '</b></span>');
+      if (selCat) parts.push('<span> · Category <b>' + escapeHtml(selCat) + '</b>: <b>' + money(catMap[selCat] || total) + '</b></span>');
+      // if no name filter, show top payers / payees mini summary
+      if (!selBy && !selTo && list.length) {
+        var topBy = Object.keys(byMap).sort(function(a,b){ return byMap[b]-byMap[a]; }).slice(0, 3)
+          .map(function(n){ return escapeHtml(n) + ' ' + money(byMap[n]); }).join(' · ');
+        var topTo = Object.keys(toMap).sort(function(a,b){ return toMap[b]-toMap[a]; }).slice(0, 3)
+          .map(function(n){ return escapeHtml(n) + ' ' + money(toMap[n]); }).join(' · ');
+        parts.push('<div class="muted" style="font-weight:500;margin-top:6px;font-size:12px">Paid by: ' + topBy +
+          '<br>Paid to: ' + topTo + '</div>');
+      }
+      totEl.innerHTML = parts.join('');
+    }
+
+    body.innerHTML = list.map(function(e) {
+      var id = String(e.id).replace(/'/g, '');
+      var photoCell = e.photo
+        ? '<button type="button" class="ghost small" title="Quick view bill" onclick="event.stopPropagation();openExpenseQuickView(\'' + id + '\')">📷 View</button>'
+        : '—';
+      return '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')){if(typeof openExpenseQuickView===\'function\')openExpenseQuickView(\'' + id + '\');}">' +
+        '<td>' + (e.date || '').slice(0, 10) + '</td>' +
+        '<td>' + escapeHtml(e.category || '') + '</td>' +
+        '<td>' + escapeHtml(e.title || '') + '</td>' +
+        '<td>' + escapeHtml(e.paidBy || '—') + '</td>' +
+        '<td>' + escapeHtml(e.payee || '—') + '</td>' +
+        '<td class="num">' + money(e.amount) + '</td>' +
+        '<td>' + photoCell + '</td>' +
+        '<td>' +
+          '<button class="ghost small" onclick="event.stopPropagation();if(typeof openExpenseQuickView===\'function\')openExpenseQuickView(\'' + id + '\')">👁</button> ' +
+          '<button class="ghost small" onclick="event.stopPropagation();editExpense(\'' + id + '\')">Edit</button> ' +
+          '<button class="ghost small" style="color:var(--danger)" onclick="event.stopPropagation();deleteExpense(\'' + id + '\')">Del</button>' +
+        '</td></tr>';
+    }).join('') || '<tr><td colspan="8" class="note">No expenses</td></tr>';
+
+    // summary cards
+    var cards = $('expenseSummaryCards');
+    if (cards) {
+      var all = getExpenses();
+      var today = new Date().toISOString().slice(0, 10);
+      var todaySum = all.filter(function(e) { return (e.date || '').slice(0, 10) === today; })
+        .reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+      var month = today.slice(0, 7);
+      var monthSum = all.filter(function(e) { return (e.date || '').slice(0, 7) === month; })
+        .reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+      var allSum = all.reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+      cards.innerHTML =
+        '<div class="dash-stat"><div class="val">' + money(todaySum) + '</div><div class="lbl">Today</div></div>' +
+        '<div class="dash-stat"><div class="val">' + money(monthSum) + '</div><div class="lbl">This month</div></div>' +
+        '<div class="dash-stat"><div class="val">' + money(allSum) + '</div><div class="lbl">All expenses</div></div>' +
+        '<div class="dash-stat"><div class="val">' + money(total) + '</div><div class="lbl">Filtered total</div></div>';
+    }
+
+    // update QV meta to show paid by / to if open
+    if (typeof renderPayTotals === 'function') {
+      try { renderPayTotals(); } catch (e) {}
+    }
+  };
+
+  // Enhance expense QV meta if modal exists
+  var _oeq = window.openExpenseQuickView;
+  if (typeof _oeq === 'function' && !_oeq._names) {
+    window.openExpenseQuickView = function(id) {
+      _oeq.apply(this, arguments);
+      try {
+        var e = getExpenses().find(function(x) { return String(x.id) === String(id); });
+        if (!e) return;
+        var meta = $('expQVMeta');
+        if (meta) {
+          meta.textContent =
+            (e.date || '').slice(0, 10) + ' · ' + (e.category || 'Misc') +
+            (e.paidBy ? ' · By: ' + e.paidBy : '') +
+            (e.payee ? ' · To: ' + e.payee : '');
+        }
+      } catch (err) {}
+    };
+    window.openExpenseQuickView._names = true;
+  }
+
+  function boot() {
+    fillDatalists();
+    fillFilterSelects();
+    if (typeof renderExpenseList === 'function') {
+      try { renderExpenseList(); } catch (e) {}
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 700);
+  console.log('✅ Expense paidBy/payee + name filters + totals');
 })();
 </script>
 
