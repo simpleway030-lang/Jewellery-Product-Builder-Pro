@@ -3687,6 +3687,29 @@ body.dark .pay-party-card {
   min-height: 42px;
   border: 1.5px solid var(--border) !important;
 }
+.pay-party-card.compact { padding: 12px; margin: 8px 0; }
+.pay-party-card.single .pay-party-grid { grid-template-columns: 1fr; }
+.pay-party-card.single .pay-party-arrow { display: none; }
+.pay-party-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.pay-party-actions button { font-size: 12px; padding: 6px 10px; border-radius: 8px; }
+.person-edit-modal .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 600px) {
+  .person-edit-modal .field-row { grid-template-columns: 1fr; }
+}
+.person-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 999px;
+  background: var(--border-soft); font-size: 12px; font-weight: 600;
+}
+.person-dir-card {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 10px; padding: 12px 14px; margin-bottom: 8px;
+  background: var(--border-soft); border-radius: 14px;
+  border: 1px solid transparent; transition: border-color .15s;
+}
+.person-dir-card:hover { border-color: rgba(var(--accent-rgb), 0.35); }
+.person-dir-meta { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+.person-dir-name { font-weight: 800; font-size: 14px; }
 </style>
 
 </head>
@@ -4214,7 +4237,13 @@ body.dark .pay-party-card {
                             <div class="note" style="font-size:12px;margin-bottom:6px">Supplier select · amount · কে দিয়েছে · bill photo · note</div>
                             <label>Supplier<select id="supPaySelect"></select></label>
                             <label>Amount ₹<input id="supPayAmount" type="number" min="0" step="0.01"></label>
-                            <label>Paid by<input id="supPayPaidBy" placeholder="কে পেমেন্ট করেছে" list="universalPaidByList"></label>
+                            <div class="pay-party-card compact single" data-party-host="supPay">
+                                <div class="pay-party-title">পেমেন্ট পার্টি</div>
+                                <div class="pay-party-field pay-party-from">
+                                    <div class="pay-party-label"><span class="pay-party-ico">📤</span> কে পেমেন্ট করেছে <span class="pay-party-en">Paid by</span></div>
+                                    <select id="supPayPaidBy" class="pay-party-select"></select>
+                                </div>
+                            </div>
                             <label>Date<input id="supPayDate" type="date"></label>
                             <label>Note<input id="supPayNote" placeholder="Bill no / remark"></label>
                             <label>Bill photo<input type="file" id="supPayPhoto" accept="image/*"></label>
@@ -4509,7 +4538,13 @@ body.dark .pay-party-card {
                                 <label style="margin:0">Amount ₹<input id="payAmount" type="number" min="0" step="1"></label>
                                 <label style="margin:0">Type<select id="payType"><option value="salary">Salary</option><option value="advance">Advance</option><option value="bonus">Bonus</option><option value="deduction">Deduction</option></select></label>
                                 <label style="margin:0">Date<input id="payDate" type="date"></label>
-                                <label style="margin:0;grid-column:1/-1">Paid by (কে পেমেন্ট করেছে)<input id="payPaidBy" placeholder="Staff / your name" list="universalPaidByList"></label>
+                                <div class="pay-party-card compact single" data-party-host="empPay" style="grid-column:1/-1">
+                                    <div class="pay-party-title">পেমেন্ট পার্টি</div>
+                                    <div class="pay-party-field pay-party-from">
+                                        <div class="pay-party-label"><span class="pay-party-ico">📤</span> কে পেমেন্ট করেছে <span class="pay-party-en">Paid by</span></div>
+                                        <select id="payPaidBy" class="pay-party-select"></select>
+                                    </div>
+                                </div>
                                 <label style="margin:0;grid-column:1/-1">Note<input id="payNote" placeholder="Month / remark"></label>
                                 <label style="margin:0;grid-column:1/-1">Bill photo<input type="file" id="payPhoto" accept="image/*"></label>
                                 <div id="payPhotoPreview" style="grid-column:1/-1;margin-top:4px"></div>
@@ -24518,11 +24553,16 @@ body.split-on #splitWorkspace { display: grid; }
       if (r.payee === name) asTo += a;
     });
 
+    // Paid by = দিয়েছে (−) ; Paid to = পেয়েছে (+)
+    var spentBy = asBy;
+    var receivedTo = asTo;
+    var netAmt = receivedTo - spentBy;
     function cardsHtml() {
       return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px">' +
-        '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px;color:var(--accent)">' + money(total) + '</div><div class="muted" style="font-size:11px">সব মিলিয়ে TOTAL</div></div>' +
-        '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px">' + money(asBy) + '</div><div class="muted" style="font-size:11px">Paid by হিসেবে</div></div>' +
-        '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px">' + money(asTo) + '</div><div class="muted" style="font-size:11px">Paid to হিসেবে</div></div>' +
+        '<div style="background:rgba(255,59,48,0.12);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px;color:var(--danger)">− ' + money(spentBy) + '</div><div class="muted" style="font-size:11px">মোট দিয়েছে (Paid by)</div></div>' +
+        '<div style="background:rgba(52,199,89,0.12);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px;color:var(--success)">+ ' + money(receivedTo) + '</div><div class="muted" style="font-size:11px">মোট পেয়েছে (Paid to)</div></div>' +
+        '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center;border:1px solid var(--border-soft)"><div style="font-weight:800;font-size:15px;color:' + (netAmt >= 0 ? 'var(--success)' : 'var(--danger)') + '">' + (netAmt >= 0 ? '+ ' : '− ') + money(Math.abs(netAmt)) + '</div><div class="muted" style="font-size:11px">Net (+/−)</div></div>' +
+        '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px;color:var(--accent)">' + money(total) + '</div><div class="muted" style="font-size:11px">সব এন্ট্রি যোগ</div></div>' +
         '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px">' + money(sec.Expense || 0) + '</div><div class="muted" style="font-size:11px">💸 Expense</div></div>' +
         '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px">' + money(sec.Supplier || 0) + '</div><div class="muted" style="font-size:11px">🏭 Supplier</div></div>' +
         '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px">' + money(sec.Employee || 0) + '</div><div class="muted" style="font-size:11px">👥 Employee</div></div>' +
@@ -24764,71 +24804,97 @@ body.split-on #splitWorkspace { display: grid; }
       if (!name) return;
       var role = ($('univPersonRole') && $('univPersonRole').value) || 'both';
 
-      // Build money-out (business spent / paid) vs money-in (received)
-      // Out: expenses paid by name, supplier/employee/karigar payments paid by name, purchases
-      // In: sales to customer name (revenue), payments received from customer
+      // CORRECT:
+      //   Paid by  = এই নাম দিয়েছে → spent (−)
+      //   Paid to  = এই নাম পেয়েছে → received (+)
       var spent = 0, received = 0;
       var lines = [];
 
-      // expenses where name is paidBy = spent; payee = still spent by shop to them
+      // Expenses
       lj('jp_daily_expenses_v1', []).forEach(function(e) {
         var a = Number(e.amount || 0);
-        if (e.paidBy === name || e.payee === name) {
+        if (!a) return;
+        if (String(e.paidBy || '').trim() === name) {
           spent += a;
           lines.push({ d: e.date, sec: 'Expense', a: -a, note: e.title || e.category });
         }
+        if (String(e.payee || '').trim() === name) {
+          received += a;
+          lines.push({ d: e.date, sec: 'Expense', a: +a, note: e.title || e.category });
+        }
       });
-      // supplier payments
+      // Supplier ledger: supplierName = recipient (পেয়েছে); paidBy = দিয়েছে
       var sled = (typeof supLedger !== 'undefined') ? supLedger : lj('jp_sup_ledger_v1', []);
       sled.forEach(function(e) {
         var a = Number(e.debit || e.amount || 0);
         if (!(a > 0)) return;
-        if (e.paidBy === name || e.supplierName === name) {
+        if (String(e.paidBy || '').trim() === name) {
           spent += a;
           lines.push({ d: e.date, sec: 'Supplier', a: -a, note: e.notes || 'Payment' });
         }
+        if (String(e.supplierName || '').trim() === name) {
+          received += a;
+          lines.push({ d: e.date, sec: 'Supplier', a: +a, note: e.notes || 'Payment' });
+        }
       });
-      // employee
+      // Employee: empName = পেয়েছে; paidBy = দিয়েছে
+      var seenPay = {};
       lj('jp_employee_payments_v1', []).concat(lj('jp_hrm_payments_v1', [])).forEach(function(p) {
+        if (!p || !p.id || seenPay[p.id]) return;
+        seenPay[p.id] = true;
         var a = Math.abs(Number(p.amount || 0));
-        if (p.paidBy === name || p.empName === name) {
+        if (!a) return;
+        if (String(p.paidBy || '').trim() === name) {
           spent += a;
           lines.push({ d: p.date || p.at, sec: 'Employee', a: -a, note: p.type || 'salary' });
         }
+        if (String(p.empName || p.employeeName || '').trim() === name) {
+          received += a;
+          lines.push({ d: p.date || p.at, sec: 'Employee', a: +a, note: p.type || 'salary' });
+        }
       });
-      // karigar
+      // Karigar: karigarName = পেয়েছে; payment.paidBy = দিয়েছে
       try {
         var jobs = (window.v3Data && window.v3Data.karigarJobs) || lj('jp_karigar_jobs_v3', []);
         jobs.forEach(function(j) {
           (j.payments || []).forEach(function(p) {
             var a = Number(p.amount || 0);
-            if (p.paidBy === name || j.karigarName === name) {
+            if (!a) return;
+            if (String(p.paidBy || '').trim() === name) {
               spent += a;
               lines.push({ d: p.date, sec: 'Karigar', a: -a, note: p.notes || j.work });
+            }
+            if (String(j.karigarName || '').trim() === name) {
+              received += a;
+              lines.push({ d: p.date, sec: 'Karigar', a: +a, note: p.notes || j.work });
             }
           });
         });
       } catch (e) {}
-      // sales revenue from customer
+      // Customer paid us (shop received) — customer name on sale: shop perspective received
+      // For the CUSTOMER ledger of "পেয়েছে" they paid us so they দিয়েছে — skip double or:
+      // User asked: Paid to = received. Sales: customer is payer to shop, not "Paid to".
       try {
         if (typeof sales !== 'undefined') {
           sales.forEach(function(s) {
-            if (s.customer && s.customer.name === name) {
-              var a = Number(s.grandTotal || 0);
-              received += a;
-              lines.push({ d: s.date, sec: 'Sale', a: +a, note: s.invoiceNo || 'Invoice' });
+            if (s.customer && String(s.customer.name || '').trim() === name) {
+              var a = Number(s.paid || 0);
+              if (a > 0) {
+                spent += a; // customer gave money to shop
+                lines.push({ d: s.date, sec: 'Sale pay', a: -a, note: s.invoiceNo || 'Invoice paid' });
+              }
             }
           });
         }
       } catch (e) {}
-      // customer payments received
       try {
         var cled = (typeof custLedger !== 'undefined') ? custLedger : lj('jp_cust_ledger_v1', []);
         cled.forEach(function(e) {
-          if (e.customerName === name && Number(e.credit || 0) > 0) {
-            var a = Number(e.credit || 0);
-            received += a;
-            lines.push({ d: e.date, sec: 'Cust pay', a: +a, note: e.notes || 'Payment in' });
+          if (String(e.customerName || '').trim() !== name) return;
+          var credit = Number(e.credit || 0);
+          if (credit > 0) {
+            spent += credit; // customer paid (দিয়েছে)
+            lines.push({ d: e.date, sec: 'Cust pay', a: -credit, note: e.notes || 'Payment to shop' });
           }
         });
       } catch (e) {}
@@ -25760,6 +25826,476 @@ body.split-on #splitWorkspace { display: grid; }
   setTimeout(boot, 600);
   setTimeout(boot, 1800);
   console.log('✅ Paid by / Paid to dropdown design');
+})();
+</script>
+
+<script>
+// ===== Universal Party Directory: same design everywhere, custom first, phone/address, Edit modal =====
+(function() {
+  function $(id) { return document.getElementById(id); }
+  function lj(k, f) {
+    try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch (e) { return f; }
+  }
+  function sj(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  }
+  function uid() { return 'P-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5); }
+  var KEY = 'jp_person_directory_v1';
+
+  // Migrate string[] → {id,name,phone,address}[]
+  function loadPeople() {
+    var raw = lj(KEY, []);
+    if (!Array.isArray(raw)) raw = [];
+    var out = [];
+    var seen = {};
+    raw.forEach(function(item) {
+      if (typeof item === 'string') {
+        var n = item.trim();
+        if (!n || seen[n.toLowerCase()]) return;
+        seen[n.toLowerCase()] = true;
+        out.push({ id: uid(), name: n, phone: '', address: '' });
+      } else if (item && item.name) {
+        var key = String(item.name).trim().toLowerCase();
+        if (!key || seen[key]) return;
+        seen[key] = true;
+        out.push({
+          id: item.id || uid(),
+          name: String(item.name).trim(),
+          phone: item.phone || '',
+          address: item.address || ''
+        });
+      }
+    });
+    // merge live names without profile yet
+    collectLooseNames().forEach(function(n) {
+      var key = n.toLowerCase();
+      if (seen[key]) return;
+      seen[key] = true;
+      out.push({ id: uid(), name: n, phone: '', address: '' });
+    });
+    out.sort(function(a, b) { return a.name.localeCompare(b.name); });
+    return out;
+  }
+  function savePeople(list) {
+    list.sort(function(a, b) { return a.name.localeCompare(b.name); });
+    sj(KEY, list);
+    return list;
+  }
+  function collectLooseNames() {
+    var map = {};
+    function add(n) { n = String(n || '').trim(); if (n) map[n] = true; }
+    try {
+      if (typeof customers !== 'undefined') customers.forEach(function(c) { add(c.name); });
+      else lj('jp_customers_v1', []).forEach(function(c) { add(c.name); });
+    } catch (e) {}
+    try {
+      if (typeof suppliers !== 'undefined') suppliers.forEach(function(s) { add(s.name); });
+      else lj('jp_suppliers_v1', []).forEach(function(s) { add(s.name); });
+    } catch (e) {}
+    lj('jp_employees_v1', []).forEach(function(e) { add(e.name); });
+    try {
+      var k = (window.v3Data && window.v3Data.karigars) || lj('jp_karigars_v3', []);
+      (k || []).forEach(function(x) { add(x.name); });
+    } catch (e) {}
+    lj('jp_daily_expenses_v1', []).forEach(function(e) { add(e.paidBy); add(e.payee); });
+    lj('jp_employee_payments_v1', []).forEach(function(e) { add(e.paidBy); add(e.empName); });
+    lj('jp_hrm_payments_v1', []).forEach(function(e) { add(e.paidBy); add(e.empName); });
+    try {
+      var sled = (typeof supLedger !== 'undefined') ? supLedger : lj('jp_sup_ledger_v1', []);
+      (sled || []).forEach(function(e) { add(e.paidBy); add(e.supplierName); });
+    } catch (e) {}
+    try {
+      if (typeof sales !== 'undefined') sales.forEach(function(s) {
+        if (s.customer) add(s.customer.name);
+      });
+    } catch (e) {}
+    try {
+      var jobs = (window.v3Data && window.v3Data.karigarJobs) || lj('jp_karigar_jobs_v3', []);
+      (jobs || []).forEach(function(j) {
+        add(j.karigarName);
+        (j.payments || []).forEach(function(p) { add(p.paidBy); });
+      });
+    } catch (e) {}
+    return Object.keys(map);
+  }
+
+  function findPersonByName(name) {
+    name = String(name || '').trim().toLowerCase();
+    if (!name) return null;
+    return loadPeople().find(function(p) { return p.name.toLowerCase() === name; }) || null;
+  }
+
+  // Fill select: Custom FIRST, then names
+  function fillPartySelect(sel, selectedName) {
+    if (!sel) return;
+    var people = loadPeople();
+    var cur = selectedName != null ? selectedName : sel.value;
+    var html = '';
+    html += '<option value="__custom__">＋ নতুন নাম (Custom)…</option>';
+    html += '<option value="">— সিলেক্ট করুন —</option>';
+    people.forEach(function(p) {
+      var label = p.name;
+      if (p.phone) label += ' · ' + p.phone;
+      html += '<option value="' + escapeHtml(p.name) + '">' + escapeHtml(label) + '</option>';
+    });
+    sel.innerHTML = html;
+    if (cur && cur !== '__custom__') {
+      if (![].some.call(sel.options, function(o) { return o.value === cur; })) {
+        var o = document.createElement('option');
+        o.value = cur; o.textContent = cur;
+        sel.appendChild(o);
+      }
+      sel.value = cur;
+    } else if (!cur) {
+      sel.value = '';
+    }
+    sel.classList.add('pay-party-select');
+  }
+
+  window.fillAllPartySelects = function() {
+    ['expPaidBy', 'expPayee', 'expFilterPaidBy', 'expFilterPayee', 'univPersonSelect',
+      'supPayPaidBy', 'payPaidBy', 'karigarV2PaidBy', 'univPayPaidBy', 'ledgerPaidBy'].forEach(function(id) {
+      var el = $(id);
+      if (!el) return;
+      if (el.tagName === 'SELECT') fillPartySelect(el);
+      else if (el.tagName === 'INPUT') {
+        // convert input to select if still input (univ modal may recreate)
+      }
+    });
+    // filter placeholders
+    if ($('expFilterPaidBy') && !$('expFilterPaidBy').value) {
+      // keep options; first empty
+    }
+    var dl = $('universalPaidByList');
+    if (dl) {
+      dl.innerHTML = loadPeople().map(function(p) {
+        return '<option value="' + escapeHtml(p.name) + '">';
+      }).join('');
+    }
+  };
+
+  // ---- Person Edit / Create Modal ----
+  function ensurePersonModal() {
+    if ($('personEditModal')) return;
+    var m = document.createElement('div');
+    m.id = 'personEditModal';
+    m.className = 'modal-backdrop';
+    m.style.display = 'none';
+    m.onclick = function(e) { if (e.target === m) closePersonEditModal(); };
+    m.innerHTML =
+      '<div class="modal-box dark person-edit-modal" style="max-width:480px;padding:20px" onclick="event.stopPropagation()">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+          '<div style="font-size:17px;font-weight:800" id="personEditTitle">👤 Person</div>' +
+          '<button type="button" class="ghost small" onclick="closePersonEditModal()">✕</button>' +
+        '</div>' +
+        '<input type="hidden" id="personEditId">' +
+        '<input type="hidden" id="personEditMode">' +
+        '<input type="hidden" id="personEditTargetSel">' +
+        '<label>নাম / Name *<input id="personEditName" placeholder="Full name"></label>' +
+        '<div class="field-row">' +
+          '<label style="margin:0">Phone<input id="personEditPhone" type="tel" placeholder="01XXXXXXXXX"></label>' +
+          '<label style="margin:0">Address<input id="personEditAddress" placeholder="Area / city"></label>' +
+        '</div>' +
+        '<div class="note" style="margin-top:8px;font-size:12px">নতুন নাম সিলেক্ট-লিস্টে যোগ হবে। Edit করলে সব Paid by/to লেবেল আপডেট হবে।</div>' +
+        '<div class="actions" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">' +
+          '<button type="button" onclick="savePersonEditModal()">💾 Save</button>' +
+          '<button type="button" class="ghost" onclick="closePersonEditModal()">Cancel</button>' +
+          '<button type="button" class="ghost" id="personEditDeleteBtn" style="color:var(--danger);margin-left:auto;display:none" onclick="deletePersonFromEditModal()">Delete</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(m);
+  }
+
+  window.closePersonEditModal = function() {
+    var m = $('personEditModal');
+    if (m) m.style.display = 'none';
+  };
+
+  /**
+   * openPersonEditor({ mode:'create'|'edit', name, selectId, onSaved })
+   */
+  window.openPersonEditor = function(opts) {
+    ensurePersonModal();
+    opts = opts || {};
+    var mode = opts.mode || 'create';
+    var name = opts.name || '';
+    var person = name ? findPersonByName(name) : null;
+    if (mode === 'edit' && person) {
+      $('personEditTitle').textContent = '✏️ Edit person';
+      $('personEditId').value = person.id;
+      $('personEditName').value = person.name;
+      $('personEditPhone').value = person.phone || '';
+      $('personEditAddress').value = person.address || '';
+      $('personEditDeleteBtn').style.display = '';
+    } else {
+      $('personEditTitle').textContent = '＋ নতুন নাম';
+      $('personEditId').value = '';
+      $('personEditName').value = name || '';
+      $('personEditPhone').value = '';
+      $('personEditAddress').value = '';
+      $('personEditDeleteBtn').style.display = 'none';
+      mode = 'create';
+    }
+    $('personEditMode').value = mode;
+    $('personEditTargetSel').value = opts.selectId || '';
+    window._personEditOnSaved = opts.onSaved || null;
+    $('personEditModal').style.display = 'flex';
+    setTimeout(function() { if ($('personEditName')) $('personEditName').focus(); }, 80);
+  };
+
+  window.savePersonEditModal = function() {
+    var name = ($('personEditName') && $('personEditName').value.trim()) || '';
+    if (!name) {
+      if (typeof showToast === 'function') showToast('নাম লাগবে', 'err');
+      return;
+    }
+    var phone = ($('personEditPhone') && $('personEditPhone').value.trim()) || '';
+    var address = ($('personEditAddress') && $('personEditAddress').value.trim()) || '';
+    var mode = $('personEditMode') && $('personEditMode').value;
+    var id = $('personEditId') && $('personEditId').value;
+    var list = loadPeople();
+    var oldName = null;
+
+    if (mode === 'edit' && id) {
+      var p = list.find(function(x) { return x.id === id; });
+      if (p) {
+        oldName = p.name;
+        // unique name check
+        if (list.some(function(x) { return x.id !== id && x.name.toLowerCase() === name.toLowerCase(); })) {
+          if (typeof showToast === 'function') showToast('এই নাম আগেই আছে', 'err');
+          return;
+        }
+        p.name = name;
+        p.phone = phone;
+        p.address = address;
+      }
+    } else {
+      if (list.some(function(x) { return x.name.toLowerCase() === name.toLowerCase(); })) {
+        // update existing profile
+        var ex = list.find(function(x) { return x.name.toLowerCase() === name.toLowerCase(); });
+        ex.phone = phone || ex.phone;
+        ex.address = address || ex.address;
+        name = ex.name;
+      } else {
+        list.push({ id: uid(), name: name, phone: phone, address: address });
+      }
+    }
+    savePeople(list);
+    if (oldName && oldName !== name && typeof replaceNameEverywhere === 'function') {
+      // use global rename if available from earlier script
+      try { replaceNameEverywhere(oldName, name); } catch (e) {}
+    } else if (oldName && oldName !== name) {
+      cascadeRename(oldName, name);
+    }
+    fillAllPartySelects();
+    var target = $('personEditTargetSel') && $('personEditTargetSel').value;
+    if (target && $(target)) {
+      fillPartySelect($(target), name);
+      $(target).value = name;
+    }
+    if (typeof window._personEditOnSaved === 'function') {
+      try { window._personEditOnSaved(name); } catch (e) {}
+    }
+    if (typeof renderPersonDirectory === 'function') renderPersonDirectory();
+    closePersonEditModal();
+    if (typeof showToast === 'function') showToast('Saved: ' + name, 'ok');
+  };
+
+  window.deletePersonFromEditModal = function() {
+    var id = $('personEditId') && $('personEditId').value;
+    var list = loadPeople();
+    var p = list.find(function(x) { return x.id === id; });
+    if (!p) return;
+    if (!confirm('"' + p.name + '" ডিলিট করবেন? সব জায়গা থেকে Paid by লেবেল মুছে যাবে।')) return;
+    if (typeof deletePersonDirectoryName === 'function') {
+      deletePersonDirectoryName(p.name);
+    } else {
+      cascadeClear(p.name);
+      savePeople(list.filter(function(x) { return x.id !== id; }));
+    }
+    // also remove from directory objects
+    savePeople(loadPeople().filter(function(x) { return x.name !== p.name; }));
+    fillAllPartySelects();
+    if (typeof renderPersonDirectory === 'function') renderPersonDirectory();
+    closePersonEditModal();
+  };
+
+  function cascadeRename(oldName, newName) {
+    function rep(obj, fields) {
+      fields.forEach(function(f) {
+        if (obj && String(obj[f] || '') === oldName) obj[f] = newName;
+      });
+    }
+    var ex = lj('jp_daily_expenses_v1', []);
+    ex.forEach(function(e) { rep(e, ['paidBy', 'payee']); });
+    sj('jp_daily_expenses_v1', ex);
+    ['jp_employee_payments_v1', 'jp_hrm_payments_v1'].forEach(function(k) {
+      var L = lj(k, []);
+      L.forEach(function(p) { rep(p, ['paidBy']); });
+      sj(k, L);
+    });
+    try {
+      if (typeof supLedger !== 'undefined') {
+        supLedger.forEach(function(e) { rep(e, ['paidBy']); });
+        if (typeof saveAll === 'function') saveAll(true);
+      }
+    } catch (e) {}
+    var sled = lj('jp_sup_ledger_v1', []);
+    sled.forEach(function(e) { rep(e, ['paidBy']); });
+    sj('jp_sup_ledger_v1', sled);
+  }
+  function cascadeClear(name) {
+    cascadeRename(name, ''); // wipe labels — imperfect but ok for paidBy
+  }
+
+  // Select change: custom → open create modal
+  function bindSelect(selId) {
+    var sel = $(selId);
+    if (!sel || sel._partyBound) return;
+    sel._partyBound = true;
+    sel.addEventListener('change', function() {
+      if (sel.value === '__custom__') {
+        sel.value = '';
+        openPersonEditor({ mode: 'create', selectId: selId });
+      }
+    });
+  }
+
+  // Wire onExpNameSelect to use modal for custom
+  window.onExpNameSelect = function(which) {
+    var sel = which === 'paidBy' ? $('expPaidBy') : $('expPayee');
+    var custom = which === 'paidBy' ? $('expPaidByCustom') : $('expPayeeCustom');
+    if (custom) custom.style.display = 'none';
+    if (!sel) return;
+    if (sel.value === '__custom__') {
+      sel.value = '';
+      openPersonEditor({ mode: 'create', selectId: sel.id });
+    }
+  };
+
+  // ---- Directory UI with Edit ----
+  window.renderPersonDirectory = function() {
+    var panel = $('personDirectoryPanel');
+    if (panel) panel.style.display = 'block';
+    var listEl = $('personDirectoryList');
+    if (!listEl) return;
+    var people = loadPeople();
+    savePeople(people);
+    listEl.innerHTML = people.length ? people.map(function(p) {
+      var meta = [];
+      if (p.phone) meta.push('📞 ' + p.phone);
+      if (p.address) meta.push('📍 ' + p.address);
+      return '<div class="person-dir-card">' +
+        '<div><div class="person-dir-name">👤 ' + escapeHtml(p.name) + '</div>' +
+        (meta.length ? '<div class="person-dir-meta">' + escapeHtml(meta.join(' · ')) + '</div>' : '<div class="person-dir-meta">No phone / address</div>') +
+        '</div>' +
+        '<div style="display:flex;gap:6px;flex-shrink:0">' +
+        '<button type="button" class="ghost small" onclick="openPersonEditor({mode:\'edit\',name:\'' +
+          escapeHtml(p.name).replace(/'/g, "\\'") + '\'})">✏️ Edit</button>' +
+        '<button type="button" class="ghost small" style="color:var(--danger)" onclick="deletePersonDirectoryName(\'' +
+          escapeHtml(p.name).replace(/'/g, "\\'") + '\')">Delete</button>' +
+        '</div></div>';
+    }).join('') : '<div class="note">কোনো নাম নেই</div>';
+  };
+
+  // Override addPersonDirectoryName to use modal
+  window.addPersonDirectoryName = function() {
+    var inp = $('personDirNewName');
+    var n = inp && inp.value.trim();
+    openPersonEditor({ mode: 'create', name: n || '' });
+    if (inp) inp.value = '';
+  };
+
+  // Convert univ modal paidBy input → select when opening
+  var _oup = window.openUnivPayModal;
+  if (typeof _oup === 'function' && !_oup._party) {
+    window.openUnivPayModal = function(ctx) {
+      _oup.apply(this, arguments);
+      setTimeout(function() {
+        var inp = $('univPayPaidBy');
+        if (!inp) return;
+        if (inp.tagName === 'INPUT') {
+          var sel = document.createElement('select');
+          sel.id = 'univPayPaidBy';
+          sel.className = 'pay-party-select';
+          inp.parentNode.replaceChild(sel, inp);
+          fillPartySelect(sel, (ctx && ctx.paidBy) || '');
+          bindSelect('univPayPaidBy');
+        } else {
+          fillPartySelect(inp, (ctx && ctx.paidBy) || '');
+        }
+        // wrap label area with party card look
+        var lab = $('univPayPaidBy') && $('univPayPaidBy').closest('label');
+        if (lab && !lab.querySelector('.pay-party-label')) {
+          lab.innerHTML = '<div class="pay-party-label"><span class="pay-party-ico">📤</span> কে পেমেন্ট করেছে <span class="pay-party-en">Paid by</span></div>';
+          lab.appendChild($('univPayPaidBy') || document.createElement('select'));
+          // re-get
+        }
+      }, 30);
+    };
+    window.openUnivPayModal._party = true;
+  }
+
+  // Ledger entry modal inject design
+  var _olem = window.openLedgerEntryModal;
+  if (typeof _olem === 'function' && !_olem._party2) {
+    window.openLedgerEntryModal = function() {
+      _olem.apply(this, arguments);
+      setTimeout(function() {
+        var inp = $('ledgerPaidBy');
+        if (!inp) return;
+        if (inp.tagName === 'INPUT') {
+          var wrap = document.createElement('div');
+          wrap.className = 'pay-party-card compact single';
+          wrap.innerHTML = '<div class="pay-party-title">পেমেন্ট পার্টি</div><div class="pay-party-label"><span class="pay-party-ico">📤</span> কে পেমেন্ট করেছে <span class="pay-party-en">Paid by</span></div>';
+          var sel = document.createElement('select');
+          sel.id = 'ledgerPaidBy';
+          sel.className = 'pay-party-select';
+          wrap.appendChild(sel);
+          inp.parentNode.replaceChild(wrap, inp.parentNode.querySelector('#ledgerPaidBy') ? inp : inp);
+          // if structure differs, just replace inp
+          if ($('ledgerPaidBy') === inp) {
+            inp.parentNode.insertBefore(wrap, inp);
+            inp.remove();
+            wrap.appendChild(sel);
+          }
+          fillPartySelect(sel);
+          bindSelect('ledgerPaidBy');
+        } else {
+          fillPartySelect(inp);
+          bindSelect('ledgerPaidBy');
+        }
+      }, 40);
+    };
+    window.openLedgerEntryModal._party2 = true;
+  }
+
+  function boot() {
+    ensurePersonModal();
+    fillAllPartySelects();
+    ['expPaidBy', 'expPayee', 'supPayPaidBy', 'payPaidBy', 'karigarV2PaidBy', 'univPayPaidBy', 'ledgerPaidBy'].forEach(bindSelect);
+    // hide old custom inputs under expense form
+    if ($('expPaidByCustom')) $('expPaidByCustom').style.display = 'none';
+    if ($('expPayeeCustom')) $('expPayeeCustom').style.display = 'none';
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 700);
+  setTimeout(boot, 2000);
+
+  // Keep older refreshAllNameDropdowns in sync
+  var _raf = window.refreshAllNameDropdowns;
+  window.refreshAllNameDropdowns = function() {
+    fillAllPartySelects();
+    if (typeof _raf === 'function') {
+      try { /* skip string-only fill */ } catch (e) {}
+    }
+  };
+
+  window.loadPeopleDirectory = loadPeople;
+  window.savePeopleDirectory = savePeople;
+  console.log('✅ Universal party design + custom first + phone/address edit');
 })();
 </script>
 </body>
