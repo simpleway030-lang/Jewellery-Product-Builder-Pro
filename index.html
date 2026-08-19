@@ -3750,13 +3750,13 @@
                         <button class="ghost small" onclick="clearProductFilters()">✕ Clear filters</button>
                     </div>
                     <div class="toolbar" style="margin-top:8px">
-                        
+                        <button type="button" id="prodSelectModeBtn" class="ghost" onclick="toggleProductSelectMode()">☑ Select to Share</button>
                     </div>
                     <div id="productGrid" class="product-grid"></div>
                     <div id="productEmpty" class="empty-state" style="display:none"><div class="glyph">💎</div><div>No products yet — build your first piece.</div></div>
                     <div class="count-line" id="countLine"></div>
                     <div class="load-more-wrap"><button id="loadMoreBtn" class="ghost" onclick="loadMoreProducts()" style="display:none">Load More</button></div>
-                    <div id="shareSelectBar" style="display:none;position:sticky;bottom:10px;margin-top:14px;background:var(--card-solid);border-radius:16px;padding:12px 16px;box-shadow:var(--shadow-md);display:flex;gap:10px;align-items:center;flex-wrap:wrap;z-index:20;">
+                    <div id="shareSelectBar" style="display:none;position:sticky;bottom:10px;margin-top:14px;background:var(--card-solid);border-radius:16px;padding:12px 16px;box-shadow:var(--shadow-md);gap:10px;align-items:center;flex-wrap:wrap;z-index:20;">
                         <span id="shareSelectCount" style="font-weight:700;font-size:13px;">0 selected</span>
                         <button onclick="openShareSelected()" style="margin-left:auto;">📤 Share Selected</button>
                         <button class="ghost small" onclick="toggleProductSelectMode()">Cancel</button>
@@ -8040,8 +8040,11 @@
         function toggleProductSelectMode() {
             productSelectMode = !productSelectMode;
             if (!productSelectMode) selectedProductIds = [];
-            $('prodSelectModeBtn').classList.toggle('active', productSelectMode);
-            $('prodSelectModeBtn').textContent = productSelectMode ? '✕ Cancel Select' : '☑ Select to Share';
+            var btn = $('prodSelectModeBtn');
+            if (btn) {
+                btn.classList.toggle('active', productSelectMode);
+                btn.textContent = productSelectMode ? '✕ Cancel Select' : '☑ Select to Share';
+            }
             renderProductGrid();
             updateShareSelectBar();
         }
@@ -9282,12 +9285,24 @@
             var statusClass = sale.status === 'Paid' ? 'status-paid' : (sale.status === 'Partial' ?
                 'status-partial' : 'status-due');
             var prevDue = 0;
-            if (sale.customer.id && sale.customer.id !== 'walkin') {
+            // Prefer frozen amount stored when THIS bill was generated (never includes later invoices)
+            if (sale.previousDue != null && sale.previousDue !== '') {
+                prevDue = Math.max(0, Number(sale.previousDue) || 0);
+            } else if (sale.customer && sale.customer.id && sale.customer.id !== 'walkin') {
                 var custId = sale.customer.id;
-                var entries = custLedger.filter(function(e) { return e.customerId === custId && e.invoiceId !== sale
-                        .id; });
-                var totalDebit = entries.reduce(function(s, e) { return s + (e.debit || 0); }, 0);
-                var totalCredit = entries.reduce(function(s, e) { return s + (e.credit || 0); }, 0);
+                var saleT = new Date(sale.date || 0).getTime();
+                var invId = sale.id;
+                var entries = (typeof custLedger !== 'undefined' ? custLedger : []).filter(function(e) {
+                    if (String(e.customerId) !== String(custId)) return false;
+                    if (e.invoiceId && String(e.invoiceId) === String(invId)) return false;
+                    var et = new Date(e.date || 0).getTime();
+                    // only ledger activity strictly before (or same second but different invoice) this bill
+                    if (et > saleT) return false;
+                    if (et === saleT && e.invoiceNo && sale.invoiceNo && e.invoiceNo === sale.invoiceNo) return false;
+                    return true;
+                });
+                var totalDebit = entries.reduce(function(s, e) { return s + Number(e.debit || 0); }, 0);
+                var totalCredit = entries.reduce(function(s, e) { return s + Number(e.credit || 0); }, 0);
                 prevDue = totalDebit - totalCredit;
                 if (prevDue < 0) prevDue = 0;
             }
@@ -21218,33 +21233,22 @@ body.split-on #splitWorkspace { display: grid; }
     return Math.max(0, due);
   };
 
-  // Patch invoice render to show previous due
+  // Previous-due banner text removed per request — base renderSalesInvoice handles frozen previousDue
   function patchInvoiceRender() {
-    if (typeof window.renderSalesInvoice !== 'function' || window.renderSalesInvoice._prevDue) return;
-    var _r = window.renderSalesInvoice;
-    window.renderSalesInvoice = function(sale) {
-      _r.apply(this, arguments);
-      try {
-        var el = $('invoiceContent');
-        if (!el || !sale) return;
-        var prev = getCustomerDueBeforeSale(sale);
-        var block = el.querySelector('.jp-prev-due');
-        if (!block) {
-          block = document.createElement('div');
-          block.className = 'jp-prev-due note';
-          block.style.cssText = 'margin:10px 0;padding:10px 12px;border-radius:10px;background:rgba(255,149,0,0.12);font-weight:600';
-          var host = el.querySelector('table') || el.firstChild;
-          if (host && host.parentNode) host.parentNode.insertBefore(block, host);
-          else el.insertBefore(block, el.firstChild);
-        }
-        var thisDue = Number(sale.due || 0);
-        var totalAfter = prev + thisDue;
-        block.innerHTML = 'Previous due (as of this bill): <b>' + money(prev) + '</b>' +
-          ' · This bill due: <b>' + money(thisDue) + '</b>' +
-          ' · After bill: <b>' + money(prev + Number(sale.grandTotal || 0) - Number(sale.paid || 0)) + '</b>';
-      } catch (e) { console.warn(e); }
-    };
-    window.renderSalesInvoice._prevDue = true;
+    // Remove any leftover jp-prev-due banners if present after render
+    if (typeof window.renderSalesInvoice === 'function' && !window.renderSalesInvoice._prevDueClean) {
+      var _r = window.renderSalesInvoice;
+      window.renderSalesInvoice = function(sale) {
+        _r.apply(this, arguments);
+        try {
+          var el = document.getElementById('invoiceContent');
+          if (!el) return;
+          el.querySelectorAll('.jp-prev-due').forEach(function(n) { n.remove(); });
+        } catch (e) {}
+      };
+      window.renderSalesInvoice._prevDueClean = true;
+      window.renderSalesInvoice._prevDue = true; // prevent older patch re-apply
+    }
   }
 
   // ---- Expenses CRUD ----
@@ -22437,6 +22441,334 @@ body.split-on #splitWorkspace { display: grid; }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
   console.log('✅ Split killed + Employee ledger redesign');
+})();
+</script>
+
+
+<script>
+// ===== HOTFIX 2026-08-19: Share btn + Emp ledger + Invoice prevDue + Dashboard period =====
+(function() {
+  function $(id) { return document.getElementById(id); }
+  function lj(k, f) {
+    try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch (e) { return f; }
+  }
+  function sj(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function money(n) {
+    return '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  }
+
+  function ensureShareBtn() {
+    if ($('prodSelectModeBtn')) return;
+    var grid = $('productGrid');
+    if (!grid || !grid.parentNode) return;
+    var bar = document.createElement('div');
+    bar.className = 'toolbar';
+    bar.style.marginTop = '8px';
+    bar.innerHTML = '<button type="button" id="prodSelectModeBtn" class="ghost" onclick="toggleProductSelectMode()">☑ Select to Share</button>';
+    grid.parentNode.insertBefore(bar, grid);
+  }
+
+  function fixDashboardPeriod() {
+    window.getSalesInPeriod = function() {
+      var period = window._dashPeriod || window.dashboardPeriod || 'week';
+      var list = (typeof sales !== 'undefined' && Array.isArray(sales)) ? sales : [];
+      var now = new Date();
+      if (period === 'all') return list.slice();
+      if (period === 'today') {
+        var t = now.toISOString().slice(0, 10);
+        return list.filter(function(s) { return String(s.date || '').slice(0, 10) === t; });
+      }
+      var start;
+      if (period === 'week') {
+        start = new Date(now);
+        start.setDate(now.getDate() - now.getDay());
+        start.setHours(0, 0, 0, 0);
+      } else if (period === 'month') {
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else if (period === 'year') {
+        start = new Date(now.getFullYear(), 0, 1);
+      } else {
+        start = new Date(0);
+      }
+      var end = new Date(now);
+      end.setHours(23, 59, 59, 999);
+      return list.filter(function(s) {
+        var d = new Date(s.date);
+        return !isNaN(d.getTime()) && d >= start && d <= end;
+      });
+    };
+
+    window.setDashboardPeriod = function(period) {
+      try { window.dashboardPeriod = period; } catch (e) {}
+      window._dashPeriod = period;
+      document.querySelectorAll('.dash-period-btn').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-period') === period);
+      });
+      if (typeof renderDashboard === 'function') renderDashboard();
+    };
+
+    var _rd = window.renderDashboard;
+    if (typeof _rd === 'function' && !_rd._hfInv) {
+      window.renderDashboard = function() {
+        _rd.apply(this, arguments);
+        try {
+          var n = (typeof sales !== 'undefined' && sales) ? sales.length : 0;
+          var chip = $('dashInvoiceCount');
+          if (!chip) {
+            var head = document.querySelector('#dashboard .section-title');
+            if (head) {
+              chip = document.createElement('span');
+              chip.id = 'dashInvoiceCount';
+              chip.className = 'code-chip';
+              chip.style.marginLeft = '8px';
+              head.appendChild(chip);
+            }
+          }
+          if (chip) {
+            var inPeriod = (typeof getSalesInPeriod === 'function') ? getSalesInPeriod().length : n;
+            chip.textContent = inPeriod + ' inv (period) · ' + n + ' total';
+          }
+        } catch (e) {}
+      };
+      window.renderDashboard._hfInv = true;
+    }
+  }
+
+  function fixInvoicePrevDue() {
+    if (typeof window.renderSalesInvoice !== 'function') return;
+    if (window.renderSalesInvoice._hfPrev) return;
+    var _r = window.renderSalesInvoice;
+    window.renderSalesInvoice = function(sale) {
+      _r.apply(this, arguments);
+      try {
+        var el = $('invoiceContent');
+        if (!el) return;
+        el.querySelectorAll('.jp-prev-due').forEach(function(n) { n.remove(); });
+        var prev = 0;
+        if (sale && sale.previousDue != null && sale.previousDue !== '') {
+          prev = Math.max(0, Number(sale.previousDue) || 0);
+        } else if (sale && typeof getCustomerDueBeforeSale === 'function') {
+          prev = Math.max(0, Number(getCustomerDueBeforeSale(sale) || 0));
+        }
+        var warns = el.querySelectorAll('div');
+        warns.forEach(function(d) {
+          var t = d.textContent || '';
+          if (/Previous Due/i.test(t) && /₹/.test(t) && d.children.length === 0) {
+            if (prev > 0) d.textContent = '⚠️ Previous Due: ₹' + prev.toFixed(2);
+            else d.remove();
+          }
+        });
+      } catch (e) {}
+    };
+    window.renderSalesInvoice._hfPrev = true;
+    window.renderSalesInvoice._prevDue = true;
+    window.renderSalesInvoice._prevDueClean = true;
+  }
+
+  window.getCustomerDueBeforeSale = function(sale) {
+    if (!sale) return 0;
+    if (sale.previousDue != null && sale.previousDue !== '') return Math.max(0, Number(sale.previousDue) || 0);
+    var due = 0;
+    var saleT = new Date(sale.date || 0).getTime();
+    var invId = sale.id;
+    var custId = sale.customer && sale.customer.id;
+    if (!custId || custId === 'walkin') return 0;
+    if (typeof custLedger === 'undefined') return 0;
+    custLedger.forEach(function(e) {
+      if (String(e.customerId) !== String(custId)) return;
+      if (e.invoiceId && String(e.invoiceId) === String(invId)) return;
+      var et = new Date(e.date || 0).getTime();
+      if (et > saleT) return;
+      if (et === saleT && e.invoiceNo && sale.invoiceNo && e.invoiceNo === sale.invoiceNo) return;
+      due += Number(e.debit || 0) - Number(e.credit || 0);
+    });
+    return Math.max(0, due);
+  };
+
+  window.getCustomerDueAsOf = function(customerId, asOfIso) {
+    var due = 0;
+    var t = asOfIso ? new Date(asOfIso).getTime() : Date.now();
+    if (typeof custLedger === 'undefined' || !Array.isArray(custLedger)) return 0;
+    custLedger.forEach(function(e) {
+      if (String(e.customerId) !== String(customerId)) return;
+      var et = new Date(e.date || 0).getTime();
+      if (et > t) return;
+      due += Number(e.debit || 0) - Number(e.credit || 0);
+    });
+    return Math.max(0, due);
+  };
+
+  function allEmpPays() {
+    var a = lj('jp_employee_payments_v1', []);
+    var b = lj('jp_hrm_payments_v1', []);
+    var c = lj('jp_payroll_v1', []);
+    var map = {};
+    a.concat(b).concat(c).forEach(function(p) {
+      if (!p || !p.id) return;
+      map[String(p.id)] = p;
+    });
+    return Object.keys(map).map(function(k) { return map[k]; });
+  }
+  function allLeaves() {
+    var a = lj('jp_leave_v1', []);
+    var b = lj('jp_leaves_v1', []);
+    var map = {};
+    a.concat(b).forEach(function(l) {
+      if (!l || !l.id) return;
+      map[String(l.id)] = l;
+    });
+    return Object.keys(map).map(function(k) { return map[k]; });
+  }
+  function monthsSinceJoin(emp) {
+    var join = emp.joinDate || emp.createdAt || emp.at || null;
+    var start = join ? new Date(join) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    if (isNaN(start.getTime())) start = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    var now = new Date();
+    var m = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth()) + 1;
+    return Math.max(1, m);
+  }
+
+  window.viewEmployeeLedger = function(empId) {
+    var emps = lj('jp_employees_v1', []);
+    var emp = emps.find(function(e) { return String(e.id) === String(empId); });
+    if (!emp) {
+      if (typeof showToast === 'function') showToast('Employee not found', 'err');
+      return;
+    }
+    var pays = allEmpPays().filter(function(p) {
+      return String(p.empId) === String(empId) || String(p.employeeId) === String(empId);
+    }).sort(function(a, b) { return new Date(a.date || a.at || 0) - new Date(b.date || b.at || 0); });
+
+    var leaves = allLeaves().filter(function(l) {
+      return String(l.empId) === String(empId) || String(l.employeeId) === String(empId);
+    });
+    var leaveDays = leaves.reduce(function(s, l) { return s + Number(l.days || 1); }, 0);
+
+    var monthly = Number(emp.salary || 0);
+    var months = monthsSinceJoin(emp);
+    var earned = monthly * months;
+
+    var paidTotal = 0, advance = 0, deduction = 0;
+    pays.forEach(function(p) {
+      var amt = Number(p.amount || p.paid || 0);
+      var typ = String(p.type || 'payment').toLowerCase();
+      if (typ.indexOf('deduct') >= 0) {
+        deduction += Math.abs(amt);
+      } else if (typ.indexOf('advance') >= 0) {
+        advance += Math.abs(amt);
+        paidTotal += Math.abs(amt);
+      } else {
+        paidTotal += Math.abs(amt);
+      }
+    });
+
+    var payable = Math.max(0, earned - paidTotal - deduction);
+    var ym = new Date().toISOString().slice(0, 7);
+    var monthPaid = pays.filter(function(p) {
+      return String(p.date || p.at || '').slice(0, 7) === ym;
+    }).reduce(function(s, p) { return s + Math.abs(Number(p.amount || p.paid || 0)); }, 0);
+    var monthDue = Math.max(0, monthly - monthPaid);
+
+    var panel = $('empLedgerPanel');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'empLedgerPanel';
+      panel.className = 'emp-ledger-panel';
+      var host = $('hrm') || document.body;
+      host.appendChild(panel);
+    }
+    panel.style.display = 'block';
+
+    var tableRows = pays.length ? pays.slice().reverse().map(function(p) {
+      var typ = String(p.type || 'Payment');
+      var chipClass = /advance|deduct|debit/i.test(typ) ? 'debit' : 'credit';
+      var amt = Math.abs(Number(p.amount || p.paid || 0));
+      var pid = String(p.id).replace(/'/g, '');
+      var eid = String(empId).replace(/'/g, '');
+      return '<tr>' +
+        '<td>' + escapeHtml(String(p.date || p.at || '').slice(0, 10)) + '</td>' +
+        '<td><span class="emp-chip ' + chipClass + '">' + escapeHtml(typ) + '</span></td>' +
+        '<td class="num" style="font-weight:700">' + money(amt) + '</td>' +
+        '<td>' + escapeHtml(p.note || p.notes || '—') + '</td>' +
+        '<td><button type="button" class="ghost small" onclick="deleteEmployeePayment(\'' + pid + '\');setTimeout(function(){viewEmployeeLedger(\'' + eid + '\');},50)">✕</button></td>' +
+        '</tr>';
+    }).join('') : '<tr><td colspan="5" class="note" style="text-align:center;padding:20px">এখনো কোনো পেমেন্ট নেই</td></tr>';
+
+    var leaveRows = leaves.length ? leaves.slice().reverse().map(function(l) {
+      return '<tr><td>' + escapeHtml(String(l.date || '').slice(0, 10)) + '</td><td>' +
+        Number(l.days || 1) + ' day(s)</td><td>' + escapeHtml(l.reason || l.note || '—') + '</td></tr>';
+    }).join('') : '<tr><td colspan="3" class="note" style="text-align:center">কোনো ছুটি নেই</td></tr>';
+
+    var eid = String(empId).replace(/'/g, '');
+    panel.innerHTML =
+      '<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px">' +
+        '<div>' +
+          '<div style="font-size:18px;font-weight:800">' + escapeHtml(emp.name) + '</div>' +
+          '<div class="muted" style="margin-top:4px">' + escapeHtml(emp.role || '') +
+            (emp.phone ? ' · ' + escapeHtml(emp.phone) : '') +
+            ' · Salary ' + money(monthly) + '/mo</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<button type="button" class="ghost small" onclick="var s=document.getElementById(\'payEmp\');if(s)s.value=\'' + eid + '\';var a=document.getElementById(\'payAmount\');if(a)a.focus()">+ Payment</button>' +
+          '<button type="button" class="ghost small" onclick="editEmployee(\'' + eid + '\')">Edit</button>' +
+          '<button type="button" class="ghost small" onclick="document.getElementById(\'empLedgerPanel\').style.display=\'none\'">Close</button>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px">' +
+        '<div style="background:var(--border-soft);border-radius:12px;padding:12px;text-align:center"><div style="font-weight:800;font-size:16px">' + money(monthly) + '</div><div class="muted" style="font-size:11px">মাসিক বেতন</div></div>' +
+        '<div style="background:var(--border-soft);border-radius:12px;padding:12px;text-align:center"><div style="font-weight:800;font-size:16px">' + months + '</div><div class="muted" style="font-size:11px">মাস (কাজ)</div></div>' +
+        '<div style="background:var(--border-soft);border-radius:12px;padding:12px;text-align:center"><div style="font-weight:800;font-size:16px">' + money(earned) + '</div><div class="muted" style="font-size:11px">মোট প্রাপ্য (≈)</div></div>' +
+        '<div style="background:var(--border-soft);border-radius:12px;padding:12px;text-align:center"><div style="font-weight:800;font-size:16px">' + money(paidTotal) + '</div><div class="muted" style="font-size:11px">কত টাকা নিয়েছে</div></div>' +
+        '<div style="background:var(--border-soft);border-radius:12px;padding:12px;text-align:center"><div style="font-weight:800;font-size:16px;color:var(--danger)">' + money(payable) + '</div><div class="muted" style="font-size:11px">এখনো পাবে</div></div>' +
+        '<div style="background:var(--border-soft);border-radius:12px;padding:12px;text-align:center"><div style="font-weight:800;font-size:16px">' + leaveDays + '</div><div class="muted" style="font-size:11px">ছুটির দিন</div></div>' +
+        '<div style="background:var(--border-soft);border-radius:12px;padding:12px;text-align:center"><div style="font-weight:800;font-size:16px">' + money(monthDue) + '</div><div class="muted" style="font-size:11px">এই মাসের বাকি</div></div>' +
+        '<div style="background:var(--border-soft);border-radius:12px;padding:12px;text-align:center"><div style="font-weight:800;font-size:16px">' + money(advance) + '</div><div class="muted" style="font-size:11px">অগ্রিম</div></div>' +
+      '</div>' +
+      '<div class="section-title" style="font-size:14px;margin:8px 0">পেমেন্ট হিস্ট্রি</div>' +
+      '<div class="table-scroll"><table><thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Note</th><th></th></tr></thead><tbody>' + tableRows + '</tbody></table></div>' +
+      '<div class="section-title" style="font-size:14px;margin:14px 0 8px">ছুটির রেকর্ড</div>' +
+      '<div class="table-scroll"><table><thead><tr><th>Date</th><th>Days</th><th>Reason</th></tr></thead><tbody>' + leaveRows + '</tbody></table></div>';
+
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  window.deleteEmployeePayment = function(id) {
+    if (!confirm('Delete this payment record?')) return;
+    ['jp_employee_payments_v1', 'jp_hrm_payments_v1', 'jp_payroll_v1'].forEach(function(k) {
+      var list = lj(k, []).filter(function(p) { return String(p.id) !== String(id); });
+      sj(k, list);
+    });
+    if (typeof renderHRM === 'function') renderHRM();
+    if (typeof showToast === 'function') showToast('Payment deleted', 'ok');
+  };
+
+  var _addPay = window.addEmployeePayment;
+  if (typeof _addPay === 'function' && !_addPay._hf) {
+    window.addEmployeePayment = function() {
+      var r = _addPay.apply(this, arguments);
+      try {
+        var main = lj('jp_employee_payments_v1', []);
+        if (main.length) sj('jp_hrm_payments_v1', main);
+      } catch (e) {}
+      return r;
+    };
+    window.addEmployeePayment._hf = true;
+  }
+
+  function boot() {
+    ensureShareBtn();
+    fixDashboardPeriod();
+    fixInvoicePrevDue();
+    setTimeout(function() { if (typeof renderDashboard === 'function') renderDashboard(); }, 900);
+    setTimeout(function() { if (typeof renderDashboard === 'function') renderDashboard(); }, 2200);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 500);
+  console.log('✅ HOTFIX: Share + Emp ledger + PrevDue + Dashboard period');
 })();
 </script>
 
