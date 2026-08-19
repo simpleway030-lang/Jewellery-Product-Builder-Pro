@@ -3561,6 +3561,134 @@
         .emp-list-card .meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
 </style>
+
+<style id="payPartyDesign">
+.pay-party-card {
+  margin: 12px 0 4px;
+  padding: 14px 14px 12px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(var(--accent-rgb), 0.08), rgba(var(--accent-rgb), 0.02));
+  border: 1px solid rgba(var(--accent-rgb), 0.18);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+body.dark .pay-party-card {
+  background: linear-gradient(145deg, rgba(var(--accent-rgb), 0.16), rgba(255,255,255,0.03));
+  border-color: rgba(var(--accent-rgb), 0.28);
+}
+.pay-party-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.pay-party-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: end;
+}
+@media (max-width: 700px) {
+  .pay-party-grid {
+    grid-template-columns: 1fr;
+  }
+  .pay-party-arrow { display: none !important; }
+}
+.pay-party-field { min-width: 0; }
+.pay-party-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pay-party-ico {
+  font-size: 14px;
+  line-height: 1;
+}
+.pay-party-en {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--border-soft);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.pay-party-select {
+  width: 100% !important;
+  margin-top: 0 !important;
+  border-radius: 12px !important;
+  border: 1.5px solid var(--border) !important;
+  background: var(--card-solid) !important;
+  color: var(--text) !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  padding: 11px 36px 11px 12px !important;
+  min-height: 44px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236e6e73' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  transition: border-color .15s ease, box-shadow .15s ease;
+  cursor: pointer;
+}
+.pay-party-select:hover {
+  border-color: rgba(var(--accent-rgb), 0.45) !important;
+}
+.pay-party-select:focus {
+  outline: none !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.2) !important;
+}
+.pay-party-from .pay-party-select {
+  border-color: rgba(0, 113, 227, 0.25) !important;
+}
+.pay-party-to .pay-party-select {
+  border-color: rgba(52, 199, 89, 0.35) !important;
+}
+.pay-party-arrow {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  padding-bottom: 12px;
+  opacity: 0.85;
+}
+.pay-party-custom {
+  width: 100% !important;
+  margin-top: 8px !important;
+  border-radius: 12px !important;
+  border: 1.5px dashed rgba(var(--accent-rgb), 0.45) !important;
+  background: var(--card-solid) !important;
+  padding: 10px 12px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+.pay-party-filter {
+  min-width: 150px !important;
+  font-size: 13px !important;
+  padding: 8px 32px 8px 10px !important;
+  min-height: 38px;
+  border-radius: 10px !important;
+}
+/* Universal pay modal fields */
+#univPayModal .pay-party-select,
+#univPayPaidBy {
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+}
+#ledgerPaidBy, #supPayPaidBy, #payPaidBy, #karigarV2PaidBy {
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  min-height: 42px;
+  border: 1.5px solid var(--border) !important;
+}
+</style>
+
 </head>
 <body>
     <div class="wrap">
@@ -3666,6 +3794,7 @@
                         <div class="dash-stat" onclick="openDashboardDetail('revenue')" title="Sum of the full invoice amount (grand total) of every sale in the selected period — this is total sales booked, whether or not it has been fully paid yet"><div class="val" id="dRevenue">₹0</div><div class="lbl">Revenue</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('totalcost')" title="The cost (purchase + making) of everything currently sitting in your stock, based on today's stock levels"><div class="val" id="dTotalCost">₹0</div><div class="lbl">Inventory Cost (Stock)</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('totalprofit')" title="Sum of profit across every sale in the selected period"><div class="val" id="dTotalProfit">₹0</div><div class="lbl">Total Profit</div></div>
+                        <div class="dash-stat" onclick="openDashboardDetail('expenses')" title="Total daily expenses in selected period"><div class="val" id="dTotalExpense">₹0</div><div class="lbl">Total Expenses</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('due')"><div class="val" id="dDue">₹0</div><div class="lbl">Outstanding Due (Customers)</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('supplierdue')"><div class="val" id="dSupplierDue">₹0</div><div class="lbl">Supplier Due</div></div>
                         <div class="dash-stat" onclick="openDashboardDetail('lowstock')"><div class="val" id="dLowStock">0</div><div class="lbl">Low Stock</div></div>
@@ -3734,11 +3863,14 @@
                             <option value="za">Name Z–A</option>
                             <option value="high">Price: High–Low</option>
                             <option value="low">Price: Low–High</option>
-                            <option value="profit_high">Profit: High–Low</option>
-                            <option value="profit_low">Profit: Low–High</option>
+                            <option value="profit_high">Profit ₹: High–Low</option>
+                            <option value="profit_low">Profit ₹: Low–High</option>
+                            <option value="profit_pct_high">Profit %: High–Low</option>
+                            <option value="profit_pct_low">Profit %: Low–High</option>
                             <option value="bestseller">Best sellers</option>
                             <option value="category">Category-wise</option>
                         </select>
+                        <button type="button" class="ghost small" onclick="openManageTagsModal()" title="Add/edit product tags">🏷 Tags</button>
                         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;margin-top:0;color:var(--muted)">
                             <input type="checkbox" id="favOnly" style="width:auto;margin:0" onchange="onProductFilterChange()"> ★ Favourites
                         </label>
@@ -3941,7 +4073,7 @@
                 </section>
                 <!-- VERSION 3.0 OPERATIONS STUDIO -->
                 <section id="studio" class="card" style="display:none">
-<div class="section-head"><div><div class="section-title">Karigar Work & Full Ledger</div><div class="note">কাজ, কারিগরের কাছে থাকা inventory, bill, purchase ও payment এক জায়গায়।</div></div><div class="code-chip">Karigar Ledger</div></div><div class="v3-summary" id="karigarV2Summary"></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">Karigar register</div><h3>New karigar</h3><div class="v3-form-grid"><label>Name<input id="karigarV2Name" placeholder="Karigar name"></label><label>Phone<input id="karigarV2Phone" placeholder="Phone"></label><label style="grid-column:1/-1">Specialty<input id="karigarV2Specialty" placeholder="Polish, casting, setting, repair..."></label></div><button style="margin-top:12px" onclick="saveKarigarV2()">Add karigar</button><button style="margin-top:12px;margin-left:8px;" class="ghost" onclick="openKarigarListModal()">📋 Karigar List</button></div><div class="v3-panel"><div class="v3-kicker">Monthly account</div><h3>One month work summary</h3><label style="display:block;font-size:11px;color:var(--muted);font-weight:700">Month<input id="karigarV2Month" type="month" onchange="renderKarigarV2()" style="width:100%;margin-top:4px"></label><div id="karigarV2Monthly" style="margin-top:12px"></div></div></div><div class="v3-panel" style="margin-top:16px"><div class="v3-kicker">Karigar full ledger</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><label style="flex:1;min-width:200px;font-size:11px;color:var(--muted);font-weight:700">Karigar<select id="karigarLedgerPerson" onchange="renderKarigarLedgerV2()" style="width:100%;margin-top:4px"></select></label><button class="ghost" onclick="renderKarigarLedgerV2()">Open ledger</button></div><div id="karigarFullLedger" style="margin-top:12px"></div></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">New job work</div><h3>Give work to karigar</h3><div class="v3-form-grid"><label>Karigar<select id="karigarV2JobPerson"></select></label><label>Expected delivery<input id="karigarV2Due" type="date"></label><label style="grid-column:1/-1">Work details<textarea id="karigarV2Work" placeholder="কি কাজ দেওয়া হলো"></textarea></label><label>Karigar work bill<input id="karigarV2Charge" type="number" min="0" step="0.01" placeholder="Total labor bill"></label><label>Payment now<input id="karigarV2Paid" type="number" min="0" step="0.01" placeholder="Paid now"></label><label style="grid-column:1/-1">Notes<textarea id="karigarV2Notes" placeholder="Design, size, instruction..."></textarea></label></div><div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><div class="v3-kicker">Issue inventory</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><select id="karigarV2Item" style="flex:1;min-width:190px"></select><input id="karigarV2Qty" type="number" min="0.001" step="0.001" value="1" style="width:100px"><button class="ghost" onclick="addKarigarV2Issue()">Add item</button></div><div id="karigarV2IssueQueue"></div></div><button style="margin-top:14px" onclick="createKarigarJobV2()">Create job work</button></div><div class="v3-panel"><div class="v3-kicker">All jobs</div><h3>Running and completed work</h3><div id="karigarV2Jobs"></div></div></div>
+<div class="section-head"><div><div class="section-title">Karigar Work & Full Ledger</div><div class="note">কাজ, কারিগরের কাছে থাকা inventory, bill, purchase ও payment এক জায়গায়।</div></div><div class="code-chip">Karigar Ledger</div></div><div class="v3-summary" id="karigarV2Summary"></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">Karigar register</div><h3>New karigar</h3><div class="v3-form-grid"><label>Name<input id="karigarV2Name" placeholder="Karigar name"></label><label>Phone<input id="karigarV2Phone" placeholder="Phone"></label><label style="grid-column:1/-1">Specialty<input id="karigarV2Specialty" placeholder="Polish, casting, setting, repair..."></label></div><button style="margin-top:12px" onclick="saveKarigarV2()">Add karigar</button><button style="margin-top:12px;margin-left:8px;" class="ghost" onclick="openKarigarListModal()">📋 Karigar List</button></div><div class="v3-panel"><div class="v3-kicker">Monthly account</div><h3>One month work summary</h3><label style="display:block;font-size:11px;color:var(--muted);font-weight:700">Month<input id="karigarV2Month" type="month" onchange="renderKarigarV2()" style="width:100%;margin-top:4px"></label><div id="karigarV2Monthly" style="margin-top:12px"></div></div></div><div class="v3-panel" style="margin-top:16px"><div class="v3-kicker">Karigar full ledger</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><label style="flex:1;min-width:200px;font-size:11px;color:var(--muted);font-weight:700">Karigar<select id="karigarLedgerPerson" onchange="renderKarigarLedgerV2()" style="width:100%;margin-top:4px"></select></label><button class="ghost" onclick="renderKarigarLedgerV2()">Open ledger</button></div><div id="karigarFullLedger" style="margin-top:12px"></div></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">New job work</div><h3>Give work to karigar</h3><div class="v3-form-grid"><label>Karigar<select id="karigarV2JobPerson"></select></label><label>Expected delivery<input id="karigarV2Due" type="date"></label><label style="grid-column:1/-1">Work details<textarea id="karigarV2Work" placeholder="কি কাজ দেওয়া হলো"></textarea></label><label>Karigar work bill<input id="karigarV2Charge" type="number" min="0" step="0.01" placeholder="Total labor bill"></label><label>Payment now<input id="karigarV2Paid" type="number" min="0" step="0.01" placeholder="Paid now"></label><label>Paid by (কে পেমেন্ট)<select id="karigarV2PaidBy"><option value="">— Select —</option></select></label><label style="grid-column:1/-1">Notes<textarea id="karigarV2Notes" placeholder="Design, size, instruction..."></textarea></label></div><div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><div class="v3-kicker">Issue inventory</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><select id="karigarV2Item" style="flex:1;min-width:190px"></select><input id="karigarV2Qty" type="number" min="0.001" step="0.001" value="1" style="width:100px"><button class="ghost" onclick="addKarigarV2Issue()">Add item</button></div><div id="karigarV2IssueQueue"></div></div><button style="margin-top:14px" onclick="createKarigarJobV2()">Create job work</button></div><div class="v3-panel"><div class="v3-kicker">All jobs</div><h3>Running and completed work</h3><div id="karigarV2Jobs"></div></div></div>
 </section>
                 <!-- ITEM DB -->
                 <section id="itemdb" class="card" style="display:none">
@@ -4800,10 +4932,28 @@
                             </label>
                             <label>Title / Note<input id="expTitle" placeholder="e.g. Auto fare, Shop rent"></label>
                             <label>Amount ₹<input type="number" id="expAmount" step="0.01" min="0"></label>
-                            <label>Paid by (কে পেমেন্ট করেছে)<input id="expPaidBy" placeholder="Staff / your name" list="expPaidByList"></label>
-                            <label>Paid to (কাকে দেওয়া হয়েছে)<input id="expPayee" placeholder="Person / shop name" list="expPayeeList"></label>
-                            <datalist id="expPaidByList"></datalist>
-                            <datalist id="expPayeeList"></datalist>
+                            <div class="pay-party-card">
+                                <div class="pay-party-title">পেমেন্ট পার্টি</div>
+                                <div class="pay-party-grid">
+                                    <div class="pay-party-field pay-party-from">
+                                        <div class="pay-party-label"><span class="pay-party-ico">📤</span> কে পেমেন্ট করেছে <span class="pay-party-en">Paid by</span></div>
+                                        <select id="expPaidBy" class="pay-party-select" onchange="onExpNameSelect('paidBy')">
+                                            <option value="">নাম সিলেক্ট করুন…</option>
+                                            <option value="__custom__">＋ নতুন নাম লিখুন…</option>
+                                        </select>
+                                        <input id="expPaidByCustom" class="pay-party-custom" placeholder="নতুন নাম টাইপ করুন" style="display:none">
+                                    </div>
+                                    <div class="pay-party-arrow" aria-hidden="true">→</div>
+                                    <div class="pay-party-field pay-party-to">
+                                        <div class="pay-party-label"><span class="pay-party-ico">📥</span> কাকে দেওয়া হয়েছে <span class="pay-party-en">Paid to</span></div>
+                                        <select id="expPayee" class="pay-party-select" onchange="onExpNameSelect('payee')">
+                                            <option value="">নাম সিলেক্ট করুন…</option>
+                                            <option value="__custom__">＋ নতুন নাম লিখুন…</option>
+                                        </select>
+                                        <input id="expPayeeCustom" class="pay-party-custom" placeholder="নতুন নাম টাইপ করুন" style="display:none">
+                                    </div>
+                                </div>
+                            </div>
                             <label>Bill photo<input type="file" id="expPhoto" accept="image/*"></label>
                             <div id="expPhotoPreview" style="margin-top:8px"></div>
                             <div class="actions" style="margin-top:10px">
@@ -4818,11 +4968,11 @@
                                 <select id="expFilterCategory" onchange="renderExpenseList()" style="min-width:120px">
                                     <option value="">All categories</option>
                                 </select>
-                                <select id="expFilterPaidBy" onchange="renderExpenseList()" style="min-width:120px">
-                                    <option value="">Paid by: All</option>
+                                <select id="expFilterPaidBy" class="pay-party-select pay-party-filter" onchange="renderExpenseList()" style="min-width:150px">
+                                    <option value="">📤 Paid by: All</option>
                                 </select>
-                                <select id="expFilterPayee" onchange="renderExpenseList()" style="min-width:120px">
-                                    <option value="">Paid to: All</option>
+                                <select id="expFilterPayee" class="pay-party-select pay-party-filter" onchange="renderExpenseList()" style="min-width:150px">
+                                    <option value="">📥 Paid to: All</option>
                                 </select>
                                 <button class="ghost small" onclick="renderExpenseList()">Filter</button>
                                 <button class="ghost small" onclick="clearExpenseFilters()">Clear</button>
@@ -4850,6 +5000,19 @@
                             <option value="payee">Only as Paid to</option>
                         </select>
                         <button class="ghost small" onclick="renderUniversalPersonLedger()">↻ Refresh</button>
+                        <button class="ghost small" onclick="renderPersonDirectory()">🏷 Manage names</button>
+                    </div>
+                    <div id="personDirectoryPanel" style="display:none;margin-bottom:12px;padding:14px;border-radius:14px;background:var(--card-solid);border:1px solid var(--border-soft)">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+                            <div style="font-weight:800;font-size:14px">🏷 Person names (category list)</div>
+                            <button type="button" class="ghost small" onclick="document.getElementById('personDirectoryPanel').style.display='none'">Hide</button>
+                        </div>
+                        <div class="note" style="margin-bottom:8px">এখান থেকে নাম <b>Delete</b> করলে Expense / Supplier / Employee / Karigar / filter — <b>সব জায়গা</b> থেকে সেই নাম মুছে যাবে (এন্ট্রি থাকবে, শুধু নাম খালি হবে)।</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+                            <input id="personDirNewName" placeholder="New name to add" style="flex:1;min-width:140px;margin:0">
+                            <button type="button" onclick="addPersonDirectoryName()">+ Add name</button>
+                        </div>
+                        <div id="personDirectoryList" style="max-height:280px;overflow:auto"></div>
                     </div>
                     <div id="univPersonLedgerFull" style="padding:12px;border-radius:14px;background:var(--border-soft);min-height:60px"></div>
                     <hr>
@@ -13145,7 +13308,7 @@ function saveV3Data() {
             window.renderKarigarV2 = refresh;
 
             var studio = $('studio');
-            studio.innerHTML = '<div class="section-head"><div><div class="section-title">Karigar Work & Full Ledger</div><div class="note">কাজ, কারিগরের কাছে থাকা inventory, bill, purchase ও payment এক জায়গায়।</div></div><div class="code-chip">Karigar Ledger</div></div><div class="v3-summary" id="karigarV2Summary"></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">Karigar register</div><h3>New karigar</h3><div class="v3-form-grid"><label>Name<input id="karigarV2Name" placeholder="Karigar name"></label><label>Phone<input id="karigarV2Phone" placeholder="Phone"></label><label style="grid-column:1/-1">Specialty<input id="karigarV2Specialty" placeholder="Polish, casting, setting, repair..."></label></div><button style="margin-top:12px" onclick="saveKarigarV2()">Add karigar</button><button style="margin-top:12px;margin-left:8px;" class="ghost" onclick="openKarigarListModal()">📋 Karigar List</button></div><div class="v3-panel"><div class="v3-kicker">Monthly account</div><h3>One month work summary</h3><label style="display:block;font-size:11px;color:var(--muted);font-weight:700">Month<input id="karigarV2Month" type="month" onchange="renderKarigarV2()" style="width:100%;margin-top:4px"></label><div id="karigarV2Monthly" style="margin-top:12px"></div></div></div><div class="v3-panel" style="margin-top:16px"><div class="v3-kicker">Karigar full ledger</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><label style="flex:1;min-width:200px;font-size:11px;color:var(--muted);font-weight:700">Karigar<select id="karigarLedgerPerson" onchange="renderKarigarLedgerV2()" style="width:100%;margin-top:4px"></select></label><button class="ghost" onclick="renderKarigarLedgerV2()">Open ledger</button></div><div id="karigarFullLedger" style="margin-top:12px"></div></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">New job work</div><h3>Give work to karigar</h3><div class="v3-form-grid"><label>Karigar<select id="karigarV2JobPerson"></select></label><label>Expected delivery<input id="karigarV2Due" type="date"></label><label style="grid-column:1/-1">Work details<textarea id="karigarV2Work" placeholder="কি কাজ দেওয়া হলো"></textarea></label><label>Karigar work bill<input id="karigarV2Charge" type="number" min="0" step="0.01" placeholder="Total labor bill"></label><label>Payment now<input id="karigarV2Paid" type="number" min="0" step="0.01" placeholder="Paid now"></label><label style="grid-column:1/-1">Notes<textarea id="karigarV2Notes" placeholder="Design, size, instruction..."></textarea></label></div><div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><div class="v3-kicker">Issue inventory</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><select id="karigarV2Item" style="flex:1;min-width:190px"></select><input id="karigarV2Qty" type="number" min="0.001" step="0.001" value="1" style="width:100px"><button class="ghost" onclick="addKarigarV2Issue()">Add item</button></div><div id="karigarV2IssueQueue"></div></div><button style="margin-top:14px" onclick="createKarigarJobV2()">Create job work</button></div><div class="v3-panel"><div class="v3-kicker">All jobs</div><h3>Running and completed work</h3><div id="karigarV2Jobs"></div></div></div>';
+            studio.innerHTML = '<div class="section-head"><div><div class="section-title">Karigar Work & Full Ledger</div><div class="note">কাজ, কারিগরের কাছে থাকা inventory, bill, purchase ও payment এক জায়গায়।</div></div><div class="code-chip">Karigar Ledger</div></div><div class="v3-summary" id="karigarV2Summary"></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">Karigar register</div><h3>New karigar</h3><div class="v3-form-grid"><label>Name<input id="karigarV2Name" placeholder="Karigar name"></label><label>Phone<input id="karigarV2Phone" placeholder="Phone"></label><label style="grid-column:1/-1">Specialty<input id="karigarV2Specialty" placeholder="Polish, casting, setting, repair..."></label></div><button style="margin-top:12px" onclick="saveKarigarV2()">Add karigar</button><button style="margin-top:12px;margin-left:8px;" class="ghost" onclick="openKarigarListModal()">📋 Karigar List</button></div><div class="v3-panel"><div class="v3-kicker">Monthly account</div><h3>One month work summary</h3><label style="display:block;font-size:11px;color:var(--muted);font-weight:700">Month<input id="karigarV2Month" type="month" onchange="renderKarigarV2()" style="width:100%;margin-top:4px"></label><div id="karigarV2Monthly" style="margin-top:12px"></div></div></div><div class="v3-panel" style="margin-top:16px"><div class="v3-kicker">Karigar full ledger</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><label style="flex:1;min-width:200px;font-size:11px;color:var(--muted);font-weight:700">Karigar<select id="karigarLedgerPerson" onchange="renderKarigarLedgerV2()" style="width:100%;margin-top:4px"></select></label><button class="ghost" onclick="renderKarigarLedgerV2()">Open ledger</button></div><div id="karigarFullLedger" style="margin-top:12px"></div></div><div class="v3-grid"><div class="v3-panel"><div class="v3-kicker">New job work</div><h3>Give work to karigar</h3><div class="v3-form-grid"><label>Karigar<select id="karigarV2JobPerson"></select></label><label>Expected delivery<input id="karigarV2Due" type="date"></label><label style="grid-column:1/-1">Work details<textarea id="karigarV2Work" placeholder="কি কাজ দেওয়া হলো"></textarea></label><label>Karigar work bill<input id="karigarV2Charge" type="number" min="0" step="0.01" placeholder="Total labor bill"></label><label>Payment now<input id="karigarV2Paid" type="number" min="0" step="0.01" placeholder="Paid now"></label><label>Paid by (কে পেমেন্ট)<select id="karigarV2PaidBy"><option value="">— Select —</option></select></label><label style="grid-column:1/-1">Notes<textarea id="karigarV2Notes" placeholder="Design, size, instruction..."></textarea></label></div><div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><div class="v3-kicker">Issue inventory</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><select id="karigarV2Item" style="flex:1;min-width:190px"></select><input id="karigarV2Qty" type="number" min="0.001" step="0.001" value="1" style="width:100px"><button class="ghost" onclick="addKarigarV2Issue()">Add item</button></div><div id="karigarV2IssueQueue"></div></div><button style="margin-top:14px" onclick="createKarigarJobV2()">Create job work</button></div><div class="v3-panel"><div class="v3-kicker">All jobs</div><h3>Running and completed work</h3><div id="karigarV2Jobs"></div></div></div>';
             $('karigarV2Month').value = new Date().toISOString().slice(0, 7);
             window.openKarigarStudio = function() { document.querySelectorAll('.tab').forEach(function(tab) { tab.classList.toggle('active', tab.dataset.tab === 'studio'); }); document.querySelectorAll('.mobile-drawer-link').forEach(function(link) { link.classList.toggle('active', link.dataset.tab === 'studio'); }); document.querySelectorAll('section.card').forEach(function(section) { section.style.display = 'none'; }); studio.style.display = 'block'; refresh(); };
             window.openV3Studio = window.openKarigarStudio;
@@ -24467,5 +24630,1137 @@ body.split-on #splitWorkspace { display: grid; }
 })();
 </script>
 
+
+<script>
+// ===== Batch UX: name dropdowns, univ ledger +/-, tags, profit%, HRM edit, dash expense, sup pay CRUD =====
+(function() {
+  function $(id) { return document.getElementById(id); }
+  function lj(k, f) {
+    try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch (e) { return f; }
+  }
+  function sj(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function money(n) {
+    return '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  }
+
+  // ---------- All money-party names (customers, suppliers, staff, karigar, expense names) ----------
+  function allPartyNames() {
+    var map = {};
+    function add(n) { n = String(n || '').trim(); if (n) map[n] = true; }
+    try {
+      if (typeof customers !== 'undefined') customers.forEach(function(c) { add(c.name); });
+      else lj('jp_customers_v1', []).forEach(function(c) { add(c.name); });
+    } catch (e) {}
+    try {
+      if (typeof suppliers !== 'undefined') suppliers.forEach(function(s) { add(s.name); });
+      else lj('jp_suppliers_v1', []).forEach(function(s) { add(s.name); });
+    } catch (e) {}
+    lj('jp_employees_v1', []).forEach(function(e) { add(e.name); });
+    try {
+      var k = (window.v3Data && window.v3Data.karigars) || lj('jp_karigars_v3', lj('jp_karigar_register_v3', []));
+      (k || []).forEach(function(x) { add(x.name); });
+    } catch (e) {}
+    lj('jp_daily_expenses_v1', []).forEach(function(e) { add(e.paidBy); add(e.payee); });
+    lj('jp_employee_payments_v1', []).forEach(function(e) { add(e.paidBy); add(e.empName); });
+    lj('jp_hrm_payments_v1', []).forEach(function(e) { add(e.paidBy); add(e.empName); });
+    try {
+      var sled = (typeof supLedger !== 'undefined') ? supLedger : lj('jp_sup_ledger_v1', []);
+      sled.forEach(function(e) { add(e.paidBy); add(e.supplierName); });
+    } catch (e) {}
+    try {
+      if (typeof sales !== 'undefined') sales.forEach(function(s) { if (s.customer) add(s.customer.name); });
+    } catch (e) {}
+    return Object.keys(map).sort(function(a, b) { return a.localeCompare(b); });
+  }
+
+  function fillNameSelect(sel, includeCustom) {
+    if (!sel) return;
+    var cur = sel.value;
+    var names = allPartyNames();
+    var html = '<option value="">— Select —</option>';
+    names.forEach(function(n) {
+      html += '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + '</option>';
+    });
+    if (includeCustom !== false) html += '<option value="__custom__">+ Custom name…</option>';
+    sel.innerHTML = html;
+    if (cur && cur !== '__custom__') {
+      // ensure current value exists
+      if (![].some.call(sel.options, function(o) { return o.value === cur; })) {
+        var opt = document.createElement('option');
+        opt.value = cur; opt.textContent = cur;
+        sel.insertBefore(opt, sel.options[sel.options.length - 1] || null);
+      }
+      sel.value = cur;
+    }
+  }
+
+  window.onExpNameSelect = function(which) {
+    var sel = which === 'paidBy' ? $('expPaidBy') : $('expPayee');
+    var custom = which === 'paidBy' ? $('expPaidByCustom') : $('expPayeeCustom');
+    if (!sel || !custom) return;
+    if (sel.value === '__custom__') {
+      custom.style.display = '';
+      custom.focus();
+    } else {
+      custom.style.display = 'none';
+      custom.value = '';
+    }
+  };
+
+  function readExpName(which) {
+    var sel = which === 'paidBy' ? $('expPaidBy') : $('expPayee');
+    var custom = which === 'paidBy' ? $('expPaidByCustom') : $('expPayeeCustom');
+    if (!sel) return '';
+    if (sel.value === '__custom__') return (custom && custom.value.trim()) || '';
+    return (sel.value || '').trim();
+  }
+
+  // Patch expense save to use select values
+  var _saveExp = window.saveExpenseEntry;
+  if (typeof _saveExp === 'function' && !_saveExp._sel) {
+    window.saveExpenseEntry = function() {
+      // inject paidBy/payee into fields the original might read — set hidden via temporary overwrite
+      var by = readExpName('paidBy');
+      var to = readExpName('payee');
+      // create temporary input mirrors if original reads getElementById value on select - selects work
+      // but custom path: set select to custom value temporarily
+      if ($('expPaidBy') && $('expPaidBy').value === '__custom__' && by) {
+        var o = document.createElement('option'); o.value = by; o.textContent = by;
+        $('expPaidBy').appendChild(o); $('expPaidBy').value = by;
+      }
+      if ($('expPayee') && $('expPayee').value === '__custom__' && to) {
+        var o2 = document.createElement('option'); o2.value = to; o2.textContent = to;
+        $('expPayee').appendChild(o2); $('expPayee').value = to;
+      }
+      var r = _saveExp.apply(this, arguments);
+      setTimeout(function() {
+        fillNameSelect($('expPaidBy'));
+        fillNameSelect($('expPayee'));
+        fillNameSelect($('expFilterPaidBy'), false);
+        fillNameSelect($('expFilterPayee'), false);
+        fillNameSelect($('univPersonSelect'), false);
+        if ($('expPaidByCustom')) { $('expPaidByCustom').style.display = 'none'; $('expPaidByCustom').value = ''; }
+        if ($('expPayeeCustom')) { $('expPayeeCustom').style.display = 'none'; $('expPayeeCustom').value = ''; }
+      }, 50);
+      return r;
+    };
+    window.saveExpenseEntry._sel = true;
+  }
+
+  // ---------- Universal person ledger: spent / received +/- colors + all parties ----------
+  var _upl = window.renderUniversalPersonLedger;
+  window.renderUniversalPersonLedger = function() {
+    // expand name list first
+    fillNameSelect($('univPersonSelect'), false);
+    if (typeof _upl === 'function') _upl.apply(this, arguments);
+
+    try {
+      var name = ($('univPersonSelect') && $('univPersonSelect').value) ||
+        ($('expFilterPaidBy') && $('expFilterPaidBy').value) ||
+        ($('expFilterPayee') && $('expFilterPayee').value) || '';
+      if (!name) return;
+      var role = ($('univPersonRole') && $('univPersonRole').value) || 'both';
+
+      // Build money-out (business spent / paid) vs money-in (received)
+      // Out: expenses paid by name, supplier/employee/karigar payments paid by name, purchases
+      // In: sales to customer name (revenue), payments received from customer
+      var spent = 0, received = 0;
+      var lines = [];
+
+      // expenses where name is paidBy = spent; payee = still spent by shop to them
+      lj('jp_daily_expenses_v1', []).forEach(function(e) {
+        var a = Number(e.amount || 0);
+        if (e.paidBy === name || e.payee === name) {
+          spent += a;
+          lines.push({ d: e.date, sec: 'Expense', a: -a, note: e.title || e.category });
+        }
+      });
+      // supplier payments
+      var sled = (typeof supLedger !== 'undefined') ? supLedger : lj('jp_sup_ledger_v1', []);
+      sled.forEach(function(e) {
+        var a = Number(e.debit || e.amount || 0);
+        if (!(a > 0)) return;
+        if (e.paidBy === name || e.supplierName === name) {
+          spent += a;
+          lines.push({ d: e.date, sec: 'Supplier', a: -a, note: e.notes || 'Payment' });
+        }
+      });
+      // employee
+      lj('jp_employee_payments_v1', []).concat(lj('jp_hrm_payments_v1', [])).forEach(function(p) {
+        var a = Math.abs(Number(p.amount || 0));
+        if (p.paidBy === name || p.empName === name) {
+          spent += a;
+          lines.push({ d: p.date || p.at, sec: 'Employee', a: -a, note: p.type || 'salary' });
+        }
+      });
+      // karigar
+      try {
+        var jobs = (window.v3Data && window.v3Data.karigarJobs) || lj('jp_karigar_jobs_v3', []);
+        jobs.forEach(function(j) {
+          (j.payments || []).forEach(function(p) {
+            var a = Number(p.amount || 0);
+            if (p.paidBy === name || j.karigarName === name) {
+              spent += a;
+              lines.push({ d: p.date, sec: 'Karigar', a: -a, note: p.notes || j.work });
+            }
+          });
+        });
+      } catch (e) {}
+      // sales revenue from customer
+      try {
+        if (typeof sales !== 'undefined') {
+          sales.forEach(function(s) {
+            if (s.customer && s.customer.name === name) {
+              var a = Number(s.grandTotal || 0);
+              received += a;
+              lines.push({ d: s.date, sec: 'Sale', a: +a, note: s.invoiceNo || 'Invoice' });
+            }
+          });
+        }
+      } catch (e) {}
+      // customer payments received
+      try {
+        var cled = (typeof custLedger !== 'undefined') ? custLedger : lj('jp_cust_ledger_v1', []);
+        cled.forEach(function(e) {
+          if (e.customerName === name && Number(e.credit || 0) > 0) {
+            var a = Number(e.credit || 0);
+            received += a;
+            lines.push({ d: e.date, sec: 'Cust pay', a: +a, note: e.notes || 'Payment in' });
+          }
+        });
+      } catch (e) {}
+
+      var net = received - spent;
+      var netColor = net >= 0 ? 'var(--success)' : 'var(--danger)';
+      var extra =
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:12px 0">' +
+        '<div style="background:rgba(255,59,48,0.12);border-radius:12px;padding:12px;text-align:center">' +
+          '<div style="font-weight:800;font-size:16px;color:var(--danger)">− ' + money(spent) + '</div>' +
+          '<div class="muted" style="font-size:11px">মোট খরচ / দিয়েছে</div></div>' +
+        '<div style="background:rgba(52,199,89,0.12);border-radius:12px;padding:12px;text-align:center">' +
+          '<div style="font-weight:800;font-size:16px;color:var(--success)">+ ' + money(received) + '</div>' +
+          '<div class="muted" style="font-size:11px">মোট পেয়েছে / ইন</div></div>' +
+        '<div style="background:var(--card-solid);border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border-soft)">' +
+          '<div style="font-weight:800;font-size:16px;color:' + netColor + '">' +
+          (net >= 0 ? '+ ' : '− ') + money(Math.abs(net)) + '</div>' +
+          '<div class="muted" style="font-size:11px">Net (+/−)</div></div></div>';
+
+      var host = $('univPersonLedgerFull');
+      if (host) {
+        var title = host.querySelector('div');
+        if (title) {
+          // inject extra after first title
+          var box = document.createElement('div');
+          box.id = 'univNetBox';
+          box.innerHTML = extra;
+          var old = $('univNetBox');
+          if (old) old.remove();
+          host.insertBefore(box, host.children[1] || null);
+        } else {
+          host.insertAdjacentHTML('afterbegin', extra);
+        }
+      }
+      var mini = $('univPersonLedger');
+      if (mini && mini.style.display !== 'none') {
+        var m = document.createElement('div');
+        m.innerHTML = extra;
+        if (!mini.querySelector('#univNetBoxMini')) {
+          m.id = 'univNetBoxMini';
+          mini.appendChild(m);
+        }
+      }
+    } catch (e) { console.warn(e); }
+  };
+
+  // ---------- Product tags manage modal + profit% filter fix ----------
+  window.openManageTagsModal = function() {
+    var m = $('manageTagsModal');
+    if (!m) {
+      m = document.createElement('div');
+      m.id = 'manageTagsModal';
+      m.className = 'modal-backdrop';
+      m.onclick = function(e) { if (e.target === m) m.style.display = 'none'; };
+      m.innerHTML =
+        '<div class="modal-box dark" style="max-width:520px;padding:18px;max-height:85vh;overflow:auto" onclick="event.stopPropagation()">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:800;font-size:16px">🏷 Product Tags</div>' +
+          '<button class="ghost small" onclick="document.getElementById(\'manageTagsModal\').style.display=\'none\'">✕</button></div>' +
+          '<div class="note" style="margin:8px 0">প্রোডাক্ট সিলেক্ট করে ট্যাগ দিন (কমা দিয়ে একাধিক)</div>' +
+          '<label>Product<select id="tagEditProd"></select></label>' +
+          '<label>Tags<input id="tagEditStr" placeholder="e.g. gold, bridal, stock"></label>' +
+          '<button style="margin-top:10px" onclick="saveTagFromModal()">💾 Save tags</button>' +
+          '<div id="tagEditList" style="margin-top:14px"></div>' +
+        '</div>';
+      document.body.appendChild(m);
+    }
+    var sel = $('tagEditProd');
+    if (sel && typeof products !== 'undefined') {
+      sel.innerHTML = products.map(function(p) {
+        return '<option value="' + p.id + '">' + escapeHtml(p.name) + (p.code ? ' (' + escapeHtml(p.code) + ')' : '') + '</option>';
+      }).join('');
+      sel.onchange = function() {
+        var p = products.find(function(x) { return String(x.id) === String(sel.value); });
+        if ($('tagEditStr')) $('tagEditStr').value = p && p.tags ? (p.tags || []).join(', ') : '';
+      };
+      if (sel.value) sel.onchange();
+    }
+    renderAllTagsList();
+    m.style.display = 'flex';
+  };
+  window.saveTagFromModal = function() {
+    var id = $('tagEditProd') && $('tagEditProd').value;
+    var str = $('tagEditStr') && $('tagEditStr').value;
+    if (typeof setProductTags === 'function') setProductTags(id, str);
+    else {
+      var p = products.find(function(x) { return String(x.id) === String(id); });
+      if (p) {
+        p.tags = String(str || '').split(/[,;]+/).map(function(t) { return t.trim(); }).filter(Boolean);
+        if (typeof saveAll === 'function') saveAll(true);
+      }
+    }
+    renderAllTagsList();
+    if (typeof refreshTagFilterOptions === 'function') refreshTagFilterOptions();
+    if (typeof renderProductGrid === 'function') renderProductGrid();
+    if (typeof showToast === 'function') showToast('Tags saved', 'ok');
+  };
+  function renderAllTagsList() {
+    var el = $('tagEditList');
+    if (!el || typeof products === 'undefined') return;
+    el.innerHTML = products.filter(function(p) { return (p.tags || []).length; }).map(function(p) {
+      return '<div class="note" style="padding:6px 0;border-bottom:1px solid var(--border-soft)">' +
+        '<b>' + escapeHtml(p.name) + '</b>: ' + (p.tags || []).map(function(t) {
+          return '<span class="code-chip" style="font-size:11px;margin:2px">' + escapeHtml(t) + '</span>';
+        }).join(' ') + '</div>';
+    }).join('') || '<div class="note">No tags yet</div>';
+  }
+
+  // Fix getFilteredSortedProducts for tag + profit sorts
+  var _gfs = window.getFilteredSortedProducts;
+  if (typeof _gfs === 'function' && !_gfs._fix) {
+    window.getFilteredSortedProducts = function() {
+      var list = _gfs.apply(this, arguments);
+      var tag = ($('filterProdTag') && $('filterProdTag').value) || '';
+      var sort = ($('sortProd') && $('sortProd').value) || '';
+      if (tag) {
+        list = list.filter(function(p) {
+          return (p.tags || []).map(String).some(function(t) { return t === tag; });
+        });
+      }
+      function pProfit(p) {
+        if (typeof productProfit === 'function') return productProfit(p);
+        return Number(p.profit || 0);
+      }
+      function pPct(p) {
+        var cost = Number(p.totalCost || 0);
+        var sell = Number(p.finalSell || p.listingPrice || 0);
+        if (cost > 0) return ((sell - cost) / cost) * 100;
+        var pr = pProfit(p);
+        return sell > 0 ? (pr / sell) * 100 : 0;
+      }
+      function sold(id) {
+        if (typeof soldCount === 'function') return soldCount(id);
+        return 0;
+      }
+      if (sort === 'profit_high') list.sort(function(a, b) { return pProfit(b) - pProfit(a); });
+      if (sort === 'profit_low') list.sort(function(a, b) { return pProfit(a) - pProfit(b); });
+      if (sort === 'profit_pct_high') list.sort(function(a, b) { return pPct(b) - pPct(a); });
+      if (sort === 'profit_pct_low') list.sort(function(a, b) { return pPct(a) - pPct(b); });
+      if (sort === 'bestseller') list.sort(function(a, b) { return sold(b.id) - sold(a.id); });
+      return list;
+    };
+    window.getFilteredSortedProducts._fix = true;
+  }
+
+  // Tag chip on product cards
+  var _rpg = window.renderProductGrid;
+  if (typeof _rpg === 'function' && !_rpg._tagbtn2) {
+    window.renderProductGrid = function() {
+      _rpg.apply(this, arguments);
+      try {
+        document.querySelectorAll('.p-card').forEach(function(card) {
+          if (card.querySelector('.tag-edit-btn')) return;
+          // resolve product id from onclick handlers
+          var html = card.innerHTML;
+          var m = html.match(/loadProductForEdit\((\d+)\)/) || html.match(/openQuickView\((\d+)\)/) ||
+            html.match(/qvSellNowFromCard\((\d+)\)/);
+          if (!m) return;
+          var id = m[1];
+          var p = (typeof products !== 'undefined') ? products.find(function(x) { return String(x.id) === String(id); }) : null;
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'small ghost tag-edit-btn';
+          btn.style.cssText = 'position:absolute;top:8px;right:40px;z-index:2;font-size:11px;padding:4px 8px';
+          btn.textContent = '🏷';
+          btn.title = 'Edit tags';
+          btn.onclick = function(e) {
+            e.stopPropagation();
+            if (typeof editProductTagsPrompt === 'function') editProductTagsPrompt(id);
+            else {
+              var cur = p && p.tags ? p.tags.join(', ') : '';
+              var v = prompt('Tags (comma separated)', cur);
+              if (v === null) return;
+              if (typeof setProductTags === 'function') setProductTags(id, v);
+              if (typeof renderProductGrid === 'function') renderProductGrid();
+            }
+          };
+          card.style.position = card.style.position || 'relative';
+          card.appendChild(btn);
+          if (p && (p.tags || []).length) {
+            var strip = document.createElement('div');
+            strip.style.cssText = 'padding:0 10px 8px;font-size:10px';
+            strip.innerHTML = (p.tags || []).map(function(t) {
+              return '<span class="code-chip" style="font-size:10px;margin:1px">' + escapeHtml(t) + '</span>';
+            }).join('');
+            var body = card.querySelector('.body');
+            if (body) body.appendChild(strip);
+          }
+        });
+      } catch (e) {}
+    };
+    window.renderProductGrid._tagbtn2 = true;
+  }
+
+  // ---------- Karigar job: save paidBy on create ----------
+  function fillKarigarPaidBy() {
+    fillNameSelect($('karigarV2PaidBy'), true);
+  }
+  var _ck = window.createKarigarJobV2;
+  if (typeof _ck === 'function' && !_ck._pb) {
+    window.createKarigarJobV2 = function() {
+      var paidBy = ($('karigarV2PaidBy') && $('karigarV2PaidBy').value) || '';
+      if (paidBy === '__custom__') paidBy = '';
+      window._pendingKarigarPaidBy = paidBy;
+      var r = _ck.apply(this, arguments);
+      // try attach to last payment on newest job
+      setTimeout(function() {
+        try {
+          var jobs = (window.v3Data && window.v3Data.karigarJobs) || lj('jp_karigar_jobs_v3', []);
+          if (!jobs.length) return;
+          var job = jobs[jobs.length - 1];
+          if (job && job.payments && job.payments.length && paidBy) {
+            job.payments[job.payments.length - 1].paidBy = paidBy;
+            sj('jp_karigar_jobs_v3', jobs);
+          }
+        } catch (e) {}
+      }, 200);
+      return r;
+    };
+    window.createKarigarJobV2._pb = true;
+  }
+
+  // ---------- HRM payment history edit ----------
+  window.editEmployeePayment = function(id) {
+    var keys = ['jp_employee_payments_v1', 'jp_hrm_payments_v1'];
+    var found = null, foundKey = null;
+    keys.forEach(function(k) {
+      var list = lj(k, []);
+      var p = list.find(function(x) { return String(x.id) === String(id); });
+      if (p && !found) { found = p; foundKey = k; }
+    });
+    if (!found) {
+      if (typeof showToast === 'function') showToast('Payment not found', 'err');
+      return;
+    }
+    if (typeof openUnivPayModal === 'function') {
+      openUnivPayModal({
+        title: 'Edit Employee Payment',
+        subtitle: found.empName || '',
+        amount: Math.abs(Number(found.amount || 0)),
+        date: String(found.date || '').slice(0, 10),
+        paidBy: found.paidBy || '',
+        note: found.note || found.notes || '',
+        photo: found.photo || '',
+        onSave: function(data) {
+          keys.forEach(function(k) {
+            var list = lj(k, []);
+            var i = list.findIndex(function(x) { return String(x.id) === String(id); });
+            if (i >= 0) {
+              list[i].amount = data.amount * (Number(found.amount) < 0 ? -1 : 1);
+              list[i].date = data.date;
+              list[i].paidBy = data.paidBy;
+              list[i].note = data.note;
+              list[i].photo = data.photo || list[i].photo || '';
+              sj(k, list);
+            }
+          });
+          if (typeof viewEmployeeLedger === 'function') viewEmployeeLedger(found.empId);
+          if (typeof renderHRM === 'function') renderHRM();
+          if (typeof showToast === 'function') showToast('Payment updated', 'ok');
+        }
+      });
+    }
+  };
+
+  // Patch viewEmployeeLedger table to add Edit buttons — re-wrap
+  var _vel = window.viewEmployeeLedger;
+  if (typeof _vel === 'function' && !_vel._editBtn) {
+    window.viewEmployeeLedger = function(empId) {
+      _vel.apply(this, arguments);
+      setTimeout(function() {
+        try {
+          var panel = $('empLedgerPanel');
+          if (!panel) return;
+          panel.querySelectorAll('table tbody tr').forEach(function(tr) {
+            if (tr.querySelector('.emp-pay-edit')) return;
+            var del = tr.querySelector('button[onclick*="deleteEmployeePayment"]');
+            if (!del) return;
+            var oc = del.getAttribute('onclick') || '';
+            var m = oc.match(/deleteEmployeePayment\('([^']+)'\)/);
+            if (!m) return;
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ghost small emp-pay-edit';
+            btn.textContent = '✎';
+            btn.onclick = function() { editEmployeePayment(m[1]); };
+            del.parentNode.insertBefore(btn, del);
+          });
+        } catch (e) {}
+      }, 30);
+    };
+    window.viewEmployeeLedger._editBtn = true;
+  }
+
+  // ---------- Dashboard total expenses + detail + clickable QV ----------
+  var _rd = window.renderDashboard;
+  if (typeof _rd === 'function' && !_rd._exp) {
+    window.renderDashboard = function() {
+      _rd.apply(this, arguments);
+      try {
+        var period = window._dashPeriod || 'week';
+        var list = lj('jp_daily_expenses_v1', []);
+        var now = new Date();
+        var filtered = list.filter(function(e) {
+          var d = new Date(e.date || 0);
+          if (period === 'all') return true;
+          if (period === 'today') return String(e.date || '').slice(0, 10) === now.toISOString().slice(0, 10);
+          if (period === 'week') {
+            var start = new Date(now); start.setDate(now.getDate() - now.getDay()); start.setHours(0,0,0,0);
+            return d >= start;
+          }
+          if (period === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+          if (period === 'year') return d.getFullYear() === now.getFullYear();
+          return true;
+        });
+        var tot = filtered.reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+        if ($('dTotalExpense')) $('dTotalExpense').textContent = money(tot);
+      } catch (e) {}
+    };
+    window.renderDashboard._exp = true;
+  }
+
+  var _odd = window.openDashboardDetail;
+  if (typeof _odd === 'function' && !_odd._exp) {
+    window.openDashboardDetail = function(type) {
+      if (type === 'expenses') {
+        var modal = $('dashboardDetailModal'), title = $('ddTitle'), content = $('ddContent');
+        if (!modal) return;
+        title.textContent = '💸 Total Expenses';
+        var list = lj('jp_daily_expenses_v1', []).slice().sort(function(a, b) {
+          return String(b.date).localeCompare(String(a.date));
+        });
+        var tot = list.reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+        content.innerHTML =
+          '<div style="font-weight:700;margin-bottom:8px">Total: ' + money(tot) + ' · ' + list.length + ' entries</div>' +
+          '<div class="table-scroll"><table><thead><tr><th>Date</th><th>Category</th><th>Note</th><th>By</th><th>To</th><th class="num">Amount</th></tr></thead><tbody>' +
+          (list.map(function(e) {
+            return '<tr style="cursor:pointer" onclick="if(typeof openExpenseQuickView===\'function\')openExpenseQuickView(\'' +
+              String(e.id).replace(/'/g, '') + '\')">' +
+              '<td>' + escapeHtml(String(e.date || '').slice(0, 10)) + '</td>' +
+              '<td>' + escapeHtml(e.category || '') + '</td>' +
+              '<td>' + escapeHtml(e.title || '') + '</td>' +
+              '<td>' + escapeHtml(e.paidBy || '—') + '</td>' +
+              '<td>' + escapeHtml(e.payee || '—') + '</td>' +
+              '<td class="num">' + money(e.amount) + '</td></tr>';
+          }).join('') || '<tr><td colspan="6" class="note">No expenses</td></tr>') +
+          '</tbody></table></div>';
+        modal.style.display = 'flex';
+        return;
+      }
+      _odd.apply(this, arguments);
+      // Make detail rows clickable for sales/products
+      setTimeout(function() {
+        try {
+          var content = $('ddContent');
+          if (!content) return;
+          // sales invoices
+          content.querySelectorAll('tr').forEach(function(tr) {
+            if (tr.querySelector('th')) return;
+            var tds = tr.querySelectorAll('td');
+            if (!tds.length) return;
+            var inv = (tds[0] && tds[0].textContent || '').trim();
+            // try match sale
+            if (typeof sales !== 'undefined') {
+              var sale = sales.find(function(s) {
+                return s.invoiceNo === inv || String(s.id) === inv;
+              });
+              if (sale) {
+                tr.style.cursor = 'pointer';
+                tr.onclick = function() {
+                  if (typeof renderSalesInvoice === 'function') {
+                    renderSalesInvoice(sale);
+                    if (typeof openInvoiceModal === 'function') openInvoiceModal();
+                    else if ($('invoiceModal')) $('invoiceModal').style.display = 'flex';
+                    else if ($('invoiceContent')) {
+                      // show invoice area
+                      if (typeof switchTab === 'function') switchTab('billing');
+                    }
+                  }
+                };
+              }
+            }
+            // product name click
+            var name = (tds[0] && tds[0].textContent || '').trim();
+            if (typeof products !== 'undefined') {
+              var p = products.find(function(x) { return x.name === name || (x.name + ' (' + (x.code || '') + ')') === name; });
+              if (p && !tr.onclick) {
+                tr.style.cursor = 'pointer';
+                tr.onclick = function() {
+                  if (typeof openQuickView === 'function') openQuickView(p.id);
+                };
+              }
+            }
+          });
+          content.querySelectorAll('.stat-detail-item').forEach(function(item) {
+            var label = item.querySelector('.sd-label');
+            if (!label || typeof products === 'undefined') return;
+            var name = label.textContent.trim();
+            var p = products.find(function(x) { return x.name === name || name.indexOf(x.name) === 0; });
+            if (p) {
+              item.style.cursor = 'pointer';
+              item.onclick = function() {
+                if (typeof openQuickView === 'function') openQuickView(p.id);
+              };
+            }
+          });
+        } catch (e) {}
+      }, 50);
+    };
+    window.openDashboardDetail._exp = true;
+  }
+
+  // ---------- Supplier payment recent: Edit / Delete ----------
+  window.deleteSupplierPaymentEntry = function(id) {
+    if (!confirm('Delete this supplier payment?')) return;
+    try {
+      if (typeof supLedger !== 'undefined') {
+        var i = supLedger.findIndex(function(e) { return String(e.id) === String(id); });
+        if (i >= 0) {
+          var entry = supLedger[i];
+          supLedger.splice(i, 1);
+          if (typeof saveAll === 'function') saveAll(true);
+          // also remove matching purchase log payment
+          if (typeof purchases !== 'undefined') {
+            purchases = purchases.filter(function(p) {
+              return !(p.isPayment && p.supplierId == entry.supplierId &&
+                Math.abs(Number(p.total) - Number(entry.debit || entry.amount || 0)) < 0.01 &&
+                String(p.date || '').slice(0, 10) === String(entry.date || '').slice(0, 10));
+            });
+            if (typeof window.purchases !== 'undefined') window.purchases = purchases;
+            if (typeof saveAll === 'function') saveAll(true);
+          }
+        }
+      } else {
+        var led = lj('jp_sup_ledger_v1', []).filter(function(e) { return String(e.id) !== String(id); });
+        sj('jp_sup_ledger_v1', led);
+      }
+    } catch (e) { console.warn(e); }
+    if (typeof renderSupPayRecent === 'function') renderSupPayRecent();
+    else bootSupRecent();
+    if (typeof renderPurchaseTable === 'function') renderPurchaseTable();
+    if (typeof renderSupplierLedger === 'function') renderSupplierLedger();
+    if (typeof showToast === 'function') showToast('Deleted', 'ok');
+  };
+
+  window.editSupplierPaymentEntry = function(id) {
+    var entry = null;
+    try {
+      if (typeof supLedger !== 'undefined') entry = supLedger.find(function(e) { return String(e.id) === String(id); });
+      if (!entry) entry = lj('jp_sup_ledger_v1', []).find(function(e) { return String(e.id) === String(id); });
+    } catch (e) {}
+    if (!entry) return;
+    if (typeof openUnivPayModal !== 'function') return;
+    openUnivPayModal({
+      title: 'Edit Supplier Payment',
+      subtitle: entry.supplierName || '',
+      amount: Number(entry.debit || entry.amount || 0),
+      date: String(entry.date || '').slice(0, 10),
+      paidBy: entry.paidBy || '',
+      note: entry.notes || '',
+      photo: entry.photo || '',
+      onSave: function(data) {
+        entry.debit = data.amount;
+        entry.amount = data.amount;
+        entry.date = data.date;
+        entry.paidBy = data.paidBy;
+        entry.notes = data.note + (data.paidBy ? ' · By: ' + data.paidBy : '');
+        entry.photo = data.photo || entry.photo || '';
+        if (typeof saveAll === 'function') saveAll(true);
+        else {
+          var led = lj('jp_sup_ledger_v1', []);
+          var i = led.findIndex(function(e) { return String(e.id) === String(id); });
+          if (i >= 0) { led[i] = entry; sj('jp_sup_ledger_v1', led); }
+        }
+        if (typeof renderSupPayRecent === 'function') renderSupPayRecent();
+        else bootSupRecent();
+        if (typeof renderSupplierLedger === 'function') renderSupplierLedger();
+        if (typeof showToast === 'function') showToast('Updated', 'ok');
+      }
+    });
+  };
+
+  function bootSupRecent() {
+    var el = $('supPayRecent');
+    if (!el) return;
+    var led = [];
+    try {
+      if (typeof supLedger !== 'undefined') led = supLedger.slice();
+      else led = lj('jp_sup_ledger_v1', []);
+    } catch (e) { led = lj('jp_sup_ledger_v1', []); }
+    var pays = led.filter(function(e) {
+      return e.type === 'payment' || Number(e.debit || 0) > 0;
+    }).slice().reverse().slice(0, 15);
+    el.innerHTML = pays.length ? pays.map(function(e) {
+      var id = String(e.id).replace(/'/g, '');
+      return '<div class="note" style="padding:8px 0;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;gap:8px;align-items:flex-start">' +
+        '<span><b>' + escapeHtml(e.supplierName || '') + '</b> · ' + money(e.debit || e.amount || 0) +
+        '<br><span class="muted" style="font-size:11px">' + escapeHtml(String(e.date || '').slice(0, 10)) +
+        (e.paidBy ? ' · By: ' + escapeHtml(e.paidBy) : '') +
+        (e.notes ? ' · ' + escapeHtml(e.notes) : '') + '</span></span>' +
+        '<span style="display:flex;gap:4px;flex-shrink:0">' +
+        (e.photo ? '<button type="button" class="ghost small" onclick="openPaymentBillPhotoBySupEntry(\'' + id + '\')">📷</button>' : '') +
+        '<button type="button" class="ghost small" onclick="editSupplierPaymentEntry(\'' + id + '\')">✎</button>' +
+        '<button type="button" class="ghost small" style="color:var(--danger)" onclick="deleteSupplierPaymentEntry(\'' + id + '\')">Del</button>' +
+        '</span></div>';
+    }).join('') : '<div class="note">No recent supplier payments</div>';
+  }
+  // override renderSupPayRecent if exists in outer scope — assign global
+  window.renderSupPayRecent = bootSupRecent;
+
+  function boot() {
+    fillNameSelect($('expPaidBy'));
+    fillNameSelect($('expPayee'));
+    fillNameSelect($('expFilterPaidBy'), false);
+    fillNameSelect($('expFilterPayee'), false);
+    fillNameSelect($('univPersonSelect'), false);
+    fillKarigarPaidBy();
+    bootSupRecent();
+    if (typeof renderDashboard === 'function') renderDashboard();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 800);
+  setTimeout(boot, 2000);
+  console.log('✅ Batch UX fixes applied');
+})();
+</script>
+
+
+<script>
+// ===== Person Directory (category-style) — delete name from ALL places =====
+(function() {
+  function $(id) { return document.getElementById(id); }
+  function lj(k, f) {
+    try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch (e) { return f; }
+  }
+  function sj(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  }
+  var KEY_DIR = 'jp_person_directory_v1';
+
+  function loadDir() {
+    var extra = lj(KEY_DIR, []);
+    return Array.isArray(extra) ? extra.map(String) : [];
+  }
+  function saveDir(arr) {
+    var uniq = [];
+    var map = {};
+    arr.forEach(function(n) {
+      n = String(n || '').trim();
+      if (!n || map[n]) return;
+      map[n] = true;
+      uniq.push(n);
+    });
+    uniq.sort(function(a, b) { return a.localeCompare(b); });
+    sj(KEY_DIR, uniq);
+    return uniq;
+  }
+
+  function collectLiveNames() {
+    var map = {};
+    function add(n) {
+      n = String(n || '').trim();
+      if (n) map[n] = true;
+    }
+    loadDir().forEach(add);
+    try {
+      if (typeof customers !== 'undefined') customers.forEach(function(c) { add(c.name); });
+      else lj('jp_customers_v1', []).forEach(function(c) { add(c.name); });
+    } catch (e) {}
+    try {
+      if (typeof suppliers !== 'undefined') suppliers.forEach(function(s) { add(s.name); });
+      else lj('jp_suppliers_v1', []).forEach(function(s) { add(s.name); });
+    } catch (e) {}
+    lj('jp_employees_v1', []).forEach(function(e) { add(e.name); });
+    try {
+      var k = (window.v3Data && window.v3Data.karigars) || lj('jp_karigars_v3', lj('jp_karigar_register_v3', []));
+      (k || []).forEach(function(x) { add(x.name); });
+    } catch (e) {}
+    lj('jp_daily_expenses_v1', []).forEach(function(e) { add(e.paidBy); add(e.payee); });
+    lj('jp_employee_payments_v1', []).forEach(function(e) { add(e.paidBy); add(e.empName); });
+    lj('jp_hrm_payments_v1', []).forEach(function(e) { add(e.paidBy); add(e.empName); });
+    try {
+      var sled = (typeof supLedger !== 'undefined') ? supLedger : lj('jp_sup_ledger_v1', []);
+      (sled || []).forEach(function(e) { add(e.paidBy); add(e.supplierName); });
+    } catch (e) {}
+    try {
+      if (typeof sales !== 'undefined') (sales || []).forEach(function(s) {
+        if (s.customer) add(s.customer.name);
+      });
+    } catch (e) {}
+    try {
+      var jobs = (window.v3Data && window.v3Data.karigarJobs) || lj('jp_karigar_jobs_v3', []);
+      (jobs || []).forEach(function(j) {
+        add(j.karigarName);
+        (j.payments || []).forEach(function(p) { add(p.paidBy); });
+      });
+    } catch (e) {}
+    lj('jp_karigar_tx_v3', []).forEach(function(t) { add(t.paidBy); add(t.karigarName); add(t.name); });
+    return Object.keys(map).sort(function(a, b) { return a.localeCompare(b); });
+  }
+
+  // Patch allPartyNames if exists
+  window.allPartyNames = collectLiveNames;
+
+  window.renderPersonDirectory = function() {
+    var panel = $('personDirectoryPanel');
+    if (panel) panel.style.display = 'block';
+    var list = $('personDirectoryList');
+    if (!list) return;
+    var names = collectLiveNames();
+    // ensure dir stores known names for category feel
+    saveDir(names.concat(loadDir()));
+    names = collectLiveNames();
+    list.innerHTML = names.length ? names.map(function(n) {
+      var safe = n.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      return '<div class="v3-queue-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;background:var(--border-soft);border-radius:10px">' +
+        '<span style="font-weight:600">🏷 ' + escapeHtml(n) + '</span>' +
+        '<span style="display:flex;gap:4px">' +
+        '<button type="button" class="ghost small" onclick="renamePersonDirectoryName(\'' + safe + '\')">Rename</button>' +
+        '<button type="button" class="ghost small" style="color:var(--danger)" onclick="deletePersonDirectoryName(\'' + safe + '\')">Delete</button>' +
+        '</span></div>';
+    }).join('') : '<div class="note">কোনো নাম নেই — পেমেন্ট/এক্সপেন্স এন্ট্রি বা + Add name দিন</div>';
+  };
+
+  window.addPersonDirectoryName = function() {
+    var inp = $('personDirNewName');
+    var n = inp && inp.value.trim();
+    if (!n) {
+      if (typeof showToast === 'function') showToast('Enter a name', 'err');
+      return;
+    }
+    var dir = loadDir();
+    dir.push(n);
+    saveDir(dir);
+    if (inp) inp.value = '';
+    refreshAllNameDropdowns();
+    renderPersonDirectory();
+    if (typeof showToast === 'function') showToast('Name added', 'ok');
+  };
+
+  window.renamePersonDirectoryName = function(oldName) {
+    var neu = prompt('Rename person', oldName);
+    if (neu === null) return;
+    neu = String(neu).trim();
+    if (!neu || neu === oldName) return;
+    // replace everywhere
+    replaceNameEverywhere(oldName, neu);
+    var dir = loadDir().map(function(n) { return n === oldName ? neu : n; });
+    saveDir(dir);
+    refreshAllNameDropdowns();
+    renderPersonDirectory();
+    if (typeof renderUniversalPersonLedger === 'function') renderUniversalPersonLedger();
+    if (typeof renderExpenseList === 'function') renderExpenseList();
+    if (typeof showToast === 'function') showToast('Renamed: ' + oldName + ' → ' + neu, 'ok');
+  };
+
+  function clearIfMatch(obj, fields, name) {
+    if (!obj) return false;
+    var changed = false;
+    fields.forEach(function(f) {
+      if (String(obj[f] || '').trim() === name) {
+        obj[f] = '';
+        changed = true;
+      }
+    });
+    return changed;
+  }
+
+  function replaceIfMatch(obj, fields, oldName, newName) {
+    if (!obj) return false;
+    var changed = false;
+    fields.forEach(function(f) {
+      if (String(obj[f] || '').trim() === oldName) {
+        obj[f] = newName;
+        changed = true;
+      }
+    });
+    return changed;
+  }
+
+  function replaceNameEverywhere(oldName, newName) {
+    // expenses
+    var ex = lj('jp_daily_expenses_v1', []);
+    ex.forEach(function(e) { replaceIfMatch(e, ['paidBy', 'payee'], oldName, newName); });
+    sj('jp_daily_expenses_v1', ex);
+
+    // employee payments
+    ['jp_employee_payments_v1', 'jp_hrm_payments_v1'].forEach(function(k) {
+      var list = lj(k, []);
+      list.forEach(function(p) { replaceIfMatch(p, ['paidBy', 'empName', 'employeeName'], oldName, newName); });
+      sj(k, list);
+    });
+
+    // supplier ledger
+    try {
+      if (typeof supLedger !== 'undefined' && Array.isArray(supLedger)) {
+        supLedger.forEach(function(e) { replaceIfMatch(e, ['paidBy', 'supplierName'], oldName, newName); });
+        if (typeof saveAll === 'function') saveAll(true);
+      }
+    } catch (e) {}
+    var sled = lj('jp_sup_ledger_v1', []);
+    sled.forEach(function(e) { replaceIfMatch(e, ['paidBy', 'supplierName'], oldName, newName); });
+    sj('jp_sup_ledger_v1', sled);
+
+    // customer ledger
+    try {
+      if (typeof custLedger !== 'undefined' && Array.isArray(custLedger)) {
+        custLedger.forEach(function(e) { replaceIfMatch(e, ['paidBy', 'customerName'], oldName, newName); });
+        if (typeof saveAll === 'function') saveAll(true);
+      }
+    } catch (e) {}
+    var cled = lj('jp_cust_ledger_v1', []);
+    cled.forEach(function(e) { replaceIfMatch(e, ['paidBy', 'customerName'], oldName, newName); });
+    sj('jp_cust_ledger_v1', cled);
+
+    // karigar jobs payments
+    try {
+      var jobs = (window.v3Data && window.v3Data.karigarJobs) || lj('jp_karigar_jobs_v3', []);
+      jobs.forEach(function(j) {
+        if (String(j.karigarName || '') === oldName) j.karigarName = newName;
+        (j.payments || []).forEach(function(p) { replaceIfMatch(p, ['paidBy'], oldName, newName); });
+      });
+      if (window.v3Data) window.v3Data.karigarJobs = jobs;
+      sj('jp_karigar_jobs_v3', jobs);
+    } catch (e) {}
+
+    lj('jp_karigar_tx_v3', []).forEach(function() {});
+    var tx = lj('jp_karigar_tx_v3', []);
+    tx.forEach(function(t) { replaceIfMatch(t, ['paidBy', 'karigarName', 'name'], oldName, newName); });
+    sj('jp_karigar_tx_v3', tx);
+
+    // purchases payment rows
+    try {
+      if (typeof purchases !== 'undefined' && Array.isArray(purchases)) {
+        purchases.forEach(function(p) {
+          replaceIfMatch(p, ['paidBy', 'supplier'], oldName, newName);
+        });
+        if (typeof saveAll === 'function') saveAll(true);
+      }
+    } catch (e) {}
+    var pur = lj('jp_purchases_v2', []);
+    pur.forEach(function(p) { replaceIfMatch(p, ['paidBy', 'supplier'], oldName, newName); });
+    sj('jp_purchases_v2', pur);
+
+    // Note: we do NOT rename core Customer/Supplier/Employee master records automatically
+    // unless user confirms — handled in delete for master unlink of payment labels only
+  }
+
+  function clearNameEverywhere(name) {
+    // Clear payment/expense labels only (does not delete the transactions)
+    var ex = lj('jp_daily_expenses_v1', []);
+    ex.forEach(function(e) { clearIfMatch(e, ['paidBy', 'payee'], name); });
+    sj('jp_daily_expenses_v1', ex);
+
+    ['jp_employee_payments_v1', 'jp_hrm_payments_v1'].forEach(function(k) {
+      var list = lj(k, []);
+      list.forEach(function(p) { clearIfMatch(p, ['paidBy'], name); });
+      // do not wipe empName (that's the employee identity of the payment target)
+      sj(k, list);
+    });
+
+    try {
+      if (typeof supLedger !== 'undefined' && Array.isArray(supLedger)) {
+        supLedger.forEach(function(e) { clearIfMatch(e, ['paidBy'], name); });
+        if (typeof saveAll === 'function') saveAll(true);
+      }
+    } catch (e) {}
+    var sled = lj('jp_sup_ledger_v1', []);
+    sled.forEach(function(e) { clearIfMatch(e, ['paidBy'], name); });
+    sj('jp_sup_ledger_v1', sled);
+
+    try {
+      if (typeof custLedger !== 'undefined' && Array.isArray(custLedger)) {
+        custLedger.forEach(function(e) { clearIfMatch(e, ['paidBy'], name); });
+        if (typeof saveAll === 'function') saveAll(true);
+      }
+    } catch (e) {}
+    var cled = lj('jp_cust_ledger_v1', []);
+    cled.forEach(function(e) { clearIfMatch(e, ['paidBy'], name); });
+    sj('jp_cust_ledger_v1', cled);
+
+    try {
+      var jobs = (window.v3Data && window.v3Data.karigarJobs) || lj('jp_karigar_jobs_v3', []);
+      jobs.forEach(function(j) {
+        (j.payments || []).forEach(function(p) { clearIfMatch(p, ['paidBy'], name); });
+      });
+      if (window.v3Data) window.v3Data.karigarJobs = jobs;
+      sj('jp_karigar_jobs_v3', jobs);
+    } catch (e) {}
+
+    var tx = lj('jp_karigar_tx_v3', []);
+    tx.forEach(function(t) { clearIfMatch(t, ['paidBy'], name); });
+    sj('jp_karigar_tx_v3', tx);
+
+    try {
+      if (typeof purchases !== 'undefined' && Array.isArray(purchases)) {
+        purchases.forEach(function(p) { clearIfMatch(p, ['paidBy'], name); });
+        if (typeof saveAll === 'function') saveAll(true);
+      }
+    } catch (e) {}
+    var pur = lj('jp_purchases_v2', []);
+    pur.forEach(function(p) { clearIfMatch(p, ['paidBy'], name); });
+    sj('jp_purchases_v2', pur);
+
+    // Remove from directory
+    saveDir(loadDir().filter(function(n) { return n !== name; }));
+  }
+
+  window.deletePersonDirectoryName = function(name) {
+    if (!name) return;
+    var msg =
+      '"' + name + '" নাম Delete করবেন?\n\n' +
+      '• সব Paid by / filter / datalist থেকে নাম মুছে যাবে\n' +
+      '• পেমেন্ট/এক্সপেন্স এন্ট্রি থাকবে, শুধু "Paid by" খালি হবে\n' +
+      '• Customer/Supplier/Employee মাস্টার রেকর্ড আলাদা ডিলিট করতে হবে';
+    if (!confirm(msg)) return;
+    clearNameEverywhere(name);
+    refreshAllNameDropdowns();
+    renderPersonDirectory();
+    if (typeof renderUniversalPersonLedger === 'function') renderUniversalPersonLedger();
+    if (typeof renderExpenseList === 'function') renderExpenseList();
+    if (typeof renderSupPayRecent === 'function') renderSupPayRecent();
+    if (typeof showToast === 'function') showToast('Name removed from all places: ' + name, 'ok');
+  };
+
+  function refreshAllNameDropdowns() {
+    var names = collectLiveNames();
+    function fill(sel, withCustom) {
+      if (!sel) return;
+      var cur = sel.value;
+      var html = '<option value="">' + (sel.id && sel.id.indexOf('Filter') >= 0 ? 'All' : '— Select —') + '</option>';
+      if (sel.id === 'univPersonSelect') html = '<option value="">— Select name —</option>';
+      if (sel.id === 'expFilterPaidBy') html = '<option value="">Paid by: All</option>';
+      if (sel.id === 'expFilterPayee') html = '<option value="">Paid to: All</option>';
+      names.forEach(function(n) {
+        html += '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + '</option>';
+      });
+      if (withCustom) html += '<option value="__custom__">+ Custom name…</option>';
+      sel.innerHTML = html;
+      if (cur && names.indexOf(cur) >= 0) sel.value = cur;
+    }
+    fill($('expPaidBy'), true);
+    fill($('expPayee'), true);
+    fill($('expFilterPaidBy'), false);
+    fill($('expFilterPayee'), false);
+    fill($('univPersonSelect'), false);
+    fill($('karigarV2PaidBy'), true);
+    fill($('univPayPaidBy'), true);
+    // datalist
+    var dl = $('universalPaidByList');
+    if (dl) {
+      dl.innerHTML = names.map(function(n) {
+        return '<option value="' + escapeHtml(n) + '">';
+      }).join('');
+    }
+  }
+
+  // Hook save expense / payments to keep directory updated
+  var _boot = function() {
+    // merge live into directory
+    saveDir(collectLiveNames());
+    refreshAllNameDropdowns();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _boot);
+  else _boot();
+  setTimeout(_boot, 1000);
+  setTimeout(_boot, 2500);
+
+  // Expose refresh for other scripts
+  window.refreshAllNameDropdowns = refreshAllNameDropdowns;
+  window.collectLiveNames = collectLiveNames;
+
+  console.log('✅ Person directory — category list + global delete');
+})();
+</script>
+
+
+<script>
+(function() {
+  function $(id) { return document.getElementById(id); }
+
+  // Polished custom-name reveal
+  window.onExpNameSelect = function(which) {
+    var sel = which === 'paidBy' ? $('expPaidBy') : $('expPayee');
+    var custom = which === 'paidBy' ? $('expPaidByCustom') : $('expPayeeCustom');
+    if (!sel || !custom) return;
+    if (sel.value === '__custom__') {
+      custom.style.display = 'block';
+      custom.focus();
+      custom.placeholder = which === 'paidBy' ? 'কে পেমেন্ট করেছে — নাম লিখুন' : 'কাকে দেওয়া হয়েছে — নাম লিখুন';
+    } else {
+      custom.style.display = 'none';
+      custom.value = '';
+    }
+  };
+
+  // Style option groups when filling selects
+  var _fill = window.refreshAllNameDropdowns;
+  if (typeof _fill === 'function' && !_fill._styled) {
+    window.refreshAllNameDropdowns = function() {
+      _fill.apply(this, arguments);
+      stylePartySelects();
+    };
+    window.refreshAllNameDropdowns._styled = true;
+  }
+
+  function stylePartySelects() {
+    ['expPaidBy', 'expPayee', 'expFilterPaidBy', 'expFilterPayee', 'univPersonSelect', 'karigarV2PaidBy'].forEach(function(id) {
+      var sel = $(id);
+      if (!sel) return;
+      sel.classList.add('pay-party-select');
+      // group custom option look
+      Array.prototype.forEach.call(sel.options, function(opt) {
+        if (opt.value === '__custom__') {
+          opt.textContent = '＋ নতুন নাম লিখুন…';
+        }
+        if (opt.value === '' && id === 'expPaidBy') opt.textContent = 'নাম সিলেক্ট করুন…';
+        if (opt.value === '' && id === 'expPayee') opt.textContent = 'নাম সিলেক্ট করুন…';
+        if (opt.value === '' && id === 'expFilterPaidBy') opt.textContent = '📤 Paid by: All';
+        if (opt.value === '' && id === 'expFilterPayee') opt.textContent = '📥 Paid to: All';
+      });
+    });
+  }
+
+  function boot() { stylePartySelects(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 600);
+  setTimeout(boot, 1800);
+  console.log('✅ Paid by / Paid to dropdown design');
+})();
+</script>
 </body>
 </html>
