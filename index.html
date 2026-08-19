@@ -4828,6 +4828,7 @@
                                 <button class="ghost small" onclick="clearExpenseFilters()">Clear</button>
                             </div>
                             <div id="expFilterTotals" style="margin-bottom:10px;padding:10px 12px;border-radius:12px;background:var(--border-soft);font-size:13px;font-weight:600"></div>
+                            <div id="univPersonLedger" style="display:none;margin-bottom:12px;padding:14px;border-radius:14px;background:var(--card-solid);border:1px solid var(--border-soft);box-shadow:var(--shadow-sm)"></div>
                             <div class="table-scroll" style="max-height:420px">
                                 <table>
                                     <thead><tr><th>Date</th><th>Category</th><th>Note</th><th>Paid by</th><th>Paid to</th><th>Amount</th><th>Photo</th><th></th></tr></thead>
@@ -4836,6 +4837,21 @@
                             </div>
                         </div>
                     </div>
+                    <hr>
+                    <div class="section-title" style="font-size:14px">👤 Universal Person Ledger — কে দিয়েছে / কাকে দেওয়া</div>
+                    <div class="note" style="margin-bottom:8px">নাম সিলেক্ট করলে Expense · Supplier · Employee · Karigar সব সেকশনের হিসাব একসাথে</div>
+                    <div class="toolbar" style="flex-wrap:wrap;gap:8px;margin-bottom:10px">
+                        <select id="univPersonSelect" onchange="renderUniversalPersonLedger()" style="min-width:180px">
+                            <option value="">— Select name —</option>
+                        </select>
+                        <select id="univPersonRole" onchange="renderUniversalPersonLedger()" style="min-width:140px">
+                            <option value="both">Paid by + Paid to</option>
+                            <option value="paidBy">Only as Paid by</option>
+                            <option value="payee">Only as Paid to</option>
+                        </select>
+                        <button class="ghost small" onclick="renderUniversalPersonLedger()">↻ Refresh</button>
+                    </div>
+                    <div id="univPersonLedgerFull" style="padding:12px;border-radius:14px;background:var(--border-soft);min-height:60px"></div>
                     <hr>
                     <div class="section-title" style="font-size:14px">Karigar &amp; Employee payments (live totals)</div>
                     <div id="payTotalsPanel" class="note" style="margin-top:8px"></div>
@@ -24018,6 +24034,436 @@ body.split-on #splitWorkspace { display: grid; }
   setTimeout(boot, 800);
   setTimeout(function() { fillSupPaySelect(); renderSupPayRecent(); }, 2000);
   console.log('✅ Universal Paid-by + bill photo (Supplier / Employee / Karigar)');
+})();
+</script>
+
+
+<script>
+// ===== Supplier payment → Purchase Log + Universal Person Ledger =====
+(function() {
+  function $(id) { return document.getElementById(id); }
+  function lj(k, f) {
+    try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch (e) { return f; }
+  }
+  function sj(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function money(n) {
+    return '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  }
+
+  // ---- 1) After supplier custom payment, also push to purchases array (Purchase Log) ----
+  var _rsp = window.recordSupplierCustomPayment;
+  if (typeof _rsp === 'function' && !_rsp._plog) {
+    window.recordSupplierCustomPayment = function() {
+      var sel = $('supPaySelect');
+      var supId = sel ? sel.value : '';
+      var amount = Number(($('supPayAmount') && $('supPayAmount').value) || 0);
+      var paidBy = ($('supPayPaidBy') && $('supPayPaidBy').value.trim()) || '';
+      var note = ($('supPayNote') && $('supPayNote').value.trim()) || 'Payment';
+      var date = ($('supPayDate') && $('supPayDate').value) || new Date().toISOString().slice(0, 10);
+      var photo = window._supPayPhoto || '';
+      var name = '';
+      try {
+        if (typeof suppliers !== 'undefined') {
+          var s = suppliers.find(function(x) { return String(x.id) === String(supId); });
+          if (s) name = s.name;
+        }
+      } catch (e) {}
+      if (!name) {
+        var list = lj('jp_suppliers_v1', []);
+        var s2 = list.find(function(x) { return String(x.id) === String(supId); });
+        if (s2) name = s2.name;
+      }
+
+      _rsp.apply(this, arguments);
+
+      // If validation failed (no amount/supplier), original returns early — check amount again
+      if (!supId || !(amount > 0)) return;
+
+      try {
+        var payId = 'SPAY-' + Date.now();
+        var row = {
+          id: Date.now() + 1,
+          date: date.length === 10 ? date + 'T12:00:00.000Z' : date,
+          supplier: name || 'Supplier',
+          supplierId: Number(supId) || supId,
+          item: '💰 Payment' + (note ? ' — ' + note : ''),
+          qty: 1,
+          unitCost: amount,
+          total: amount,
+          isPayment: true,
+          paidBy: paidBy,
+          photo: photo,
+          notes: note,
+          paymentRef: payId
+        };
+        if (typeof purchases !== 'undefined' && Array.isArray(purchases)) {
+          purchases.push(row);
+          if (typeof saveAll === 'function') saveAll(true);
+          else {
+            try {
+              var KEY = (typeof KEY_PURCHASES !== 'undefined') ? KEY_PURCHASES : 'jp_purchases_v2';
+              localStorage.setItem(KEY, JSON.stringify(purchases));
+            } catch (e) {}
+          }
+        } else {
+          var KEY2 = 'jp_purchases_v2';
+          var arr = lj(KEY2, []);
+          arr.push(row);
+          sj(KEY2, arr);
+        }
+        if (typeof renderPurchaseTable === 'function') renderPurchaseTable();
+      } catch (e) { console.warn(e); }
+    };
+    window.recordSupplierCustomPayment._plog = true;
+  }
+
+  // Enhance purchase log rows for payment entries
+  var _rpt = window.renderPurchaseTable;
+  if (typeof _rpt === 'function' && !_rpt._pay) {
+    window.renderPurchaseTable = function() {
+      _rpt.apply(this, arguments);
+      try {
+        var tbody = document.querySelector('#purchaseTable tbody');
+        if (!tbody || typeof purchases === 'undefined') return;
+        // Re-render with payment-aware markup for clarity
+        if (!purchases.length) return;
+        var sorted = [].concat(purchases).reverse();
+        var limit = (typeof purchaseShowAll !== 'undefined' && purchaseShowAll)
+          ? sorted.length
+          : Math.min((typeof SHOW_LIMIT !== 'undefined' ? SHOW_LIMIT : 20), sorted.length);
+        var shown = sorted.slice(0, limit);
+        tbody.innerHTML = '';
+        shown.forEach(function(p) {
+          var tr = document.createElement('tr');
+          var isPay = !!p.isPayment || /^💰\s*Payment/i.test(String(p.item || ''));
+          if (isPay) tr.style.background = 'rgba(var(--accent-rgb),0.06)';
+          var itemLabel = escapeHtml(p.item || '');
+          if (isPay && p.paidBy) itemLabel += ' <span class="muted" style="font-size:11px">· By: ' + escapeHtml(p.paidBy) + '</span>';
+          var actions = '';
+          if (isPay) {
+            actions = (p.photo
+              ? '<button class="small ghost" onclick="openPaymentBillPhoto && openPaymentBillPhoto(' + JSON.stringify(p.photo) + ', ' + JSON.stringify((p.supplier || '') + ' payment') + ')">📷</button> '
+              : '') +
+              '<button class="small danger" onclick="deletePurchase(' + p.id + ')">Del</button>';
+          } else {
+            actions = '<button class="small ghost" onclick="editPurchase(' + p.id + ')">✎</button>' +
+              '<button class="small danger" onclick="deletePurchase(' + p.id + ')">Del</button>';
+          }
+          tr.innerHTML =
+            '<td>' + (p.date ? new Date(p.date).toLocaleDateString() : '') + '</td>' +
+            '<td>' + escapeHtml(p.supplier || '') + '</td>' +
+            '<td>' + itemLabel + '</td>' +
+            '<td class="num">' + (isPay ? '—' : (p.qty || '')) + '</td>' +
+            '<td class="num">' + (isPay ? '—' : ('₹' + Number(p.unitCost || 0).toFixed(2))) + '</td>' +
+            '<td class="num"><b>' + (isPay ? money(p.total) : ('₹' + Number(p.total || 0).toFixed(2))) + '</b></td>' +
+            '<td>' + actions + '</td>';
+          tbody.appendChild(tr);
+        });
+        var btn = $('purchaseShowMore');
+        if (btn) {
+          btn.style.display = sorted.length > (typeof SHOW_LIMIT !== 'undefined' ? SHOW_LIMIT : 20) ? 'inline-block' : 'none';
+          btn.textContent = (typeof purchaseShowAll !== 'undefined' && purchaseShowAll) ? 'Show Less' : 'Show More';
+        }
+      } catch (e) { console.warn(e); }
+    };
+    window.renderPurchaseTable._pay = true;
+  }
+
+  // ---- 2) Universal person payment ledger across sections ----
+  function allPaymentRows() {
+    var rows = [];
+
+    // Expenses
+    lj('jp_daily_expenses_v1', []).forEach(function(e) {
+      rows.push({
+        section: 'Expense',
+        date: (e.date || '').slice(0, 10),
+        amount: Number(e.amount || 0),
+        paidBy: String(e.paidBy || '').trim(),
+        payee: String(e.payee || '').trim(),
+        note: e.title || e.category || '',
+        photo: e.photo || '',
+        id: e.id,
+        category: e.category || ''
+      });
+    });
+
+    // Supplier ledger payments
+    var sled = [];
+    try {
+      if (typeof supLedger !== 'undefined' && Array.isArray(supLedger)) sled = supLedger;
+      else sled = lj('jp_sup_ledger_v1', []);
+    } catch (e) { sled = lj('jp_sup_ledger_v1', []); }
+    sled.forEach(function(e) {
+      var amt = Number(e.debit || e.amount || 0);
+      if (!(amt > 0) && e.type !== 'payment') return;
+      if (e.type && e.type !== 'payment' && !(Number(e.debit || 0) > 0)) return;
+      rows.push({
+        section: 'Supplier',
+        date: String(e.date || '').slice(0, 10),
+        amount: amt || Number(e.credit || 0),
+        paidBy: String(e.paidBy || '').trim(),
+        payee: String(e.supplierName || '').trim(),
+        note: e.notes || e.note || 'Supplier payment',
+        photo: e.photo || '',
+        id: e.id
+      });
+    });
+
+    // Purchase log payment rows
+    try {
+      var pur = (typeof purchases !== 'undefined' && Array.isArray(purchases)) ? purchases : lj('jp_purchases_v2', []);
+      pur.forEach(function(p) {
+        if (!p.isPayment && !/^💰\s*Payment/i.test(String(p.item || ''))) return;
+        rows.push({
+          section: 'Supplier',
+          date: String(p.date || '').slice(0, 10),
+          amount: Number(p.total || p.unitCost || 0),
+          paidBy: String(p.paidBy || '').trim(),
+          payee: String(p.supplier || '').trim(),
+          note: p.item || p.notes || 'Payment',
+          photo: p.photo || '',
+          id: p.id,
+          fromPurchaseLog: true
+        });
+      });
+    } catch (e) {}
+
+    // Employee payments
+    var ep = lj('jp_employee_payments_v1', []).concat(lj('jp_hrm_payments_v1', []));
+    var seen = {};
+    ep.forEach(function(p) {
+      if (!p || !p.id || seen[p.id]) return;
+      seen[p.id] = true;
+      rows.push({
+        section: 'Employee',
+        date: String(p.date || p.at || '').slice(0, 10),
+        amount: Math.abs(Number(p.amount || p.paid || 0)),
+        paidBy: String(p.paidBy || '').trim(),
+        payee: String(p.empName || p.employeeName || '').trim(),
+        note: (p.type || 'salary') + (p.note ? ' · ' + p.note : ''),
+        photo: p.photo || '',
+        id: p.id
+      });
+    });
+
+    // Karigar job payments
+    try {
+      var jobs = (window.v3Data && window.v3Data.karigarJobs) || lj('jp_karigar_jobs_v3', []);
+      jobs.forEach(function(j) {
+        (j.payments || []).forEach(function(p) {
+          rows.push({
+            section: 'Karigar',
+            date: String(p.date || '').slice(0, 10),
+            amount: Number(p.amount || 0),
+            paidBy: String(p.paidBy || '').trim(),
+            payee: String(j.karigarName || '').trim(),
+            note: p.notes || ('Job ' + (j.work || j.id || '')),
+            photo: p.photo || '',
+            id: p._id || p.id
+          });
+        });
+      });
+    } catch (e) {}
+
+    // Karigar direct tx
+    lj('jp_karigar_tx_v3', []).concat(lj('jp_karigar_transactions_v3', [])).forEach(function(t) {
+      if (!t) return;
+      rows.push({
+        section: 'Karigar',
+        date: String(t.date || '').slice(0, 10),
+        amount: Number(t.amount || 0),
+        paidBy: String(t.paidBy || '').trim(),
+        payee: String(t.karigarName || t.name || '').trim(),
+        note: t.notes || t.note || 'Karigar payment',
+        photo: t.photo || '',
+        id: t.id
+      });
+    });
+
+    return rows;
+  }
+
+  function collectAllPersonNames() {
+    var map = {};
+    allPaymentRows().forEach(function(r) {
+      if (r.paidBy) map[r.paidBy] = true;
+      if (r.payee) map[r.payee] = true;
+    });
+    return Object.keys(map).sort(function(a, b) { return a.localeCompare(b); });
+  }
+
+  function fillUnivPersonSelect() {
+    var sel = $('univPersonSelect');
+    if (!sel) return;
+    var cur = sel.value;
+    var names = collectAllPersonNames();
+    sel.innerHTML = '<option value="">— Select name —</option>' +
+      names.map(function(n) {
+        return '<option value="' + escapeHtml(n) + '"' + (cur === n ? ' selected' : '') + '>' + escapeHtml(n) + '</option>';
+      }).join('');
+    if (cur) sel.value = cur;
+  }
+
+  function matchPerson(row, name, role) {
+    if (!name) return false;
+    var by = row.paidBy === name;
+    var to = row.payee === name;
+    if (role === 'paidBy') return by;
+    if (role === 'payee') return to;
+    return by || to;
+  }
+
+  window.renderUniversalPersonLedger = function() {
+    fillUnivPersonSelect();
+    var name = ($('univPersonSelect') && $('univPersonSelect').value) || '';
+    var role = ($('univPersonRole') && $('univPersonRole').value) || 'both';
+    // Also sync from expense filters if set
+    var expBy = ($('expFilterPaidBy') && $('expFilterPaidBy').value) || '';
+    var expTo = ($('expFilterPayee') && $('expFilterPayee').value) || '';
+    if (!name && (expBy || expTo)) {
+      name = expBy || expTo;
+      if ($('univPersonSelect')) $('univPersonSelect').value = name;
+      if (expBy && !expTo) role = 'paidBy';
+      else if (expTo && !expBy) role = 'payee';
+      if ($('univPersonRole')) $('univPersonRole').value = role;
+    }
+
+    var host = $('univPersonLedgerFull');
+    var mini = $('univPersonLedger');
+    if (!name) {
+      if (host) host.innerHTML = '<div class="note">নাম সিলেক্ট করুন — সব সেকশনের পেমেন্ট হিসাব দেখাবে</div>';
+      if (mini) mini.style.display = 'none';
+      return;
+    }
+
+    var rows = allPaymentRows().filter(function(r) { return matchPerson(r, name, role); })
+      .sort(function(a, b) { return String(b.date).localeCompare(String(a.date)); });
+
+    // Section totals
+    var sec = { Expense: 0, Supplier: 0, Employee: 0, Karigar: 0 };
+    var asBy = 0, asTo = 0, total = 0;
+    rows.forEach(function(r) {
+      var a = Number(r.amount || 0);
+      total += a;
+      if (sec[r.section] != null) sec[r.section] += a;
+      else sec[r.section] = a;
+      if (r.paidBy === name) asBy += a;
+      if (r.payee === name) asTo += a;
+    });
+
+    function cardsHtml() {
+      return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px">' +
+        '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px;color:var(--accent)">' + money(total) + '</div><div class="muted" style="font-size:11px">সব মিলিয়ে TOTAL</div></div>' +
+        '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px">' + money(asBy) + '</div><div class="muted" style="font-size:11px">Paid by হিসেবে</div></div>' +
+        '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px">' + money(asTo) + '</div><div class="muted" style="font-size:11px">Paid to হিসেবে</div></div>' +
+        '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px">' + money(sec.Expense || 0) + '</div><div class="muted" style="font-size:11px">💸 Expense</div></div>' +
+        '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px">' + money(sec.Supplier || 0) + '</div><div class="muted" style="font-size:11px">🏭 Supplier</div></div>' +
+        '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px">' + money(sec.Employee || 0) + '</div><div class="muted" style="font-size:11px">👥 Employee</div></div>' +
+        '<div style="background:var(--card-solid);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:800;font-size:15px">' + money(sec.Karigar || 0) + '</div><div class="muted" style="font-size:11px">🔨 Karigar</div></div>' +
+        '</div>';
+    }
+
+    var tableRows = rows.length ? rows.map(function(r) {
+      var roleTag = [];
+      if (r.paidBy === name) roleTag.push('by');
+      if (r.payee === name) roleTag.push('to');
+      return '<tr>' +
+        '<td>' + escapeHtml(r.date) + '</td>' +
+        '<td><span class="code-chip" style="font-size:11px">' + escapeHtml(r.section) + '</span></td>' +
+        '<td>' + escapeHtml(r.note) + '</td>' +
+        '<td>' + escapeHtml(r.paidBy || '—') + '</td>' +
+        '<td>' + escapeHtml(r.payee || '—') + '</td>' +
+        '<td class="num" style="font-weight:700">' + money(r.amount) + '</td>' +
+        '<td>' + (r.photo ? '<button type="button" class="ghost small" onclick="openPaymentBillPhoto && openPaymentBillPhoto(this.dataset.p,\'Bill\')" data-p="">📷</button>'.replace('data-p=""', '') : '—') + '</td>' +
+        '</tr>';
+    }).join('') : '<tr><td colspan="7" class="note" style="text-align:center">এই নামে কোনো পেমেন্ট নেই</td></tr>';
+
+    // Photo buttons need careful data binding — rebuild with index
+    tableRows = rows.length ? rows.map(function(r, i) {
+      var photoCell = r.photo
+        ? '<button type="button" class="ghost small univ-photo-btn" data-i="' + i + '">📷</button>'
+        : '—';
+      return '<tr>' +
+        '<td>' + escapeHtml(r.date) + '</td>' +
+        '<td><span class="code-chip" style="font-size:11px">' + escapeHtml(r.section) + '</span></td>' +
+        '<td>' + escapeHtml(r.note) + '</td>' +
+        '<td>' + escapeHtml(r.paidBy || '—') + '</td>' +
+        '<td>' + escapeHtml(r.payee || '—') + '</td>' +
+        '<td class="num" style="font-weight:700">' + money(r.amount) + '</td>' +
+        '<td>' + photoCell + '</td>' +
+        '</tr>';
+    }).join('') : '<tr><td colspan="7" class="note" style="text-align:center">এই নামে কোনো পেমেন্ট নেই</td></tr>';
+
+    var html =
+      '<div style="font-size:16px;font-weight:800;margin-bottom:10px">👤 ' + escapeHtml(name) + '</div>' +
+      cardsHtml() +
+      '<div class="table-scroll"><table><thead><tr>' +
+        '<th>Date</th><th>Section</th><th>Note</th><th>Paid by</th><th>Paid to</th><th>Amount</th><th>Photo</th>' +
+      '</tr></thead><tbody>' + tableRows + '</tbody></table></div>';
+
+    if (host) {
+      host.innerHTML = html;
+      host.querySelectorAll('.univ-photo-btn').forEach(function(btn) {
+        btn.onclick = function() {
+          var i = Number(btn.getAttribute('data-i'));
+          var r = rows[i];
+          if (r && r.photo && typeof openPaymentBillPhoto === 'function') {
+            openPaymentBillPhoto(r.photo, name + ' · ' + r.section);
+          }
+        };
+      });
+    }
+
+    // Mini panel above expense table when filter active
+    if (mini) {
+      if (expBy || expTo || name) {
+        mini.style.display = 'block';
+        mini.innerHTML =
+          '<div style="font-weight:800;margin-bottom:8px">👤 ' + escapeHtml(name) + ' — cross-section</div>' +
+          cardsHtml();
+      } else {
+        mini.style.display = 'none';
+      }
+    }
+  };
+
+  // Hook expense filter changes to refresh universal ledger
+  var _rel = window.renderExpenseList;
+  if (typeof _rel === 'function' && !_rel._univLed) {
+    window.renderExpenseList = function() {
+      _rel.apply(this, arguments);
+      try {
+        var by = ($('expFilterPaidBy') && $('expFilterPaidBy').value) || '';
+        var to = ($('expFilterPayee') && $('expFilterPayee').value) || '';
+        if ((by || to) && $('univPersonSelect')) {
+          $('univPersonSelect').value = by || to;
+          if ($('univPersonRole')) {
+            if (by && !to) $('univPersonRole').value = 'paidBy';
+            else if (to && !by) $('univPersonRole').value = 'payee';
+            else $('univPersonRole').value = 'both';
+          }
+        }
+        renderUniversalPersonLedger();
+      } catch (e) {}
+    };
+    window.renderExpenseList._univLed = true;
+  }
+
+  function boot() {
+    fillUnivPersonSelect();
+    if (typeof renderPurchaseTable === 'function') {
+      try { renderPurchaseTable(); } catch (e) {}
+    }
+    renderUniversalPersonLedger();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 900);
+  console.log('✅ Supplier pay→Purchase Log + Universal person ledger');
 })();
 </script>
 
