@@ -4077,6 +4077,18 @@
                             <button class="ghost" style="margin-top:8px" onclick="addSupplier()">+ Add Supplier</button>
                             <div id="supplierList" style="margin-top:10px"></div>
                             <button class="ghost small" style="margin-top:8px" onclick="openSupplierLedger()">📒 Supplier Ledger</button>
+                            <hr style="margin:14px 0">
+                            <div class="section-title" style="font-size:14px">💰 Supplier Payment (custom)</div>
+                            <div class="note" style="font-size:12px;margin-bottom:6px">Supplier select · amount · কে দিয়েছে · bill photo · note</div>
+                            <label>Supplier<select id="supPaySelect"></select></label>
+                            <label>Amount ₹<input id="supPayAmount" type="number" min="0" step="0.01"></label>
+                            <label>Paid by<input id="supPayPaidBy" placeholder="কে পেমেন্ট করেছে" list="universalPaidByList"></label>
+                            <label>Date<input id="supPayDate" type="date"></label>
+                            <label>Note<input id="supPayNote" placeholder="Bill no / remark"></label>
+                            <label>Bill photo<input type="file" id="supPayPhoto" accept="image/*"></label>
+                            <div id="supPayPhotoPreview" style="margin-top:6px"></div>
+                            <button style="margin-top:10px" onclick="recordSupplierCustomPayment()">💾 Save payment</button>
+                            <div id="supPayRecent" style="margin-top:10px;max-height:180px;overflow:auto"></div>
                         </div>
                         <div>
                             <div class="section-title" style="font-size:15px">Record a Purchase</div>
@@ -4365,7 +4377,10 @@
                                 <label style="margin:0">Amount ₹<input id="payAmount" type="number" min="0" step="1"></label>
                                 <label style="margin:0">Type<select id="payType"><option value="salary">Salary</option><option value="advance">Advance</option><option value="bonus">Bonus</option><option value="deduction">Deduction</option></select></label>
                                 <label style="margin:0">Date<input id="payDate" type="date"></label>
+                                <label style="margin:0;grid-column:1/-1">Paid by (কে পেমেন্ট করেছে)<input id="payPaidBy" placeholder="Staff / your name" list="universalPaidByList"></label>
                                 <label style="margin:0;grid-column:1/-1">Note<input id="payNote" placeholder="Month / remark"></label>
+                                <label style="margin:0;grid-column:1/-1">Bill photo<input type="file" id="payPhoto" accept="image/*"></label>
+                                <div id="payPhotoPreview" style="grid-column:1/-1;margin-top:4px"></div>
                             </div>
                             <button style="margin-top:8px" onclick="addEmployeePayment()">Record payment</button>
                             <div id="empPayList" style="margin-top:10px;max-height:160px;overflow:auto"></div>
@@ -23395,6 +23410,614 @@ body.split-on #splitWorkspace { display: grid; }
   else boot();
   setTimeout(boot, 700);
   console.log('✅ Expense paidBy/payee + name filters + totals');
+})();
+</script>
+
+
+<script>
+// ===== UNIVERSAL "Paid by" + Bill photo for Supplier / Employee / Karigar / Ledger =====
+(function() {
+  function $(id) { return document.getElementById(id); }
+  function lj(k, f) {
+    try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch (e) { return f; }
+  }
+  function sj(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function money(n) {
+    return '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  }
+  function uid(p) { return (p || 'P') + '-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5); }
+
+  // Collect known "paid by" names across modules for datalist
+  function collectPaidByNames() {
+    var map = {};
+    function add(v) { v = String(v || '').trim(); if (v) map[v] = true; }
+    lj('jp_daily_expenses_v1', []).forEach(function(e) { add(e.paidBy); });
+    lj('jp_employee_payments_v1', []).forEach(function(e) { add(e.paidBy); });
+    lj('jp_hrm_payments_v1', []).forEach(function(e) { add(e.paidBy); });
+    try {
+      if (typeof supLedger !== 'undefined' && Array.isArray(supLedger)) {
+        supLedger.forEach(function(e) { add(e.paidBy); });
+      } else {
+        lj('jp_sup_ledger_v1', []).forEach(function(e) { add(e.paidBy); });
+      }
+    } catch (e) {}
+    // karigar jobs payments
+    try {
+      var jobs = lj('jp_karigar_jobs_v3', []);
+      jobs.forEach(function(j) {
+        (j.payments || []).forEach(function(p) { add(p.paidBy); });
+      });
+      var tx = lj('jp_karigar_tx_v3', lj('jp_karigar_transactions_v3', []));
+      (tx || []).forEach(function(t) { add(t.paidBy); });
+    } catch (e) {}
+    return Object.keys(map).sort(function(a, b) { return a.localeCompare(b); });
+  }
+
+  function ensurePaidByDatalist() {
+    var dl = $('universalPaidByList');
+    if (!dl) {
+      dl = document.createElement('datalist');
+      dl.id = 'universalPaidByList';
+      document.body.appendChild(dl);
+    }
+    dl.innerHTML = collectPaidByNames().map(function(n) {
+      return '<option value="' + escapeHtml(n) + '">';
+    }).join('');
+  }
+
+  // ---- Universal Payment Modal ----
+  window._univPayCtx = null;
+  window._univPayPhoto = '';
+
+  function ensureUnivPayModal() {
+    if ($('univPayModal')) return;
+    var m = document.createElement('div');
+    m.id = 'univPayModal';
+    m.className = 'modal-backdrop';
+    m.style.display = 'none';
+    m.onclick = function(e) { if (e.target === m) closeUnivPayModal(); };
+    m.innerHTML =
+      '<div class="modal-box dark" style="max-width:480px;padding:20px;max-height:90vh;overflow:auto" onclick="event.stopPropagation()">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+          '<div style="font-size:16px;font-weight:800" id="univPayTitle">Payment</div>' +
+          '<button type="button" class="ghost small" onclick="closeUnivPayModal()">✕</button>' +
+        '</div>' +
+        '<div class="muted" id="univPaySub" style="font-size:12px;margin-bottom:10px"></div>' +
+        '<label>Amount ₹<input id="univPayAmount" type="number" min="0" step="0.01"></label>' +
+        '<label>Date<input id="univPayDate" type="date"></label>' +
+        '<label>Paid by (কে পেমেন্ট করেছে)<input id="univPayPaidBy" list="universalPaidByList" placeholder="Staff / your name"></label>' +
+        '<label>Note<input id="univPayNote" placeholder="Bill no / remark"></label>' +
+        '<label>Bill photo<input type="file" id="univPayPhoto" accept="image/*"></label>' +
+        '<div id="univPayPhotoPreview" style="margin-top:8px"></div>' +
+        '<div class="actions" style="margin-top:14px;display:flex;gap:8px">' +
+          '<button type="button" onclick="saveUnivPayModal()">💾 Save</button>' +
+          '<button type="button" class="ghost" onclick="closeUnivPayModal()">Cancel</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(m);
+    document.addEventListener('change', function(ev) {
+      if (ev.target && ev.target.id === 'univPayPhoto' && ev.target.files && ev.target.files[0]) {
+        var r = new FileReader();
+        r.onload = function() {
+          window._univPayPhoto = r.result;
+          if ($('univPayPhotoPreview')) {
+            $('univPayPhotoPreview').innerHTML = '<img src="' + r.result + '" style="max-width:180px;border-radius:10px">';
+          }
+        };
+        r.readAsDataURL(ev.target.files[0]);
+      }
+      if (ev.target && ev.target.id === 'payPhoto' && ev.target.files && ev.target.files[0]) {
+        var r2 = new FileReader();
+        r2.onload = function() {
+          window._empPayPhoto = r2.result;
+          if ($('payPhotoPreview')) {
+            $('payPhotoPreview').innerHTML = '<img src="' + r2.result + '" style="max-width:140px;border-radius:10px">';
+          }
+        };
+        r2.readAsDataURL(ev.target.files[0]);
+      }
+      if (ev.target && ev.target.id === 'supPayPhoto' && ev.target.files && ev.target.files[0]) {
+        var r3 = new FileReader();
+        r3.onload = function() {
+          window._supPayPhoto = r3.result;
+          if ($('supPayPhotoPreview')) {
+            $('supPayPhotoPreview').innerHTML = '<img src="' + r3.result + '" style="max-width:140px;border-radius:10px">';
+          }
+        };
+        r3.readAsDataURL(ev.target.files[0]);
+      }
+    });
+  }
+
+  /**
+   * ctx: { kind, title, subtitle, amount, date, paidBy, note, photo, onSave(data) }
+   * kind: supplier|employee|karigar-job|karigar-direct|ledger
+   */
+  window.openUnivPayModal = function(ctx) {
+    ensureUnivPayModal();
+    ensurePaidByDatalist();
+    window._univPayCtx = ctx || {};
+    window._univPayPhoto = (ctx && ctx.photo) || '';
+    if ($('univPayTitle')) $('univPayTitle').textContent = (ctx && ctx.title) || 'Payment';
+    if ($('univPaySub')) $('univPaySub').textContent = (ctx && ctx.subtitle) || '';
+    if ($('univPayAmount')) $('univPayAmount').value = ctx && ctx.amount != null ? ctx.amount : '';
+    if ($('univPayDate')) $('univPayDate').value = (ctx && ctx.date) || new Date().toISOString().slice(0, 10);
+    if ($('univPayPaidBy')) $('univPayPaidBy').value = (ctx && ctx.paidBy) || '';
+    if ($('univPayNote')) $('univPayNote').value = (ctx && ctx.note) || '';
+    if ($('univPayPhoto')) $('univPayPhoto').value = '';
+    if ($('univPayPhotoPreview')) {
+      $('univPayPhotoPreview').innerHTML = window._univPayPhoto
+        ? '<img src="' + window._univPayPhoto + '" style="max-width:180px;border-radius:10px">'
+        : '';
+    }
+    $('univPayModal').style.display = 'flex';
+    setTimeout(function() { if ($('univPayAmount')) $('univPayAmount').focus(); }, 80);
+  };
+  window.closeUnivPayModal = function() {
+    var m = $('univPayModal');
+    if (m) m.style.display = 'none';
+    window._univPayCtx = null;
+  };
+  window.saveUnivPayModal = function() {
+    var ctx = window._univPayCtx;
+    if (!ctx) return;
+    var amount = Number(($('univPayAmount') && $('univPayAmount').value) || 0);
+    if (!(amount > 0)) {
+      if (typeof showToast === 'function') showToast('Enter amount', 'err');
+      return;
+    }
+    var data = {
+      amount: amount,
+      date: ($('univPayDate') && $('univPayDate').value) || new Date().toISOString().slice(0, 10),
+      paidBy: ($('univPayPaidBy') && $('univPayPaidBy').value.trim()) || '',
+      note: ($('univPayNote') && $('univPayNote').value.trim()) || '',
+      photo: window._univPayPhoto || ''
+    };
+    try {
+      if (typeof ctx.onSave === 'function') ctx.onSave(data);
+    } catch (e) {
+      console.warn(e);
+      if (typeof showToast === 'function') showToast('Save failed', 'err');
+      return;
+    }
+    closeUnivPayModal();
+    ensurePaidByDatalist();
+  };
+
+  // Bill photo quick view (shared)
+  window.openPaymentBillPhoto = function(dataUrl, meta) {
+    if (!dataUrl) {
+      if (typeof showToast === 'function') showToast('No bill photo', 'info');
+      return;
+    }
+    var m = $('payBillQVModal');
+    if (!m) {
+      m = document.createElement('div');
+      m.id = 'payBillQVModal';
+      m.className = 'modal-backdrop';
+      m.onclick = function(e) { if (e.target === m) m.style.display = 'none'; };
+      m.innerHTML =
+        '<div class="modal-box dark" style="max-width:560px;padding:16px" onclick="event.stopPropagation()">' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:8px">' +
+            '<div id="payBillQVMeta" style="font-weight:700"></div>' +
+            '<button type="button" class="ghost small" onclick="document.getElementById(\'payBillQVModal\').style.display=\'none\'">✕</button>' +
+          '</div>' +
+          '<div id="payBillQVBody" style="text-align:center"></div>' +
+        '</div>';
+      document.body.appendChild(m);
+    }
+    if ($('payBillQVMeta')) $('payBillQVMeta').textContent = meta || 'Bill photo';
+    if ($('payBillQVBody')) {
+      $('payBillQVBody').innerHTML = '<img src="' + dataUrl +
+        '" style="max-width:100%;max-height:75vh;border-radius:12px;cursor:zoom-in" onclick="window.open(this.src,\'_blank\')">';
+    }
+    m.style.display = 'flex';
+  };
+
+  // ---- Patch openLedgerEntryModal: add paidBy + photo ----
+  var _olem = window.openLedgerEntryModal;
+  if (typeof _olem === 'function' && !_olem._univ) {
+    window.openLedgerEntryModal = function(type, id, name, action) {
+      _olem.apply(this, arguments);
+      try {
+        var form = $('ledgerEntryForm');
+        if (!form) return;
+        if (form.querySelector('#ledgerPaidBy')) return;
+        var extra = document.createElement('div');
+        extra.innerHTML =
+          '<div style="margin-top:8px"><label>Paid by (কে পেমেন্ট করেছে)</label>' +
+          '<input id="ledgerPaidBy" list="universalPaidByList" placeholder="Staff / your name"></div>' +
+          '<div style="margin-top:8px"><label>Bill photo</label>' +
+          '<input id="ledgerPhoto" type="file" accept="image/*"></div>' +
+          '<div id="ledgerPhotoPreview" style="margin-top:6px"></div>';
+        form.appendChild(extra);
+        ensurePaidByDatalist();
+        window._ledgerPhotoData = '';
+        var ph = $('ledgerPhoto');
+        if (ph) {
+          ph.onchange = function() {
+            if (!ph.files || !ph.files[0]) return;
+            var r = new FileReader();
+            r.onload = function() {
+              window._ledgerPhotoData = r.result;
+              if ($('ledgerPhotoPreview')) {
+                $('ledgerPhotoPreview').innerHTML = '<img src="' + r.result + '" style="max-width:160px;border-radius:10px">';
+              }
+            };
+            r.readAsDataURL(ph.files[0]);
+          };
+        }
+        // wrap callback to attach paidBy + photo
+        var prevCb = window.ledgerEntryCallback;
+        window.ledgerEntryCallback = function() {
+          // Temporarily intercept the last pushed entry — call original which reads amount from form
+          // Monkey-patch: store paidBy on next push by wrapping array push is heavy;
+          // Instead re-read and patch last entry after callback.
+          var paidBy = ($('ledgerPaidBy') && $('ledgerPaidBy').value.trim()) || '';
+          var photo = window._ledgerPhotoData || '';
+          if (typeof prevCb === 'function') prevCb();
+          try {
+            if (type === 'supplier' && typeof supLedger !== 'undefined' && supLedger.length) {
+              var last = supLedger[supLedger.length - 1];
+              if (last && last.supplierId === id) {
+                last.paidBy = paidBy;
+                last.photo = photo;
+                if (paidBy && last.notes && last.notes.indexOf('By:') < 0) {
+                  last.notes = (last.notes || '') + (paidBy ? ' · By: ' + paidBy : '');
+                }
+                if (typeof saveAll === 'function') saveAll(true);
+                if (typeof renderSupplierLedger === 'function') renderSupplierLedger();
+              }
+            }
+            if (type === 'customer' && typeof custLedger !== 'undefined' && custLedger.length) {
+              var lastC = custLedger[custLedger.length - 1];
+              if (lastC && lastC.customerId === id) {
+                lastC.paidBy = paidBy;
+                lastC.photo = photo;
+                if (typeof saveAll === 'function') saveAll(true);
+                if (typeof renderCustomerLedger === 'function') renderCustomerLedger();
+              }
+            }
+          } catch (e) { console.warn(e); }
+          ensurePaidByDatalist();
+        };
+      } catch (e) { console.warn(e); }
+    };
+    window.openLedgerEntryModal._univ = true;
+  }
+
+  // ---- Supplier custom payment ----
+  window.recordSupplierCustomPayment = function() {
+    var sel = $('supPaySelect');
+    var supId = sel ? sel.value : '';
+    if (!supId) {
+      if (typeof showToast === 'function') showToast('Select supplier', 'err');
+      return;
+    }
+    var amount = Number(($('supPayAmount') && $('supPayAmount').value) || 0);
+    if (!(amount > 0)) {
+      if (typeof showToast === 'function') showToast('Enter amount', 'err');
+      return;
+    }
+    var supplier = null;
+    try {
+      if (typeof suppliers !== 'undefined') {
+        supplier = suppliers.find(function(s) { return String(s.id) === String(supId); });
+      }
+    } catch (e) {}
+    if (!supplier) {
+      var list = lj('jp_suppliers_v1', []);
+      supplier = list.find(function(s) { return String(s.id) === String(supId); });
+    }
+    var name = supplier ? supplier.name : 'Supplier';
+    var paidBy = ($('supPayPaidBy') && $('supPayPaidBy').value.trim()) || '';
+    var note = ($('supPayNote') && $('supPayNote').value.trim()) || 'Payment';
+    var date = ($('supPayDate') && $('supPayDate').value) || new Date().toISOString().slice(0, 10);
+    var photo = window._supPayPhoto || '';
+
+    var entry = {
+      id: Date.now(),
+      supplierId: Number(supId) || supId,
+      supplierName: name,
+      type: 'payment',
+      date: date,
+      debit: amount,
+      credit: 0,
+      balance: 0,
+      notes: note + (paidBy ? ' · By: ' + paidBy : ''),
+      paidBy: paidBy,
+      photo: photo
+    };
+    try {
+      if (typeof supLedger !== 'undefined') {
+        // recompute balance roughly
+        var totalDebit = 0, totalCredit = 0;
+        supLedger.forEach(function(e) {
+          if (String(e.supplierId) !== String(supId)) return;
+          totalDebit += Number(e.debit || 0);
+          totalCredit += Number(e.credit || 0);
+        });
+        // supplier payable side: purchases credit us / payments debit reduce due — match existing pattern
+        entry.balance = (totalCredit - totalDebit) - amount;
+        supLedger.push(entry);
+        if (typeof saveAll === 'function') saveAll(true);
+      } else {
+        var led = lj('jp_sup_ledger_v1', []);
+        led.push(entry);
+        sj('jp_sup_ledger_v1', led);
+      }
+    } catch (e) { console.warn(e); }
+
+    if ($('supPayAmount')) $('supPayAmount').value = '';
+    if ($('supPayNote')) $('supPayNote').value = '';
+    if ($('supPayPaidBy')) $('supPayPaidBy').value = '';
+    if ($('supPayPhoto')) $('supPayPhoto').value = '';
+    if ($('supPayPhotoPreview')) $('supPayPhotoPreview').innerHTML = '';
+    window._supPayPhoto = '';
+    renderSupPayRecent();
+    if (typeof renderSupplierLedger === 'function') renderSupplierLedger();
+    if (typeof renderDashboard === 'function') renderDashboard();
+    if (typeof showToast === 'function') showToast('Supplier payment saved', 'ok');
+    ensurePaidByDatalist();
+  };
+
+  function fillSupPaySelect() {
+    var sel = $('supPaySelect');
+    if (!sel) return;
+    var cur = sel.value;
+    var list = [];
+    try {
+      if (typeof suppliers !== 'undefined' && Array.isArray(suppliers)) list = suppliers;
+      else list = lj('jp_suppliers_v1', []);
+    } catch (e) { list = lj('jp_suppliers_v1', []); }
+    sel.innerHTML = '<option value="">-- supplier --</option>' + list.map(function(s) {
+      return '<option value="' + s.id + '">' + escapeHtml(s.name) + '</option>';
+    }).join('');
+    if (cur) sel.value = cur;
+  }
+
+  function renderSupPayRecent() {
+    var el = $('supPayRecent');
+    if (!el) return;
+    var led = [];
+    try {
+      if (typeof supLedger !== 'undefined') led = supLedger.slice();
+      else led = lj('jp_sup_ledger_v1', []);
+    } catch (e) { led = lj('jp_sup_ledger_v1', []); }
+    var pays = led.filter(function(e) { return e.type === 'payment' || Number(e.debit || 0) > 0; })
+      .slice().reverse().slice(0, 12);
+    el.innerHTML = pays.length ? pays.map(function(e) {
+      var photoBtn = e.photo
+        ? '<button type="button" class="ghost small" onclick="openPaymentBillPhoto(\'' +
+          // can't embed large data in attr easily - use id lookup
+          '\')">📷</button>'
+        : '';
+      // safer: store id
+      return '<div class="note" style="padding:6px 0;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;gap:8px">' +
+        '<span><b>' + escapeHtml(e.supplierName || '') + '</b> · ' + money(e.debit || e.amount || 0) +
+        '<br><span class="muted" style="font-size:11px">' + escapeHtml(String(e.date || '').slice(0, 10)) +
+        (e.paidBy ? ' · By: ' + escapeHtml(e.paidBy) : '') +
+        (e.notes ? ' · ' + escapeHtml(e.notes) : '') + '</span></span>' +
+        (e.photo ? '<button type="button" class="ghost small" onclick="openPaymentBillPhotoBySupEntry(\'' +
+          String(e.id).replace(/'/g, '') + '\')">📷</button>' : '') +
+        '</div>';
+    }).join('') : '<div class="note">No recent supplier payments</div>';
+  }
+
+  window.openPaymentBillPhotoBySupEntry = function(id) {
+    var led = [];
+    try {
+      if (typeof supLedger !== 'undefined') led = supLedger;
+      else led = lj('jp_sup_ledger_v1', []);
+    } catch (e) { led = lj('jp_sup_ledger_v1', []); }
+    var e = led.find(function(x) { return String(x.id) === String(id); });
+    if (e && e.photo) openPaymentBillPhoto(e.photo, (e.supplierName || '') + ' · ' + money(e.debit || 0));
+  };
+
+  // Patch supplier ledger entry display to show paidBy + photo
+  var _rsl = window.renderSupplierLedger;
+  if (typeof _rsl === 'function' && !_rsl._univ) {
+    window.renderSupplierLedger = function() {
+      _rsl.apply(this, arguments);
+      try {
+        var host = $('supLedgerEntries');
+        if (!host) return;
+        // enhance rows text if possible by re-render simple
+        // leave original; recent panel handles photo
+      } catch (e) {}
+    };
+    window.renderSupplierLedger._univ = true;
+  }
+
+  // ---- Employee payment: attach paidBy + photo ----
+  var _aep = window.addEmployeePayment;
+  if (typeof _aep === 'function' && !_aep._univ) {
+    window.addEmployeePayment = function() {
+      // ensure paidBy field read by wrapping after original writes
+      var paidBy = ($('payPaidBy') && $('payPaidBy').value.trim()) || '';
+      var photo = window._empPayPhoto || '';
+      var r = _aep.apply(this, arguments);
+      try {
+        var list = lj('jp_employee_payments_v1', []);
+        if (list.length) {
+          list[0].paidBy = paidBy;
+          list[0].photo = photo;
+          if (paidBy && list[0].note && String(list[0].note).indexOf('By:') < 0) {
+            list[0].note = (list[0].note || '') + ' · By: ' + paidBy;
+          }
+          sj('jp_employee_payments_v1', list);
+          sj('jp_hrm_payments_v1', list);
+        }
+      } catch (e) {}
+      if ($('payPaidBy')) $('payPaidBy').value = '';
+      if ($('payPhoto')) $('payPhoto').value = '';
+      if ($('payPhotoPreview')) $('payPhotoPreview').innerHTML = '';
+      window._empPayPhoto = '';
+      ensurePaidByDatalist();
+      if (typeof renderHRM === 'function') renderHRM();
+      return r;
+    };
+    window.addEmployeePayment._univ = true;
+  }
+
+  // ---- Karigar: replace prompt-based payments with universal modal ----
+  function findV3Data() {
+    // v3Data is often closure-scoped; try window
+    if (window.v3Data) return window.v3Data;
+    if (window._karigarV3Data) return window._karigarV3Data;
+    // reconstruct from localStorage common keys
+    return {
+      karigarJobs: lj('jp_karigar_jobs_v3', []),
+      transactions: lj('jp_karigar_tx_v3', lj('jp_karigar_transactions_v3', [])),
+      karigars: lj('jp_karigars_v3', lj('jp_karigar_register_v3', []))
+    };
+  }
+  function persistJobs(jobs) {
+    sj('jp_karigar_jobs_v3', jobs);
+    if (window.v3Data) window.v3Data.karigarJobs = jobs;
+  }
+
+  window.addJobPaymentV3 = function(id) {
+    var jobs = lj('jp_karigar_jobs_v3', []);
+    // also try live v3Data
+    try {
+      if (window.v3Data && Array.isArray(window.v3Data.karigarJobs)) jobs = window.v3Data.karigarJobs;
+    } catch (e) {}
+    var job = jobs.find(function(entry) { return entry.id === id; });
+    if (!job) {
+      if (typeof showToast === 'function') showToast('Job not found', 'err');
+      return;
+    }
+    var paid = (job.payments || []).reduce(function(s, p) { return s + Number(p.amount || 0); }, 0);
+    var due = Math.max(0, Number(job.laborCharge || 0) - paid);
+    openUnivPayModal({
+      kind: 'karigar-job',
+      title: 'Karigar Job Payment',
+      subtitle: (job.karigarName || '') + ' — ' + (job.work || job.id) + (due ? ' · Due ' + money(due) : ''),
+      amount: due || '',
+      note: 'Job payment',
+      onSave: function(data) {
+        if (!job.payments) job.payments = [];
+        job.payments.push({
+          _id: job.id + '-P-' + Date.now(),
+          amount: data.amount,
+          notes: data.note,
+          paidBy: data.paidBy,
+          photo: data.photo,
+          date: data.date || new Date().toISOString()
+        });
+        // write back
+        var all = jobs.map(function(j) { return j.id === job.id ? job : j; });
+        try {
+          if (window.v3Data && Array.isArray(window.v3Data.karigarJobs)) {
+            var idx = window.v3Data.karigarJobs.findIndex(function(j) { return j.id === job.id; });
+            if (idx >= 0) window.v3Data.karigarJobs[idx] = job;
+            if (typeof window.saveAndRender === 'function') window.saveAndRender();
+            else if (typeof window.renderKarigarV3 === 'function') window.renderKarigarV3();
+          }
+        } catch (e) {}
+        persistJobs(window.v3Data && window.v3Data.karigarJobs ? window.v3Data.karigarJobs : all);
+        if (typeof showToast === 'function') showToast('Payment saved', 'ok');
+        // try common refresh
+        ['renderKarigarV2', 'renderKarigarV3', 'renderJobsV3', 'renderLedgerV3', 'renderRegisterV3'].forEach(function(fn) {
+          if (typeof window[fn] === 'function') try { window[fn](); } catch (e) {}
+        });
+      }
+    });
+  };
+
+  window.editJobPaymentV3 = function(jobId, paymentId) {
+    var jobs = (window.v3Data && window.v3Data.karigarJobs) || lj('jp_karigar_jobs_v3', []);
+    var job = jobs.find(function(entry) { return entry.id === jobId; });
+    if (!job) return;
+    var payment = (job.payments || []).find(function(entry) { return entry._id === paymentId; });
+    if (!payment) return;
+    openUnivPayModal({
+      kind: 'karigar-job-edit',
+      title: 'Edit Job Payment',
+      subtitle: (job.karigarName || '') + ' — ' + (job.work || jobId),
+      amount: payment.amount,
+      date: String(payment.date || '').slice(0, 10),
+      paidBy: payment.paidBy || '',
+      note: payment.notes || '',
+      photo: payment.photo || '',
+      onSave: function(data) {
+        payment.amount = data.amount;
+        payment.notes = data.note;
+        payment.paidBy = data.paidBy;
+        payment.photo = data.photo || payment.photo || '';
+        payment.date = data.date || payment.date;
+        try {
+          if (window.v3Data && window.v3Data.karigarJobs) {
+            if (typeof window.saveAndRender === 'function') window.saveAndRender();
+          }
+        } catch (e) {}
+        persistJobs(window.v3Data && window.v3Data.karigarJobs ? window.v3Data.karigarJobs : jobs);
+        if (typeof showToast === 'function') showToast('Payment updated', 'ok');
+        ['renderKarigarV2', 'renderKarigarV3', 'renderJobsV3', 'renderLedgerV3'].forEach(function(fn) {
+          if (typeof window[fn] === 'function') try { window[fn](); } catch (e) {}
+        });
+      }
+    });
+  };
+
+  // Override other job payment entry points
+  window.addJobPaymentV2 = function(id) { window.addJobPaymentV3(id); };
+  window.addKarigarPayment = function(id) { window.addJobPaymentV3(id); };
+
+  var _direct = window.addKarigarDirectPaymentV3 || window.addKarigarDirectPayment;
+  window.addKarigarDirectPaymentV3 = function(id) {
+    openUnivPayModal({
+      kind: 'karigar-direct',
+      title: 'Karigar Payment',
+      subtitle: 'Direct payment to karigar',
+      note: 'Payment',
+      onSave: function(data) {
+        // Prefer original path if available after filling via transaction API
+        try {
+          if (typeof window.addTransaction === 'function') {
+            // may not accept paidBy — store in local extra
+            window.addTransaction(id, 'payment', data.note || 'Payment', data.note || 'Payment');
+          }
+        } catch (e) {}
+        var tx = lj('jp_karigar_tx_v3', []);
+        tx.unshift({
+          id: uid('KTX'),
+          karigarId: id,
+          type: 'payment',
+          amount: data.amount,
+          notes: data.note,
+          paidBy: data.paidBy,
+          photo: data.photo,
+          date: data.date || new Date().toISOString()
+        });
+        sj('jp_karigar_tx_v3', tx);
+        if (typeof showToast === 'function') showToast('Karigar payment saved', 'ok');
+        ['renderKarigarV2', 'renderKarigarV3', 'renderLedgerV3'].forEach(function(fn) {
+          if (typeof window[fn] === 'function') try { window[fn](); } catch (e) {}
+        });
+      }
+    });
+  };
+  window.addKarigarDirectPayment = window.addKarigarDirectPaymentV3;
+
+  function boot() {
+    ensureUnivPayModal();
+    ensurePaidByDatalist();
+    fillSupPaySelect();
+    renderSupPayRecent();
+    if ($('supPayDate') && !$('supPayDate').value) {
+      $('supPayDate').value = new Date().toISOString().slice(0, 10);
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 800);
+  setTimeout(function() { fillSupPaySelect(); renderSupPayRecent(); }, 2000);
+  console.log('✅ Universal Paid-by + bill photo (Supplier / Employee / Karigar)');
 })();
 </script>
 
