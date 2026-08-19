@@ -22772,5 +22772,301 @@ body.split-on #splitWorkspace { display: grid; }
 })();
 </script>
 
+
+<script>
+// ===== Expense Quick View (bill photo) + Employee Quick Edit =====
+(function() {
+  function $(id) { return document.getElementById(id); }
+  function lj(k, f) {
+    try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch (e) { return f; }
+  }
+  function sj(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function money(n) {
+    return '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  }
+  function getExpenses() { return lj('jp_daily_expenses_v1', []); }
+
+  function ensureExpenseQVModal() {
+    if ($('expenseQVModal')) return;
+    var m = document.createElement('div');
+    m.id = 'expenseQVModal';
+    m.className = 'modal-backdrop';
+    m.style.display = 'none';
+    m.onclick = function(e) { if (e.target === m) closeExpenseQuickView(); };
+    m.innerHTML =
+      '<div class="modal-box dark" style="max-width:560px;padding:20px" onclick="event.stopPropagation()">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px">' +
+          '<div><div style="font-size:17px;font-weight:800" id="expQVTitle">Expense</div>' +
+          '<div class="muted" id="expQVMeta" style="margin-top:4px;font-size:13px"></div></div>' +
+          '<button type="button" class="ghost small" onclick="closeExpenseQuickView()">✕</button>' +
+        '</div>' +
+        '<div id="expQVAmount" style="font-size:22px;font-weight:800;font-family:var(--font-mono);margin-bottom:12px"></div>' +
+        '<div id="expQVPhotoWrap" style="background:var(--border-soft);border-radius:14px;min-height:180px;display:flex;align-items:center;justify-content:center;overflow:hidden">' +
+          '<div class="muted" id="expQVNoPhoto">No bill photo</div>' +
+        '</div>' +
+        '<div class="actions" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
+          '<button type="button" onclick="editExpenseFromQV()">✏️ Edit</button>' +
+          '<button type="button" class="ghost" id="expQVOpenFull" style="display:none">🔍 Full size</button>' +
+          '<button type="button" class="ghost" style="color:var(--danger);margin-left:auto" onclick="deleteExpenseFromQV()">Delete</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(m);
+  }
+
+  function ensureEmpQVModal() {
+    if ($('empQVModal')) return;
+    var m = document.createElement('div');
+    m.id = 'empQVModal';
+    m.className = 'modal-backdrop';
+    m.style.display = 'none';
+    m.onclick = function(e) { if (e.target === m) closeEmployeeQuickView(); };
+    m.innerHTML =
+      '<div class="modal-box dark" style="max-width:480px;padding:20px" onclick="event.stopPropagation()">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+          '<div style="font-size:17px;font-weight:800">👤 Employee — Quick Edit</div>' +
+          '<button type="button" class="ghost small" onclick="closeEmployeeQuickView()">✕</button>' +
+        '</div>' +
+        '<input type="hidden" id="empQVId">' +
+        '<label>Name<input id="empQVName" type="text"></label>' +
+        '<label>Phone<input id="empQVPhone" type="text"></label>' +
+        '<label>Role<select id="empQVRole">' +
+          '<option>Sales</option><option>Karigar</option><option>Manager</option>' +
+          '<option>Admin</option><option>Warehouse</option><option>Accountant</option>' +
+        '</select></label>' +
+        '<label>Monthly salary ₹<input id="empQVSalary" type="number" min="0" step="1"></label>' +
+        '<label>Join date<input id="empQVJoin" type="date"></label>' +
+        '<label>Notes<textarea id="empQVNotes" rows="2" placeholder="Optional notes"></textarea></label>' +
+        '<div class="actions" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
+          '<button type="button" onclick="saveEmployeeQuickView()">💾 Save</button>' +
+          '<button type="button" class="ghost" onclick="openLedgerFromQV()">📒 Ledger</button>' +
+          '<button type="button" class="ghost" onclick="closeEmployeeQuickView()">Cancel</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(m);
+  }
+
+  window._expQVId = null;
+  window.openExpenseQuickView = function(id) {
+    ensureExpenseQVModal();
+    var e = getExpenses().find(function(x) { return String(x.id) === String(id); });
+    if (!e) {
+      if (typeof showToast === 'function') showToast('Expense not found', 'err');
+      return;
+    }
+    window._expQVId = e.id;
+    if ($('expQVTitle')) $('expQVTitle').textContent = e.title || e.payee || e.category || 'Expense';
+    if ($('expQVMeta')) {
+      $('expQVMeta').textContent =
+        (e.date || '').slice(0, 10) + ' · ' + (e.category || 'Misc') +
+        (e.payee ? ' · Paid to: ' + e.payee : '');
+    }
+    if ($('expQVAmount')) $('expQVAmount').textContent = money(e.amount);
+    var wrap = $('expQVPhotoWrap');
+    var fullBtn = $('expQVOpenFull');
+    if (wrap) {
+      if (e.photo) {
+        wrap.innerHTML = '<img id="expQVPhotoImg" src="' + e.photo +
+          '" alt="Bill" style="max-width:100%;max-height:70vh;border-radius:10px;cursor:zoom-in" ' +
+          'onclick="window.open(this.src,\'_blank\')">';
+        if (fullBtn) {
+          fullBtn.style.display = '';
+          fullBtn.onclick = function() { window.open(e.photo, '_blank'); };
+        }
+      } else {
+        wrap.innerHTML = '<div class="muted" style="padding:40px;text-align:center">📷 No bill photo attached</div>';
+        if (fullBtn) fullBtn.style.display = 'none';
+      }
+    }
+    $('expenseQVModal').style.display = 'flex';
+  };
+  window.closeExpenseQuickView = function() {
+    var m = $('expenseQVModal');
+    if (m) m.style.display = 'none';
+    window._expQVId = null;
+  };
+  window.editExpenseFromQV = function() {
+    var id = window._expQVId;
+    closeExpenseQuickView();
+    if (id && typeof editExpense === 'function') editExpense(id);
+  };
+  window.deleteExpenseFromQV = function() {
+    var id = window._expQVId;
+    if (!id) return;
+    if (typeof deleteExpense === 'function') deleteExpense(id);
+    closeExpenseQuickView();
+  };
+
+  // Patch expense list: View button + clickable photo → quick view
+  var _rel = window.renderExpenseList;
+  if (typeof _rel === 'function' && !_rel._qv) {
+    window.renderExpenseList = function() {
+      _rel.apply(this, arguments);
+      try {
+        var body = $('expenseTableBody');
+        if (!body) return;
+        var from = ($('expFrom') && $('expFrom').value) || '';
+        var to = ($('expTo') && $('expTo').value) || '';
+        var list = getExpenses().filter(function(e) {
+          var d = (e.date || '').slice(0, 10);
+          if (from && d < from) return false;
+          if (to && d > to) return false;
+          return true;
+        });
+        body.innerHTML = list.map(function(e) {
+          var id = String(e.id).replace(/'/g, '');
+          var photoCell = e.photo
+            ? '<button type="button" class="ghost small" title="Quick view bill" onclick="openExpenseQuickView(\'' + id + '\')">📷 View</button>'
+            : '—';
+          return '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\'))openExpenseQuickView(\'' + id + '\')">' +
+            '<td>' + (e.date || '').slice(0, 10) + '</td>' +
+            '<td>' + escapeHtml(e.category || '') + '</td>' +
+            '<td>' + escapeHtml(e.title || e.payee || '') + '</td>' +
+            '<td class="num">' + money(e.amount) + '</td>' +
+            '<td>' + photoCell + '</td>' +
+            '<td>' +
+              '<button class="ghost small" onclick="event.stopPropagation();openExpenseQuickView(\'' + id + '\')">👁</button> ' +
+              '<button class="ghost small" onclick="event.stopPropagation();editExpense(\'' + id + '\')">Edit</button> ' +
+              '<button class="ghost small" style="color:var(--danger)" onclick="event.stopPropagation();deleteExpense(\'' + id + '\')">Del</button>' +
+            '</td></tr>';
+        }).join('') || '<tr><td colspan="6" class="note">No expenses</td></tr>';
+      } catch (err) { console.warn(err); }
+    };
+    window.renderExpenseList._qv = true;
+  }
+
+  // ---- Employee Quick Edit ----
+  window.openEmployeeQuickView = function(empId) {
+    ensureEmpQVModal();
+    var emps = lj('jp_employees_v1', []);
+    var emp = emps.find(function(e) { return String(e.id) === String(empId); });
+    if (!emp) {
+      if (typeof showToast === 'function') showToast('Employee not found', 'err');
+      return;
+    }
+    if ($('empQVId')) $('empQVId').value = emp.id;
+    if ($('empQVName')) $('empQVName').value = emp.name || '';
+    if ($('empQVPhone')) $('empQVPhone').value = emp.phone || '';
+    if ($('empQVRole')) $('empQVRole').value = emp.role || 'Sales';
+    if ($('empQVSalary')) $('empQVSalary').value = emp.salary != null ? emp.salary : '';
+    if ($('empQVJoin')) {
+      var j = emp.joinDate || emp.createdAt || '';
+      $('empQVJoin').value = String(j).slice(0, 10);
+    }
+    if ($('empQVNotes')) $('empQVNotes').value = emp.notes || emp.note || '';
+    $('empQVModal').style.display = 'flex';
+  };
+  window.closeEmployeeQuickView = function() {
+    var m = $('empQVModal');
+    if (m) m.style.display = 'none';
+  };
+  window.saveEmployeeQuickView = function() {
+    var id = ($('empQVId') && $('empQVId').value) || '';
+    if (!id) return;
+    var list = lj('jp_employees_v1', []);
+    var emp = list.find(function(e) { return String(e.id) === String(id); });
+    if (!emp) return;
+    emp.name = (($('empQVName') && $('empQVName').value) || '').trim() || emp.name;
+    emp.phone = (($('empQVPhone') && $('empQVPhone').value) || '').trim();
+    emp.role = (($('empQVRole') && $('empQVRole').value) || emp.role || 'Sales').trim();
+    emp.salary = Math.max(0, parseFloat(($('empQVSalary') && $('empQVSalary').value) || 0) || 0);
+    var join = ($('empQVJoin') && $('empQVJoin').value) || '';
+    if (join) emp.joinDate = join;
+    emp.notes = (($('empQVNotes') && $('empQVNotes').value) || '').trim();
+    emp.updatedAt = new Date().toISOString();
+    sj('jp_employees_v1', list);
+    closeEmployeeQuickView();
+    if (typeof renderHRM === 'function') renderHRM();
+    if (typeof showToast === 'function') showToast('Employee updated', 'ok');
+  };
+  window.openLedgerFromQV = function() {
+    var id = ($('empQVId') && $('empQVId').value) || '';
+    closeEmployeeQuickView();
+    if (id && typeof viewEmployeeLedger === 'function') viewEmployeeLedger(id);
+  };
+
+  // Override editEmployee to open form modal instead of prompt chain
+  window.editEmployee = function(id) {
+    openEmployeeQuickView(id);
+  };
+
+  // Patch emp list / cards to include Quick View edit
+  function patchEmpLists() {
+    var _rh = window.renderHRM;
+    if (typeof _rh !== 'function' || _rh._qvEmp) return;
+    window.renderHRM = function() {
+      _rh.apply(this, arguments);
+      try {
+        // empList items: add View/Edit if missing
+        var list = $('empList');
+        if (list) {
+          list.querySelectorAll('.v3-queue-item').forEach(function(row) {
+            if (row.querySelector('.emp-qv-btn')) return;
+            var btn = row.querySelector('button[onclick*="editEmployee"], button[onclick*="viewEmployeeLedger"]');
+            var oc = row.innerHTML;
+            var m = oc.match(/editEmployee\('([^']+)'\)/) || oc.match(/viewEmployeeLedger\('([^']+)'\)/) || oc.match(/deleteEmployee\('([^']+)'\)/);
+            if (!m) return;
+            var id = m[1];
+            var actions = row.querySelector('div[style*="display:flex"]') || row;
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'ghost small emp-qv-btn';
+            b.textContent = '👁 Edit';
+            b.onclick = function(e) { e.stopPropagation(); openEmployeeQuickView(id); };
+            if (actions.appendChild) actions.appendChild(b);
+          });
+        }
+        var cards = $('empListCards');
+        if (cards) {
+          cards.querySelectorAll('.emp-list-card, .v3-queue-item').forEach(function(row) {
+            if (row.querySelector('.emp-qv-btn')) return;
+            var oc = row.innerHTML;
+            var m = oc.match(/viewEmployeeLedger\('([^']+)'\)/) || oc.match(/editEmployee\('([^']+)'\)/);
+            if (!m) return;
+            var id = m[1];
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'ghost small emp-qv-btn';
+            b.textContent = '👁 Edit';
+            b.onclick = function(e) { e.stopPropagation(); openEmployeeQuickView(id); };
+            var actions = row.querySelector('div[style*="display:flex"]') || row;
+            if (actions.appendChild) actions.appendChild(b);
+            row.style.cursor = 'pointer';
+            row.addEventListener('click', function(ev) {
+              if (ev.target.closest('button')) return;
+              openEmployeeQuickView(id);
+            });
+          });
+        }
+      } catch (e) {}
+    };
+    window.renderHRM._qvEmp = true;
+  }
+
+  // Also enhance the card-style override from earlier hotfix if present
+  var _viewLed = window.viewEmployeeLedger;
+  // leave ledger as is; edit is separate
+
+  function boot() {
+    ensureExpenseQVModal();
+    ensureEmpQVModal();
+    patchEmpLists();
+    if (typeof renderExpenseList === 'function') {
+      try { renderExpenseList(); } catch (e) {}
+    }
+    if (typeof renderHRM === 'function') {
+      try { renderHRM(); } catch (e) {}
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 600);
+  setTimeout(boot, 1500);
+  console.log('✅ Expense QV photo + Employee quick edit');
+})();
+</script>
+
 </body>
 </html>
