@@ -300,9 +300,9 @@
             }
         }
         .wrap {
-            max-width: 1400px;
+            max-width: 100%;
             margin: 0 auto;
-            padding: 26px 22px 70px;
+            padding: 6px 10px 24px;
         }
         header {
             display: flex;
@@ -4215,12 +4215,12 @@ table thead th {
   padding-right: max(12px, env(safe-area-inset-right));
 }
 .grid {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-  gap: 18px;
-  align-items: start;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
-.grid > * { min-width: 0; }
+.grid > * { min-width: 0; width: 100%; max-width: 100%; }
+.right-panel { display: none !important; width: 0 !important; }
 
 /* Common multi-column panels inside sections */
 .v3-grid,
@@ -4263,6 +4263,7 @@ section.card [style*="grid-template-columns: 1fr 1fr"] {
 /* Tablet */
 @media (max-width: 1024px) {
   .grid {
+    display: block !important;
     grid-template-columns: 1fr !important;
   }
   .v3-grid {
@@ -4519,6 +4520,67 @@ body.dark .prod-analytics-block { background: rgba(255,255,255,.04); }
 }
 </style>
 
+
+<style id="singleBodyFix">
+/* Force single full-width body — no AI/right split */
+html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+.wrap {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 6px 10px 24px !important; /* ~80% less than 26px 22px 70px */
+}
+header { margin-bottom: 8px !important; gap: 8px !important; }
+.tabs { margin: 4px 0 10px !important; padding: 4px !important; }
+section.card {
+  padding: 10px 10px 14px !important;
+  margin-bottom: 10px !important;
+  border-radius: 14px !important;
+}
+.grid {
+  display: block !important;
+  width: 100% !important;
+}
+.right-panel, aside.right-panel {
+  display: none !important;
+  width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+body.split-on #splitWorkspace { display: none !important; }
+body.split-on #splitBar { display: none !important; }
+body.split-on .tabs { opacity: 1 !important; pointer-events: auto !important; }
+#splitBar, #splitWorkspace { display: none !important; }
+.dash-stats { gap: 8px !important; }
+.section-head { margin-bottom: 4px !important; padding-bottom: 4px !important; }
+</style>
+
+
+<style id="paCollapseCss">
+.pa-toggle {
+  width: 100%;
+  text-align: left;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 0 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: var(--muted) !important;
+  cursor: pointer;
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+}
+.pa-toggle:hover { color: var(--text) !important; }
+.pa-arrow { transition: transform .15s; font-size: 14px; }
+.pa-collapsible.open .pa-arrow { transform: rotate(90deg); }
+.pa-collapse-body { margin-top: 8px; }
+.prod-analytics-block.pa-collapsible { max-height: none; }
+</style>
+
 </head>
 <body>
     <div class="wrap">
@@ -4738,21 +4800,21 @@ body.dark .prod-analytics-block { background: rgba(255,255,255,.04); }
                         </div>
                         <div id="productAnalyticsCards" class="prod-analytics-cards"></div>
                         <div class="prod-analytics-grid">
-                          <div class="prod-analytics-block">
-                            <div class="prod-analytics-label">🏆 Top by revenue</div>
-                            <div id="paTopRevenue"></div>
+                          <div class="prod-analytics-block pa-collapsible">
+                            <button type="button" class="pa-toggle" onclick="togglePaBlock(this)">🏆 Top by revenue <span class="pa-arrow">▸</span></button>
+                            <div id="paTopRevenue" class="pa-collapse-body" style="display:none"></div>
                           </div>
-                          <div class="prod-analytics-block">
-                            <div class="prod-analytics-label">📈 Top by profit</div>
-                            <div id="paTopProfit"></div>
+                          <div class="prod-analytics-block pa-collapsible">
+                            <button type="button" class="pa-toggle" onclick="togglePaBlock(this)">📈 Top by profit <span class="pa-arrow">▸</span></button>
+                            <div id="paTopProfit" class="pa-collapse-body" style="display:none"></div>
                           </div>
-                          <div class="prod-analytics-block">
-                            <div class="prod-analytics-label">⚠️ Low / zero stock</div>
-                            <div id="paLowStock"></div>
+                          <div class="prod-analytics-block pa-collapsible">
+                            <button type="button" class="pa-toggle" onclick="togglePaBlock(this)">⚠️ Low / zero stock <span class="pa-arrow">▸</span></button>
+                            <div id="paLowStock" class="pa-collapse-body" style="display:none"></div>
                           </div>
-                          <div class="prod-analytics-block">
-                            <div class="prod-analytics-label">🏷 By tag</div>
-                            <div id="paByTag"></div>
+                          <div class="prod-analytics-block pa-collapsible">
+                            <button type="button" class="pa-toggle" onclick="togglePaBlock(this)">🏷 By tag <span class="pa-arrow">▸</span></button>
+                            <div id="paByTag" class="pa-collapse-body" style="display:none"></div>
                           </div>
                         </div>
                     </div>
@@ -5791,7 +5853,7 @@ body.dark .prod-analytics-block { background: rgba(255,255,255,.04); }
                         <div style="background:var(--border-soft);border-radius:14px;padding:14px">
                             <div class="section-title" style="font-size:14px">🏢 Companies (tenants)</div>
                             <label>Company name<input id="tenantName" placeholder="Company A"></label>
-                            <label>Plan<select id="tenantPlan"><option>free</option><option>pro</option><option>business</option></select></label>
+                            <select id="tenantPlan" style="display:none"><option value="business">business</option></select>
                             <button style="margin-top:8px" onclick="addTenant()">Create company</button>
                             <div id="tenantList" style="margin-top:10px;max-height:220px;overflow:auto"></div>
                         </div>
@@ -16711,18 +16773,17 @@ function saveV3Data() {
             if ($('subPlan')) $('subPlan').value = sub.plan || 'free';
             if ($('subStatus')) {
                 var limits = { free: '1 branch, basic reports', pro: 'multi-branch, CRM, forecast', business: 'API, marketplaces, priority' };
-                $('subStatus').textContent = 'Plan: ' + (sub.plan || 'free') + ' — ' + (limits[sub.plan] || '');
+                /* plan status removed */
             }
             if ($('tenantList')) {
                 $('tenantList').innerHTML = tenants.length ? tenants.map(function(t) {
-                    return '<div class="v3-queue-item"><div><b>' + escapeHtml(t.name) + '</b><div class="muted" style="font-size:11px">' + t.plan + (t.active ? ' · ACTIVE' : '') + '</div></div>' +
+                    return '<div class="v3-queue-item"><div><b>' + escapeHtml(t.name) + '</b><div class="muted" style="font-size:11px">' + (t.active ? 'ACTIVE' : '') + '</div></div>' +
                         '<div style="display:flex;gap:4px"><button class="ghost small" onclick="setActiveTenant(\'' + t.id + '\')">Activate</button><button class="ghost small" onclick="deleteTenant(\'' + t.id + '\')">Del</button></div></div>';
                 }).join('') : '<div class="note">No companies yet.</div>';
             }
             if ($('adminSummary')) {
                 $('adminSummary').innerHTML =
                     '<div class="dash-stat"><div class="val">' + tenants.length + '</div><div class="lbl">Companies</div></div>' +
-                    '<div class="dash-stat"><div class="val">' + (sub.plan || 'free') + '</div><div class="lbl">Plan</div></div>' +
                     '<div class="dash-stat"><div class="val">' + lj(KEY_DEVICES, []).length + '</div><div class="lbl">Devices</div></div>' +
                     '<div class="dash-stat"><div class="val">' + ((products && products.length) || 0) + '</div><div class="lbl">Products</div></div>';
             }
@@ -28227,6 +28288,39 @@ body.split-on #splitWorkspace { display: grid; }
   setTimeout(refreshAllProductAnalytics, 900);
   setTimeout(refreshAllProductAnalytics, 2500);
   console.log("product-analytics-ok");
+})();
+</script>
+
+
+<script>
+(function(){
+  window.togglePaBlock = function(btn){
+    var block = btn && btn.closest(".pa-collapsible");
+    if (!block) return;
+    var body = block.querySelector(".pa-collapse-body");
+    var open = block.classList.toggle("open");
+    if (body) body.style.display = open ? "block" : "none";
+  };
+  // Force single body — disable split screen
+  try {
+    document.body.classList.remove("split-on");
+    localStorage.setItem("jp_split_screen", "0");
+    var sw = document.getElementById("splitWorkspace");
+    if (sw) sw.style.display = "none";
+    var sb = document.getElementById("splitBar");
+    if (sb) sb.style.display = "none";
+  } catch(e){}
+  if (typeof window.setSplit === "function") {
+    var _ss = window.setSplit;
+    window.setSplit = function(on){
+      if (on) {
+        if (typeof showToast === "function") showToast("Split screen disabled", "ok");
+        return _ss.call(this, false);
+      }
+      return _ss.apply(this, arguments);
+    };
+  }
+  console.log("single-body-pa-collapse-ok");
 })();
 </script>
 
